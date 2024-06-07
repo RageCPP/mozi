@@ -1,0 +1,89 @@
+cmake_minimum_required(VERSION 3.29)
+
+project(mozi LANGUAGES CXX)
+
+include(CheckCXXSourceCompiles)
+
+unset(HAS_COUNTER CACHE)
+check_cxx_source_compiles("
+  #ifdef __COUNTER__
+      int main() { return 0; }
+  #endif
+" HAS_COUNTER)
+if(HAS_COUNTER)
+    message(STATUS "Compiler supports __COUNTER__")
+else()
+    message(WARNING "Compiler does not support __COUNTER__")
+endif()
+
+include(CheckPIESupported)
+check_pie_supported()
+
+set(MOZI_COMPILE_HEADERS
+  compile/attributes_cpp.hpp
+  compile/portability_c.hpp
+  compile/portability.hpp
+  compile/preprocessor.hpp)
+
+set(MOZI_UTILS_HEADERS
+  utils/exception.hpp
+  utils/expected.hpp
+  utils/traits.hpp
+  utils/unit.hpp
+  utils/utility.hpp)
+
+# set(MOZI_HEADER_FILES
+#   mozi.hpp)
+
+add_library(${PROJECT_NAME} STATIC 
+  ${MOZI_HEADER_FILES} 
+  ${MOZI_COMPILE_HEADERS}
+  ${MOZI_UTILS_HEADERS})
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
+
+message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  # target_compile_options(${PROJECT_NAME} PRIVATE )
+endif()
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  concurrentqueue
+  libcuckoo::libcuckoo
+  spdlog::spdlog_header_only
+  ssl
+  pcre2-8 r3
+  pq pqxx
+  fmt::fmt
+  libuv::uv_a
+  jwt-cpp::jwt-cpp
+  flatbuffers)
+
+message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+
+get_target_property(MY_COMPILE_OPTIONS ${PROJECT_NAME} COMPILE_OPTIONS)
+message(STATUS "Compile options for ${PROJECT_NAME}: ${MY_COMPILE_OPTIONS} ${CMAKE_CXX_FLAGS}")
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include>)
+
+install(TARGETS ${PROJECT_NAME} spdlog_header_only
+  EXPORT ${PROJECT_NAME}-config
+  ARCHIVE DESTINATION "${MOZI_INSTALL_LIB_DIR}/mozi"
+  LIBRARY DESTINATION "${MOZI_INSTALL_LIB_DIR}/mozi")
+
+install(EXPORT ${PROJECT_NAME}-config
+  NAMESPACE mozi::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mozi)
+
+install(FILES
+  ${MOZI_HEADER_FILES}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi")
+install(FILES
+  ${MOZI_COMPILE_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/compile")
+install(FILES
+  ${MOZI_UTILS_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/utils")

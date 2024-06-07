@@ -1,0 +1,3 @@
+BasedOnStyle: Microsoft
+DerivePointerAlignment: false
+IncludeBlocks: Preserve

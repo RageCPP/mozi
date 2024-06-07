@@ -1,0 +1,40 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "mozi",
+      "description": "Default settings for the project",
+      "hidden": false,
+      "generator": "Unix Makefiles",
+      "binaryDir": "./build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+        "BUILD_SHARED_LIBS": "NO",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "libmozi",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "mozi",
+      "jobs": 32,
+      "targets": [
+        "mozi"
+      ]
+    },
+    {
+      "name": "install",
+      "description": "",
+      "displayName": "",
+      "jobs": 32,
+      "configurePreset": "mozi",
+      "targets": [
+        "install"
+      ]
+    }
+  ]
+}

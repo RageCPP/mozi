@@ -1,0 +1,10 @@
+build/
+bin/
+lib/
+lib64/
+include/
+cmake/
+share/
+pkg/
+compile_commands.json
+.cache/
