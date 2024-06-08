@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.29)
 
-project(mozi LANGUAGES CXX)
+project(mozi LANGUAGES CXX C)
 
 include(CheckCXXSourceCompiles)
 
@@ -37,11 +37,21 @@ set(MOZI_NID_HEADERS
   nid/worker_config.hpp
   nid/worker.hpp)
 
+set(MOZI_HTTP_HEADERS
+  http/llhttp/llhttp.h
+  http/ada.h)
+set(MOZI_HTTP_SOURCES
+  http/llhttp/api.c
+  http/llhttp/http.c
+  http/llhttp/llhttp.c)
+
 # set(MOZI_HEADER_FILES
 #   mozi.hpp)
 
 add_library(${PROJECT_NAME} STATIC 
   # ${MOZI_HEADER_FILES}
+  ${MOZI_HTTP_SOURCES}
+  ${MOZI_HTTP_HEADERS}
   ${MOZI_COMPILE_HEADERS}
   ${MOZI_UTILS_HEADERS}
   ${MOZI_NID_HEADERS})
@@ -96,3 +106,6 @@ install(FILES
 install(FILES
   ${MOZI_NID_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/nid")
+install(FILES
+  ${MOZI_HTTP_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
