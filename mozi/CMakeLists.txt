@@ -19,6 +19,11 @@ endif()
 include(CheckPIESupported)
 check_pie_supported()
 
+set(MOZI_VARIABLES
+  variables/mask.hpp
+  variables/const_dec.hpp
+  variables/string_view.hpp)
+
 set(MOZI_COMPILE_HEADERS
   compile/attributes_cpp.hpp
   compile/portability_c.hpp
@@ -39,17 +44,22 @@ set(MOZI_NID_HEADERS
 
 set(MOZI_HTTP_HEADERS
   http/llhttp/llhttp.h
-  http/ada.h)
+  http/ada.h
+  http/http.hpp
+  http/responder.hpp
+  http/router.hpp)
 set(MOZI_HTTP_SOURCES
   http/llhttp/api.c
   http/llhttp/http.c
   http/llhttp/llhttp.c)
 
-# set(MOZI_HEADER_FILES
-#   mozi.hpp)
+set(MOZI_HEADER_FILES
+  core/common.hpp
+  core/mo.hpp)
 
 add_library(${PROJECT_NAME} STATIC 
-  # ${MOZI_HEADER_FILES}
+  ${MOZI_VARIABLES}
+  ${MOZI_HEADER_FILES}
   ${MOZI_HTTP_SOURCES}
   ${MOZI_HTTP_HEADERS}
   ${MOZI_COMPILE_HEADERS}
@@ -109,3 +119,6 @@ install(FILES
 install(FILES
   ${MOZI_HTTP_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
+install(FILES
+  ${MOZI_VARIABLES}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")

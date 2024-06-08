@@ -1,6 +1,6 @@
 #pragma once
+#include "mozi/core/common.hpp"
 #include "mozi/http/llhttp/llhttp.h"
-#include "mozi/http/types.hpp"
 #include "mozi/utils/traits.hpp"
 #include <string_view>
 

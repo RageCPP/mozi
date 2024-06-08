@@ -1,8 +1,7 @@
 #pragma once
 
+#include "mozi/core/common.hpp"
 #include "mozi/http/llhttp/llhttp.h"
-#include "mozi/http/types.hpp"
-#include "mozi/nid/worker.hpp"
 #include "mozi/utils/traits.hpp"
 #include "mozi/variables/const_dec.hpp"
 #include "mozi/variables/string_view.hpp"
@@ -21,13 +20,6 @@
 
 namespace mozi::http
 {
-
-struct mo_loop_data_s
-{
-    mo_route_t *rageroute;
-    mo_responder_map_t *responders;
-    nid::mo_nid_worker_t *nid_worker;
-};
 
 class mo_responder_c : public std::enable_shared_from_this<mo_responder_c>
 {
@@ -66,7 +58,7 @@ class mo_responder_c : public std::enable_shared_from_this<mo_responder_c>
     }
     static std::shared_ptr<mo_responder_c> create(box<uv_tcp_t> client) noexcept
     {
-        int64_t id = static_cast<mo_loop_data_s *>(client->loop->data)->nid_worker->next_id();
+        int64_t id = (static_cast<mozi::mo_loop_data_t *>(client->loop->data))->nid_worker->next_id();
         auto responder = std::make_shared<mo_responder_c>(mo__info_s{std::move(client), {}, {}, id});
         auto info = &responder->m_info;
         auto request_settings = &info->request_settings;
@@ -89,7 +81,7 @@ class mo_responder_c : public std::enable_shared_from_this<mo_responder_c>
         request_parser->data = request_parser_data;
         info->client->data = self_ptr_raw;
 
-        static_cast<mo_loop_data_t *>(client->loop->data)->responders->insert(info->id, responder);
+        static_cast<mozi::mo_loop_data_t *>(responder->client()->loop->data)->responders->insert(id, responder);
 
         return responder;
     }

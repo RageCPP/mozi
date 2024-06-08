@@ -78,9 +78,9 @@ void mo_on_connect(uv_stream_t *server, int status) noexcept
     spdlog::info("New connection");
 
     std::unique_ptr<uv_tcp_t> client = std::make_unique<uv_tcp_t>();
+    uv_tcp_init(server->loop, client.get());
     std::shared_ptr<mo_responder_c> responder = mo_responder_c::create(std::move(client));
     uv_stream_t *client_stream = static_cast<uv_stream_t *>(static_cast<void *>(responder->client()));
-    uv_tcp_init(server->loop, responder->client());
     if (uv_accept(server, client_stream) == 0)
     {
         auto rr = uv_read_start(
