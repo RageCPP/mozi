@@ -3,7 +3,6 @@
 #include "mozi/compile/attributes_cpp.hpp"
 #include "mozi/compile/portability_c.hpp"
 #include "mozi/utils/traits.hpp"
-#include <exception>
 #include <fmt/format.h>
 namespace mozi
 {
@@ -13,7 +12,7 @@ namespace mozi
 /// -fno-exceptions.
 template <typename Ex> [[noreturn, MO_COLD]] MO_NOINLINE void throw_exception(Ex &&ex)
 {
-#if FOLLY_HAS_EXCEPTIONS
+#if MO_HAS_EXCEPTIONS
     throw static_cast<Ex &&>(ex);
 #else
     (void)ex;

@@ -30,15 +30,21 @@ set(MOZI_UTILS_HEADERS
   utils/expected.hpp
   utils/traits.hpp
   utils/unit.hpp
-  utils/utility.hpp)
+  utils/utility.hpp
+  utils/chrono.hpp)
+
+set(MOZI_NID_HEADERS
+  nid/worker_config.hpp
+  nid/worker.hpp)
 
 # set(MOZI_HEADER_FILES
 #   mozi.hpp)
 
 add_library(${PROJECT_NAME} STATIC 
-  ${MOZI_HEADER_FILES} 
+  # ${MOZI_HEADER_FILES}
   ${MOZI_COMPILE_HEADERS}
-  ${MOZI_UTILS_HEADERS})
+  ${MOZI_UTILS_HEADERS}
+  ${MOZI_NID_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 
@@ -87,3 +93,6 @@ install(FILES
 install(FILES
   ${MOZI_UTILS_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/utils")
+install(FILES
+  ${MOZI_NID_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/nid")

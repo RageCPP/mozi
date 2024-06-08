@@ -44,6 +44,13 @@
 #define MO_ATTR_VISIBILITY_HIDDEN
 #endif
 
+// Microsoft ABI version (can be overridden manually if necessary)
+#ifndef MO_MICROSOFT_ABI_VER
+#ifdef _MSC_VER
+#define MO_MICROSOFT_ABI_VER _MSC_VER
+#endif
+#endif
+
 //  MO_ERASE
 //
 //  A conceptual attribute/syntax combo for erasing a function from the build
