@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mozi/utils/sequenced.hpp"
+#include "mozi/algorithm/disruptor/sequenced.hpp"
 #include <cstddef>
 #include <cstdint>
 

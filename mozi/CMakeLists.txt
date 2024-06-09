@@ -36,11 +36,7 @@ set(MOZI_UTILS_HEADERS
   utils/traits.hpp
   utils/unit.hpp
   utils/utility.hpp
-  utils/chrono.hpp
-  utils/ring_buffer.hpp
-  utils/sequence.hpp
-  utils/sequenced.hpp
-  utils/single_producer_sequencer.hpp)
+  utils/chrono.hpp)
 
 set(MOZI_NID_HEADERS
   nid/worker_config.hpp
@@ -57,6 +53,13 @@ set(MOZI_HTTP_SOURCES
   http/llhttp/http.c
   http/llhttp/llhttp.c)
 
+set(MOZI_ALGORITHM_DISRUPTOR_HEADERS
+  algorithm/disruptor/cursored.hpp
+  algorithm/disruptor/ring_buffer.hpp
+  algorithm/disruptor/sequence.hpp
+  algorithm/disruptor/sequenced.hpp
+  algorithm/disruptor/single_producer_sequencer.hpp)
+
 set(MOZI_HEADER_FILES
   core/common.hpp
   core/mo.hpp)
@@ -68,7 +71,8 @@ add_library(${PROJECT_NAME} STATIC
   ${MOZI_HTTP_HEADERS}
   ${MOZI_COMPILE_HEADERS}
   ${MOZI_UTILS_HEADERS}
-  ${MOZI_NID_HEADERS})
+  ${MOZI_NID_HEADERS}
+  ${MOZI_ALGORITHM_DISRUPTOR_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 
@@ -126,3 +130,6 @@ install(FILES
 install(FILES
   ${MOZI_VARIABLES}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")
+install(FILES
+  ${MOZI_ALGORITHM_DISRUPTOR_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/algorithm/disruptor")

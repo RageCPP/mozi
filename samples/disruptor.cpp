@@ -1,6 +1,6 @@
 #include "fmt/core.h"
-#include "mozi/utils/sequence.hpp"
-#include "mozi/utils/single_producer_sequencer.hpp"
+#include "mozi/algorithm/disruptor/sequence.hpp"
+#include "mozi/algorithm/disruptor/single_producer_sequencer.hpp"
 #include <chrono>
 #include <cstdint>
 #include <random>
