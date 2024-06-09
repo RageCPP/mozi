@@ -51,7 +51,7 @@ size_t mo_http_listen(uv_loop_t *loop, int32_t port) noexcept
 
     spdlog::info("Listen at port {}", port);
     int32_t address = uv_ip4_addr("0.0.0.0", port, addr_in.get());
-    if (address)
+    if (address) [[MO_UNLIKELY]]
     {
         spdlog::error("Address error {}", uv_strerror(address));
         return 1;
@@ -61,7 +61,7 @@ size_t mo_http_listen(uv_loop_t *loop, int32_t port) noexcept
     uv_tcp_init(loop, server.get());
     uv_tcp_bind(server.get(), static_cast<const sockaddr *>(static_cast<void *>(addr_in.get())), 0);
     int r = uv_listen(static_cast<uv_stream_t *>(static_cast<void *>(server.get())), DEFAULT_BACKLOG, mo_on_connect);
-    if (r)
+    if (r) [[MO_UNLIKELY]]
     {
         spdlog::error("Listen error {}", uv_strerror(r));
         return 1;
@@ -70,7 +70,7 @@ size_t mo_http_listen(uv_loop_t *loop, int32_t port) noexcept
 }
 void mo_on_connect(uv_stream_t *server, int status) noexcept
 {
-    if (status < 0)
+    if (status < 0) [[MO_UNLIKELY]]
     {
         spdlog::error("New connection error {}", uv_strerror(status));
         return;
@@ -81,7 +81,7 @@ void mo_on_connect(uv_stream_t *server, int status) noexcept
     uv_tcp_init(server->loop, client.get());
     std::shared_ptr<mo_responder_c> responder = mo_responder_c::create(std::move(client));
     uv_stream_t *client_stream = static_cast<uv_stream_t *>(static_cast<void *>(responder->client()));
-    if (uv_accept(server, client_stream) == 0)
+    if (uv_accept(server, client_stream) == 0) [[MO_LIKELY]]
     {
         auto rr = uv_read_start(
             client_stream,

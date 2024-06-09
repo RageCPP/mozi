@@ -36,7 +36,11 @@ set(MOZI_UTILS_HEADERS
   utils/traits.hpp
   utils/unit.hpp
   utils/utility.hpp
-  utils/chrono.hpp)
+  utils/chrono.hpp
+  utils/ring_buffer.hpp
+  utils/sequence.hpp
+  utils/sequenced.hpp
+  utils/single_producer_sequencer.hpp)
 
 set(MOZI_NID_HEADERS
   nid/worker_config.hpp
