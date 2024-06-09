@@ -3,14 +3,14 @@
 #include <type_traits>
 namespace mozi::disruptor
 {
-template <class T, typename D> class mo_data_provider_c
+template <template <auto> class T> class mo_data_provider_c
 {
-    template <typename U, typename = void> struct D_get_sequence : std::false_type
+    template <template <auto> class U, typename = void> struct D_get_sequence : std::false_type
     {
     };
-    template <typename U>
-    struct D_get_sequence<U,
-                          std::enable_if_t<std::is_same_v<decltype(std::declval<U>().get(std::declval<size_t>())), D>>>
+    template <template <auto> class U>
+    struct D_get_sequence<
+        U, std::enable_if_t<std::is_same_v<decltype(std::declval<U<0>>().get(std::declval<size_t>())), decltype(0)>>>
         : std::true_type
     {
     };
@@ -21,5 +21,5 @@ template <class T, typename D> class mo_data_provider_c
         static_assert(D_get_sequence<T>::value, "T should have `D get(size_t)` method");
     }
 };
-template <class T, typename D> using mo_data_provider_t = mo_data_provider_c<T, D>;
+template <template <auto> class T> using mo_data_provider_t = mo_data_provider_c<T>;
 } // namespace mozi::disruptor
