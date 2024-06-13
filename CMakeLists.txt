@@ -32,27 +32,37 @@ FetchContent_Declare(spdlog
   GIT_TAG 27cb4c76708608465c413f6d0e6b8d99a4d84302
   GIT_SHALLOW ON
 )
+
+FetchContent_Declare(
+  googletest
+  URL https://github.com/google/googletest/archive/f8d7d77c06936315286eb55f8de22cd23c188571.zip
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 FetchContent_Declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_Declare(llhttp URL https://github.com/nodejs/llhttp/archive/refs/tags/release/v9.2.1.tar.gz)
-FetchContent_MakeAvailable(libpqxx jwt nlohmann_json fmt concurrentqueue spdlog llhttp)
+FetchContent_MakeAvailable(libpqxx jwt nlohmann_json fmt concurrentqueue spdlog llhttp googletest)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/libuv")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/cuckoo")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/pcre2")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/r3")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/date")
 
+find_package(date REQUIRED)
 find_package(libuv REQUIRED)
 find_package(libcuckoo REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PCRE2 REQUIRED libpcre2-8)
 pkg_check_modules(R3 REQUIRED r3)
 
-include_directories(${PCRE2_INCLUDE_DIRS})
+
+# include_directories(${PCRE2_INCLUDE_DIRS})
 link_directories(${PCRE2_LIBRARY_DIRS})
 message(STATUS "PCRE2_INCLUDE_DIRS: ${PCRE2_INCLUDE_DIRS}")
 message(STATUS "PCRE2_LIBRARY_DIRS: ${PCRE2_LIBRARY_DIRS}")
 
-include_directories(${R3_INCLUDE_DIRS})
+# include_directories(${R3_INCLUDE_DIRS})
 link_directories(${R3_LIBRARY_DIRS})
 message(STATUS "R3_INCLUDE_DIRS: ${R3_INCLUDE_DIRS}")
 message(STATUS "R3_LIBRARY_DIRS: ${R3_LIBRARY_DIRS}")
@@ -75,4 +85,5 @@ set(MOZI_INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR})
 set(MOZI_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(mozi)
-add_subdirectory(samples)
+# add_subdirectory(samples)
+# add_subdirectory(tests)

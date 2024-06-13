@@ -38,5 +38,17 @@
         "install"
       ]
     }
+  ],
+  "testPresets": [
+    {
+      "name": "test",
+      "description": "",
+      "displayName": "",
+      "configurePreset": "mozi",
+      "configuration": "Debug",
+      "environment": {
+        "CTEST_ARGS": "-R Mozi"
+      }
+    }
   ]
 }

@@ -1,7 +1,11 @@
 #include "fmt/core.h"
 #include "mozi/nid/worker.hpp"
 #include "mozi/utils/chrono.hpp"
+#include <array>
+#include <atomic>
 #include <chrono>
+#include <cstdint>
+#include <libcuckoo/cuckoohash_map.hh>
 
 int main()
 {
@@ -40,11 +44,57 @@ int main()
 
     // 0 01011001110001011100111011001001111010111 00001 00000000000000000 worker_id:1 5位worker_id
 
+    libcuckoo::cuckoohash_map<int64_t, int64_t> map{};
+
+    std::atomic<int64_t> atomic_id = std::atomic_int64_t(2);
+
     auto empty_start = std::chrono::high_resolution_clock::now();
-    auto e = 10 + 10;
     auto empty_end = std::chrono::high_resolution_clock::now();
     auto empty = std::chrono::duration_cast<std::chrono::nanoseconds>(empty_end - empty_start).count();
     fmt::println("empty use time {}ns", empty);
+
+    empty_start = std::chrono::high_resolution_clock::now();
+    map.insert(0, 1);
+    empty_end = std::chrono::high_resolution_clock::now();
+    fmt::println("map use time {}ns",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(empty_end - empty_start).count());
+
+    empty_start = std::chrono::high_resolution_clock::now();
+    map.find(0);
+    empty_end = std::chrono::high_resolution_clock::now();
+    fmt::println("map find use time {}ns",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(empty_end - empty_start).count());
+
+    empty_start = std::chrono::high_resolution_clock::now();
+    map.erase(0);
+    empty_end = std::chrono::high_resolution_clock::now();
+    fmt::println("map erase use time {}ns",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(empty_end - empty_start).count());
+
+    std::array<int64_t, 5> array_id{0, 1, 2, 3, 4};
+    empty_start = std::chrono::high_resolution_clock::now();
+    int64_t expected = 2;
+    std::array<int64_t, 5> expected_array{0};
+    for (int i = 0; i < 5; i++)
+    {
+        expected_array[i] = array_id[i];
+    }
+    [[maybe_unused]] bool success = atomic_id.compare_exchange_strong(expected, 1);
+    empty_end = std::chrono::high_resolution_clock::now();
+    fmt::println("atomic use time {}ns",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(empty_end - empty_start).count());
+
+    empty_start = std::chrono::high_resolution_clock::now();
+    auto e = 10 + 10;
+    empty_end = std::chrono::high_resolution_clock::now();
+    fmt::println("normal add use time {}ns",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(empty_end - empty_start).count());
+
+    auto one_id_start = std::chrono::high_resolution_clock::now();
+    [[maybe_unused]] auto _ = worker_1.next_id();
+    auto one_id_end = std::chrono::high_resolution_clock::now();
+    fmt::println("one id use time {}ns",
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(one_id_end - one_id_start).count());
 
     auto start = std::chrono::high_resolution_clock::now();
     for (int i = 0; i <= 131071; i++)
@@ -53,7 +103,7 @@ int main()
     }
     auto end = std::chrono::high_resolution_clock::now();
     fmt::println("131072 iter use time: {}ns",
-                 std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count() - empty);
+                 std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
     fmt::println("{}", e);
     return 0;
 }

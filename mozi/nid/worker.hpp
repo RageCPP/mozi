@@ -1,10 +1,10 @@
 #pragma once
 
-#include "mozi/compile/attributes_cpp.hpp"
-#include "mozi/nid/worker_config.hpp"
-#include "mozi/utils/chrono.hpp"
-#include "mozi/utils/exception.hpp"
-#include "mozi/variables/mask.hpp"
+#include "../compile/attributes_cpp.hpp"
+#include "../nid/worker_config.hpp"
+#include "../utils/chrono.hpp"
+#include "../utils/exception.hpp"
+#include "../variables/mask.hpp"
 #include <cstdint>
 
 namespace mozi::nid

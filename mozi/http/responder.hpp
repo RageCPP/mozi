@@ -14,7 +14,6 @@
 #include <r3.h>
 #include <spdlog/spdlog.h>
 #include <string>
-#include <string_view>
 #include <uv.h>
 #include <uv/unix.h>
 

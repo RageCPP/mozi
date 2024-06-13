@@ -25,18 +25,18 @@ set(MOZI_VARIABLES
   variables/string_view.hpp)
 
 set(MOZI_COMPILE_HEADERS
-  compile/attributes_cpp.hpp
   compile/portability_c.hpp
   compile/portability.hpp
+  compile/attributes_cpp.hpp
   compile/preprocessor.hpp)
 
 set(MOZI_UTILS_HEADERS
-  utils/exception.hpp
-  utils/expected.hpp
-  utils/traits.hpp
-  utils/unit.hpp
-  utils/utility.hpp
-  utils/chrono.hpp)
+  exception.hpp
+  expected.hpp
+  traits.hpp
+  unit.hpp
+  utility.hpp
+  mo_time.hpp)
 
 set(MOZI_NID_HEADERS
   nid/worker_config.hpp
@@ -53,26 +53,36 @@ set(MOZI_HTTP_SOURCES
   http/llhttp/http.c
   http/llhttp/llhttp.c)
 
-set(MOZI_ALGORITHM_DISRUPTOR_HEADERS
-  algorithm/disruptor/cursored.hpp
-  algorithm/disruptor/ring_buffer.hpp
-  algorithm/disruptor/sequence.hpp
-  algorithm/disruptor/sequenced.hpp
-  algorithm/disruptor/single_producer_sequencer.hpp)
+set(MOZI_CORE_DISRUPTOR_HEADERS
+  core/disruptor/cursored.hpp
+  core/disruptor/ring_buffer.hpp
+  core/disruptor/sequence.hpp
+  core/disruptor/gating_sequence.hpp
+  core/disruptor/sequenced.hpp
+  core/disruptor/sequencer.hpp
+  core/disruptor/data_provider.hpp
+  core/disruptor/event_poller.hpp
+  core/disruptor/single_producer_sequencer.hpp
+  core/disruptor/processing_sequence_barrier.hpp
+  core/disruptor/utils.hpp)
 
-set(MOZI_HEADER_FILES
+set(MOZI_HEADERS
   core/common.hpp
   core/mo.hpp)
 
-add_library(${PROJECT_NAME} STATIC 
-  ${MOZI_VARIABLES}
-  ${MOZI_HEADER_FILES}
-  ${MOZI_HTTP_SOURCES}
-  ${MOZI_HTTP_HEADERS}
+# add_library(${PROJECT_NAME} STATIC
+#   ${MOZI_COMPILE_HEADERS}
+#   ${MOZI_NID_HEADERS}
+#   ${MOZI_VARIABLES}
+#   ${MOZI_HEADERS}
+#   ${MOZI_HTTP_HEADERS}
+#   ${MOZI_HTTP_SOURCES}
+#   ${MOZI_UTILS_HEADERS}
+#   ${MOZI_CORE_DISRUPTOR_HEADERS})
+
+add_library(${PROJECT_NAME} STATIC
   ${MOZI_COMPILE_HEADERS}
-  ${MOZI_UTILS_HEADERS}
-  ${MOZI_NID_HEADERS}
-  ${MOZI_ALGORITHM_DISRUPTOR_HEADERS})
+  ${MOZI_UTILS_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 
@@ -86,6 +96,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   concurrentqueue
   libcuckoo::libcuckoo
   spdlog::spdlog_header_only
+  date::date date::date-tz
   ssl
   pcre2-8 r3
   pq pqxx
@@ -93,15 +104,6 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
   libuv::uv_a
   jwt-cpp::jwt-cpp
   flatbuffers)
-
-message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
-
-get_target_property(MY_COMPILE_OPTIONS ${PROJECT_NAME} COMPILE_OPTIONS)
-message(STATUS "Compile options for ${PROJECT_NAME}: ${MY_COMPILE_OPTIONS} ${CMAKE_CXX_FLAGS}")
-
-target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
-  $<INSTALL_INTERFACE:include>)
 
 install(TARGETS ${PROJECT_NAME} spdlog_header_only
   EXPORT ${PROJECT_NAME}-config
@@ -112,24 +114,37 @@ install(EXPORT ${PROJECT_NAME}-config
   NAMESPACE mozi::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mozi)
 
-install(FILES
-  ${MOZI_HEADER_FILES}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi")
+
+message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+
+get_target_property(MY_COMPILE_OPTIONS ${PROJECT_NAME} COMPILE_OPTIONS)
+message(STATUS "Compile options for ${PROJECT_NAME}: ${MY_COMPILE_OPTIONS} ${CMAKE_CXX_FLAGS}")
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/pkg/date/include>
+  $<BUILD_INTERFACE:${PCRE2_INCLUDE_DIRS}>
+  $<BUILD_INTERFACE:${R3_INCLUDE_DIRS}>
+  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+  $<INSTALL_INTERFACE:include/>)
+
 install(FILES
   ${MOZI_COMPILE_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/compile")
+# install(FILES
+#   ${MOZI_HEADERS}
+#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi")
 install(FILES
   ${MOZI_UTILS_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/utils")
-install(FILES
-  ${MOZI_NID_HEADERS}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/nid")
-install(FILES
-  ${MOZI_HTTP_HEADERS}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
-install(FILES
-  ${MOZI_VARIABLES}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")
-install(FILES
-  ${MOZI_ALGORITHM_DISRUPTOR_HEADERS}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/algorithm/disruptor")
+# install(FILES
+#   ${MOZI_NID_HEADERS}
+#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/nid")
+# install(FILES
+#   ${MOZI_HTTP_HEADERS}
+#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
+# install(FILES
+#   ${MOZI_VARIABLES}
+#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")
+# install(FILES
+#   ${MOZI_CORE_DISRUPTOR_HEADERS}
+#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/disruptor")

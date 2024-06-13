@@ -20,5 +20,5 @@ template <class T> class mo_cursored_c
         static_assert(size_t_cursor<T>::value, "T should have `size_t cursor()` method");
     }
 };
-template <class T> using mo_curored_t = mo_cursored_c<T>;
+template <class T> using mo_cursored_t = mo_cursored_c<T>;
 } // namespace mozi::disruptor

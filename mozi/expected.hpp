@@ -1,12 +1,12 @@
 #pragma once
 
-#include "mozi/compile/attributes_cpp.hpp"
-#include "mozi/compile/portability_c.hpp"
-#include "mozi/compile/preprocessor.hpp"
-#include "mozi/utils/exception.hpp"
-#include "mozi/utils/traits.hpp"
-#include "mozi/utils/unit.hpp"
-#include "mozi/utils/utility.hpp"
+#include "compile/attributes_cpp.hpp"
+#include "compile/portability_c.hpp"
+#include "compile/preprocessor.hpp"
+#include "exception.hpp"
+#include "traits.hpp"
+#include "unit.hpp"
+#include "utility.hpp"
 #include <exception>
 #include <type_traits>
 #include <utility>

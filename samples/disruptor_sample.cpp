@@ -1,6 +1,6 @@
 #include "fmt/core.h"
-#include "mozi/algorithm/disruptor/sequence.hpp"
-#include "mozi/algorithm/disruptor/single_producer_sequencer.hpp"
+#include "mozi/core/disruptor/sequence.hpp"
+#include "mozi/core/disruptor/single_producer_sequencer.hpp"
 #include <chrono>
 #include <cstdint>
 #include <random>
@@ -150,14 +150,14 @@ int random_1_to_5()
 
 int main()
 {
-    mozi::disruptor::mo_sequence_t sequence;
-    sequence.set(1);
-    fmt::println("{}", sequence.value());
-    sequence.compare_and_set(1, 2);
-    fmt::println("{}", sequence.value());
-    sequence.compare_and_set(1, 2);
-    fmt::println("{}", sequence.value());
+    // mozi::disruptor::mo_sequence_t sequence;
+    // sequence.set(1);
+    // fmt::println("{}", sequence.value());
+    // sequence.compare_and_set(1, 2);
+    // fmt::println("{}", sequence.value());
+    // sequence.compare_and_set(1, 2);
+    // fmt::println("{}", sequence.value());
 
-    [[maybe_unused]] mozi::disruptor::mo_single_producer_sequencer_t sequencer{};
-    sequencer.publish(1, 1);
+    // [[maybe_unused]] mozi::disruptor::mo_single_producer_sequencer_t sequencer{};
+    // sequencer.publish(1, 1);
 }
