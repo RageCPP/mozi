@@ -1,6 +1,6 @@
 #include "fmt/core.h"
-#include "mozi/core/disruptor/sequence.hpp"
-#include "mozi/core/disruptor/single_producer_sequencer.hpp"
+#include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/single_producer_sequencer.hpp"
 #include <chrono>
 #include <cstdint>
 #include <random>
@@ -22,7 +22,7 @@ int random_1_to_5()
 //     {
 //         list.emplace_back(random_1_to_5(), random_1_to_5());
 //     }
-//     mozi::disruptor::mo_sequence_t sequence;
+//     mozi::ring::mo_sequence_t sequence;
 
 //     sequence.set(1);
 //     auto start_if = std::chrono::high_resolution_clock::now();
@@ -150,7 +150,7 @@ int random_1_to_5()
 
 int main()
 {
-    // mozi::disruptor::mo_sequence_t sequence;
+    // mozi::ring::mo_sequence_t sequence;
     // sequence.set(1);
     // fmt::println("{}", sequence.value());
     // sequence.compare_and_set(1, 2);
@@ -158,6 +158,6 @@ int main()
     // sequence.compare_and_set(1, 2);
     // fmt::println("{}", sequence.value());
 
-    // [[maybe_unused]] mozi::disruptor::mo_single_producer_sequencer_t sequencer{};
+    // [[maybe_unused]] mozi::ring::mo_single_producer_sequencer_t sequencer{};
     // sequencer.publish(1, 1);
 }

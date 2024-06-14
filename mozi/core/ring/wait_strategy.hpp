@@ -1,10 +1,10 @@
 #pragma once
-#include "mozi/core/disruptor/sequence.hpp"
-#include "mozi/core/disruptor/sequence_barrier.hpp"
+#include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/sequence_barrier.hpp"
 #include <cstddef>
 #include <type_traits>
 
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class T, class SequenceBarrier> class mo_wait_strategy_c
 {
@@ -43,4 +43,4 @@ template <class T, class SequenceBarrier> class mo_wait_strategy_c
     }
 };
 template <class T, class SequenceBarrier> using mo_wait_strategy_t = mo_wait_strategy_c<T, SequenceBarrier>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

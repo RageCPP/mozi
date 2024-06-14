@@ -10,10 +10,11 @@ check_cxx_source_compiles("
       int main() { return 0; }
   #endif
 " HAS_COUNTER)
+
 if(HAS_COUNTER)
-    message(STATUS "Compiler supports __COUNTER__")
+  message(STATUS "Compiler supports __COUNTER__")
 else()
-    message(WARNING "Compiler does not support __COUNTER__")
+  message(WARNING "Compiler does not support __COUNTER__")
 endif()
 
 include(CheckPIESupported)
@@ -31,12 +32,12 @@ set(MOZI_COMPILE_HEADERS
   compile/preprocessor.hpp)
 
 set(MOZI_UTILS_HEADERS
-  exception.hpp
-  expected.hpp
-  traits.hpp
-  unit.hpp
-  utility.hpp
-  mo_time.hpp)
+  utils/exception.hpp
+  utils/expected.hpp
+  utils/traits.hpp
+  utils/unit.hpp
+  utils/utility.hpp
+  utils/mo_time.hpp)
 
 set(MOZI_NID_HEADERS
   nid/worker_config.hpp
@@ -53,41 +54,40 @@ set(MOZI_HTTP_SOURCES
   http/llhttp/http.c
   http/llhttp/llhttp.c)
 
-set(MOZI_CORE_DISRUPTOR_HEADERS
-  core/disruptor/cursored.hpp
-  core/disruptor/ring_buffer.hpp
-  core/disruptor/sequence.hpp
-  core/disruptor/gating_sequence.hpp
-  core/disruptor/sequenced.hpp
-  core/disruptor/sequencer.hpp
-  core/disruptor/data_provider.hpp
-  core/disruptor/event_poller.hpp
-  core/disruptor/single_producer_sequencer.hpp
-  core/disruptor/processing_sequence_barrier.hpp
-  core/disruptor/utils.hpp)
+set(MOZI_CORE_ring_HEADERS
+  core/ring/cursored.hpp
+  core/ring/ring_buffer.hpp
+  core/ring/sequence.hpp
+  core/ring/gating_sequence.hpp
+  core/ring/sequenced.hpp
+  core/ring/sequencer.hpp
+  core/ring/data_provider.hpp
+  core/ring/event_poller.hpp
+  core/ring/abstruct_sequencer.hpp
+  core/ring/single_producer_sequencer.hpp
+  core/ring/processing_sequence_barrier.hpp
+  core/ring/utils.hpp)
 
 set(MOZI_HEADERS
   core/common.hpp
   core/mo.hpp)
 
-# add_library(${PROJECT_NAME} STATIC
-#   ${MOZI_COMPILE_HEADERS}
-#   ${MOZI_NID_HEADERS}
-#   ${MOZI_VARIABLES}
-#   ${MOZI_HEADERS}
-#   ${MOZI_HTTP_HEADERS}
-#   ${MOZI_HTTP_SOURCES}
-#   ${MOZI_UTILS_HEADERS}
-#   ${MOZI_CORE_DISRUPTOR_HEADERS})
-
 add_library(${PROJECT_NAME} STATIC
+  clangd.cpp
   ${MOZI_COMPILE_HEADERS}
-  ${MOZI_UTILS_HEADERS})
+  ${MOZI_NID_HEADERS}
+  ${MOZI_VARIABLES}
+  ${MOZI_HEADERS}
+  ${MOZI_HTTP_HEADERS}
+  ${MOZI_HTTP_SOURCES}
+  ${MOZI_UTILS_HEADERS}
+  ${MOZI_CORE_ring_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 
 message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
-if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # target_compile_options(${PROJECT_NAME} PRIVATE )
 endif()
 
@@ -114,37 +114,13 @@ install(EXPORT ${PROJECT_NAME}-config
   NAMESPACE mozi::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mozi)
 
-
 message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
 
 get_target_property(MY_COMPILE_OPTIONS ${PROJECT_NAME} COMPILE_OPTIONS)
 message(STATUS "Compile options for ${PROJECT_NAME}: ${MY_COMPILE_OPTIONS} ${CMAKE_CXX_FLAGS}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/pkg/date/include>
   $<BUILD_INTERFACE:${PCRE2_INCLUDE_DIRS}>
   $<BUILD_INTERFACE:${R3_INCLUDE_DIRS}>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include/>)
-
-install(FILES
-  ${MOZI_COMPILE_HEADERS}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/compile")
-# install(FILES
-#   ${MOZI_HEADERS}
-#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi")
-install(FILES
-  ${MOZI_UTILS_HEADERS}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/utils")
-# install(FILES
-#   ${MOZI_NID_HEADERS}
-#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/nid")
-# install(FILES
-#   ${MOZI_HTTP_HEADERS}
-#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
-# install(FILES
-#   ${MOZI_VARIABLES}
-#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")
-# install(FILES
-#   ${MOZI_CORE_DISRUPTOR_HEADERS}
-#   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/disruptor")

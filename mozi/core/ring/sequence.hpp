@@ -1,10 +1,12 @@
 #pragma once
 
 #include "mozi/compile/attributes_cpp.hpp"
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
 #include <string>
-namespace mozi::disruptor
+
+namespace mozi::ring
 {
 class mo_sequence_c
 {
@@ -22,7 +24,7 @@ class mo_sequence_c
     }
     void set(size_t value) noexcept
     {
-        mo_value = value;
+        mo_value.store(value);
     }
     bool compare_and_set(size_t expected_value, size_t new_value) noexcept
     {
@@ -34,10 +36,10 @@ class mo_sequence_c
     {
         return mo_value += 1;
     }
+    static const int64_t INITIAL_VALUE = -1;
 
   private:
-    static const int64_t INITIAL_VALUE = -1;
-    size_t mo_value;
+    std::atomic<size_t> mo_value;
 };
 using mo_sequence_t = mo_sequence_c;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

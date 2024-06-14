@@ -1,8 +1,8 @@
 #pragma once
 
-#include "compile/attributes_cpp.hpp"
-#include "compile/portability_c.hpp"
-#include "traits.hpp"
+#include "mozi/compile/attributes_cpp.hpp"
+#include "mozi/compile/portability_c.hpp"
+#include "mozi/utils/traits.hpp"
 #include <fmt/format.h>
 namespace mozi
 {

@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <type_traits>
 
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class T> class mo_sequence_barrier_c
 {
@@ -72,4 +72,4 @@ template <class T> class mo_sequence_barrier_c
     }
 };
 template <class T> using mo_sequence_barrier_t = mo_sequence_barrier_c<T>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

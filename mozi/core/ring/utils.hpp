@@ -1,12 +1,12 @@
 #pragma once
 
-#include "mozi/core/disruptor/sequence.hpp"
+#include "mozi/core/ring/sequence.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
 
-namespace mozi::disruptor
+namespace mozi::ring
 {
 namespace utils
 {
@@ -25,4 +25,4 @@ inline size_t minimum_sequence(std::vector<std::shared_ptr<mo_sequence_t>> &sequ
     return minimum_sequence(sequences, max);
 }
 } // namespace utils
-} // namespace mozi::disruptor
+} // namespace mozi::ring

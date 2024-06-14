@@ -1,13 +1,13 @@
 #pragma once
-#include "mozi/core/disruptor/cursored.hpp"
-#include "mozi/core/disruptor/data_provider.hpp"
-#include "mozi/core/disruptor/sequence.hpp"
-#include "mozi/core/disruptor/sequence_barrier.hpp"
-#include "mozi/core/disruptor/sequenced.hpp"
+#include "mozi/core/ring/cursored.hpp"
+#include "mozi/core/ring/data_provider.hpp"
+#include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/sequence_barrier.hpp"
+#include "mozi/core/ring/sequenced.hpp"
 #include <cstddef>
 #include <memory>
 #include <type_traits>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class Sequencer, class SequenceBarrier, template <auto> class DataProvider> class mo_event_poller_c;
 
@@ -189,4 +189,4 @@ class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
 };
 template <class T, class SequenceBarrier, template <auto> class DataProvider>
 using mo_sequencer_t = mo_sequencer_c<T, SequenceBarrier, DataProvider>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

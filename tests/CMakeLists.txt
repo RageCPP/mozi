@@ -5,14 +5,14 @@ project(tests LANGUAGES CXX)
 enable_testing()
 
 add_executable(
-  disruptor_test
-  disruptor/sequence_about.cpp)
+  ring_test
+  ring/sequence_about.cpp)
 
 target_link_libraries(
-  disruptor_test
+  ring_test
   GTest::gtest_main
   mozi
 )
 
 include(GoogleTest)
-gtest_discover_tests(disruptor_test)
+gtest_discover_tests(ring_test)

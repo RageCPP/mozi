@@ -1,5 +1,5 @@
 #pragma once
-#include "portability.hpp"
+#include "mozi/compile/portability.hpp"
 
 #if MO_HAS_CPP_ATTRIBUTE(gnu::cold)
 #define MO_COLD gnu::cold

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "mozi/core/disruptor/data_provider.hpp"
-#include "mozi/core/disruptor/gating_sequence.hpp"
-#include "mozi/core/disruptor/sequence.hpp"
-#include "mozi/core/disruptor/sequencer.hpp"
+#include "mozi/core/ring/data_provider.hpp"
+#include "mozi/core/ring/gating_sequence.hpp"
+#include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/sequencer.hpp"
 #include <cstddef>
 #include <memory>
 
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class Sequencer, class SequenceBarrier, template <auto> class A> class mo_event_poller_c
 {
@@ -90,10 +90,14 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
         }
     }
 
+    // clang-format off
     template <class TSequencer, class TSequenceBarrier, template <auto> class TA, typename... Args>
     static std::unique_ptr<mo_event_poller_c<TSequencer, TSequenceBarrier, TA>> new_poller(
-        mo_data_provider_t<TA> data_provider, mo_sequencer_c<Sequencer, SequenceBarrier, TA> *sequencer,
-        mo_sequence_t sequence, mo_sequence_t cursor_sequence, Args... gating_sequences)
+        mo_data_provider_t<TA> data_provider, 
+        mo_sequencer_c<Sequencer, SequenceBarrier, TA> *sequencer,
+        mo_sequence_t&& sequence, 
+        mo_sequence_t& cursor_sequence, 
+        Args... gating_sequences)
     {
         mo_gating_sequence_t gating_sequence{};
         // 在编译时检查每个Args都是mo_sequence_t
@@ -111,9 +115,10 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
         {
             gating_sequence.set_sequences(gating_sequences...);
         }
-        return std::make_unique<mo_event_poller_c<TSequencer, TSequenceBarrier, TA>>(data_provider, sequencer, sequence,
-                                                                                     gating_sequence);
+        return std::make_unique<mo_event_poller_c<TSequencer, TSequenceBarrier, TA>>(
+            data_provider, sequencer, sequence, gating_sequence);
     }
+    // clang-format on
 
     mo_sequence_t sequence()
     {
@@ -121,13 +126,18 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
     }
 
   private:
+    // clang-format off
     explicit mo_event_poller_c(mo_data_provider_t<A> data_provider,
-                               mo_sequencer_c<Sequencer, SequenceBarrier, A> *sequencer, mo_sequence_t sequence,
+                               mo_sequencer_c<Sequencer, SequenceBarrier, A> *sequencer,
+                               mo_sequence_t&& sequence,
                                mo_gating_sequence_t gating_sequence)
-        : m_data_provider(data_provider), m_sequencer(sequencer), m_sequence(sequence),
+        : m_data_provider(data_provider),
+          m_sequencer(sequencer),
+          m_sequence(sequence),
           m_gating_sequence(gating_sequence)
-    {
-    }
+    {}
+    // clang-format on
+
     mo_data_provider_t<A> m_data_provider;
     mo_sequencer_c<Sequencer, SequenceBarrier, A> *m_sequencer;
     mo_sequence_t m_sequence;
@@ -135,4 +145,4 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
 };
 template <class Sequencer, class SequenceBarrier, template <auto> class A>
 using mo_event_poller_t = mo_event_poller_c<Sequencer, SequenceBarrier, A>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

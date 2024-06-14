@@ -2,7 +2,7 @@
   "version": 6,
   "configurePresets": [
     {
-      "name": "mozi",
+      "name": "debug",
       "description": "Default settings for the project",
       "hidden": false,
       "generator": "Unix Makefiles",
@@ -15,37 +15,47 @@
         "CMAKE_C_COMPILER": "/usr/bin/gcc-13",
         "CMAKE_CXX_COMPILER": "/usr/bin/g++-13"
       }
+    },
+    {
+      "name": "release",
+      "description": "Default settings for the project",
+      "hidden": false,
+      "generator": "Unix Makefiles",
+      "binaryDir": "./build",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "YES",
+        "BUILD_SHARED_LIBS": "NO",
+        "CMAKE_INSTALL_PREFIX": "${sourceDir}",
+        "CMAKE_C_COMPILER": "/usr/bin/gcc-13",
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++-13"
+      }
     }
   ],
   "buildPresets": [
     {
-      "name": "libmozi",
-      "description": "",
-      "displayName": "",
-      "configurePreset": "mozi",
+      "name": "debug_lib",
+      "description": "Build the library",
+      "configurePreset": "debug",
       "jobs": 32,
       "targets": [
         "mozi"
       ]
     },
     {
-      "name": "install",
-      "description": "",
-      "displayName": "",
+      "name": "release_lib",
+      "description": "Build the library",
+      "configurePreset": "release",
       "jobs": 32,
-      "configurePreset": "mozi",
       "targets": [
-        "install"
+        "mozi"
       ]
     }
   ],
   "testPresets": [
     {
       "name": "test",
-      "description": "",
-      "displayName": "",
-      "configurePreset": "mozi",
-      "configuration": "Debug",
+      "configurePreset": "debug",
       "environment": {
         "CTEST_ARGS": "-R Mozi"
       }

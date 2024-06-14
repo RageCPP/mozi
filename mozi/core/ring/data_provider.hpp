@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <type_traits>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <template <auto> class T> class mo_data_provider_c
 {
@@ -22,4 +22,4 @@ template <template <auto> class T> class mo_data_provider_c
     }
 };
 template <template <auto> class T> using mo_data_provider_t = mo_data_provider_c<T>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

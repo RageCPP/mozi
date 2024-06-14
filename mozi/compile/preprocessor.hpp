@@ -1,5 +1,5 @@
 #pragma once
-#include "portability_c.hpp"
+#include "mozi/compile/portability_c.hpp"
 #include <assert.h>
 
 #define MO_SINGLE_ARG(...) __VA_ARGS__

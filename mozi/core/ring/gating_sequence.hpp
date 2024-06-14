@@ -1,9 +1,9 @@
 #pragma once
 #include "mozi/compile/attributes_cpp.hpp"
-#include "mozi/core/disruptor/sequence.hpp"
+#include "mozi/core/ring/sequence.hpp"
 #include "spdlog/spdlog.h"
 #include <cstddef>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 struct mo_gating_sequence_c
 {
@@ -32,4 +32,4 @@ struct mo_gating_sequence_c
     size_t mo_value;
 };
 using mo_gating_sequence_t = mo_gating_sequence_c;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

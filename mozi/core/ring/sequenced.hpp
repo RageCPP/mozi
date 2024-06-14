@@ -2,7 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <type_traits>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class S> class mo_sequenced_c
 {
@@ -109,4 +109,4 @@ template <class S> class mo_sequenced_c
     }
 };
 template <class S> using mo_sequenced_t = mo_sequenced_c<S>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

@@ -1,18 +1,19 @@
 #pragma once
-#include "mozi/core/disruptor/processing_sequence_barrier.hpp"
-#include "mozi/core/disruptor/sequence.hpp"
-#include "mozi/core/disruptor/sequence_barrier.hpp"
-#include "mozi/core/disruptor/sequence_group.hpp"
-#include "mozi/core/disruptor/sequencer.hpp"
-#include "mozi/core/disruptor/utils.hpp"
-#include "mozi/core/disruptor/wait_strategy.hpp"
+#include "mozi/core/ring/data_provider.hpp"
+#include "mozi/core/ring/event_poller.hpp"
+#include "mozi/core/ring/processing_sequence_barrier.hpp"
+#include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/sequence_group.hpp"
+#include "mozi/core/ring/sequencer.hpp"
+#include "mozi/core/ring/utils.hpp"
+#include "mozi/core/ring/wait_strategy.hpp"
 #include <atomic>
 #include <concurrentqueue.h>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <vector>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class T, class SequenceBarrier, template <auto> class DataProvider, class WaitStrategy>
 class mo_abstruct_sequencer_c
@@ -20,6 +21,11 @@ class mo_abstruct_sequencer_c
       public std::enable_shared_from_this<mo_abstruct_sequencer_c<T, SequenceBarrier, DataProvider, WaitStrategy>>
 {
   public:
+    mo_abstruct_sequencer_c(uint16_t buffer_size, mo_wait_strategy_t<WaitStrategy, SequenceBarrier> wait_strategy)
+        : m_buffer_size(buffer_size), m_wait_strategy(wait_strategy),
+          m_gating_sequences(std::make_shared<std::vector<std::shared_ptr<mo_sequence_t>>>())
+    {
+    }
     inline size_t cursor() noexcept
     {
         return m_cursor.value();
@@ -32,20 +38,18 @@ class mo_abstruct_sequencer_c
     {
         static_assert((std::is_same_v<Args, std::shared_ptr<mo_sequence_t>> && ...),
                       "All Args must be of type  std::atomic<std::shared_ptr<mo_sequence_t>>");
-        mozi::disruptor::sequence_group::add_sequences(*this, sequence...);
+        mozi::ring::sequence_group::add_sequences(*this, sequence...);
     }
     inline bool remove_gating_sequence(std::shared_ptr<mo_sequence_t> sequence) noexcept
     {
-        return mozi::disruptor::sequence_group::remove_sequences(*this, sequence);
+        return mozi::ring::sequence_group::remove_sequences(*this, sequence);
     }
     inline size_t minimum_sequence() noexcept
     {
         // TODO: 优化这里是否不使用强一致顺序
-        return mozi::disruptor::utils::minimum_sequence(*m_gating_sequences.load(), m_cursor.value());
+        return mozi::ring::utils::minimum_sequence(*m_gating_sequences.load(), m_cursor.value());
     }
-    template <typename... Args>
-    inline mo_sequence_barrier_t<mo_processing_sequence_barrier_t<T, DataProvider, WaitStrategy>> new_barrier(
-        Args... sequences_to_track) noexcept
+    template <typename... Args> inline auto new_barrier(Args... sequences_to_track) noexcept
     {
         static_assert((std::is_same_v<Args, mo_sequence_t> && ...), "All Args must be of type mo_sequence_t");
         mo_gating_sequence_t gating_sequence{};
@@ -62,10 +66,37 @@ class mo_abstruct_sequencer_c
                                                                                &m_cursor);
     }
 
+    // clang-format off
+    template <typename... Args>
+    inline decltype(auto) new_poller(mo_data_provider_t<DataProvider> data_provider, Args... gating_sequences) noexcept
+    {
+        return mo_event_poller_t<T, SequenceBarrier, DataProvider>::new_poller(
+            data_provider,
+            this,
+            {},
+            m_cursor,
+            gating_sequences...);
+    }
+
+    inline std::string to_string() noexcept
+    {
+        std::string gating_sequences{};
+        for (auto &sequence : *m_gating_sequences.load())
+        {
+            gating_sequences += sequence->to_string() + ", ";
+        }
+        return std::string{"mo_abstruct_sequencer_c{"} +
+                                ", wait_strategy=" + m_wait_strategy.to_string() +
+                                ", cursor=" + std::to_string(m_cursor.value()) + 
+                                ", gating_sequences=" + gating_sequences + 
+                                "}";
+    }
+    // clang-format on
+
   protected:
     uint16_t m_buffer_size;
     mo_wait_strategy_t<WaitStrategy, SequenceBarrier> m_wait_strategy;
     mo_sequence_t m_cursor{mo_sequencer_t<T, SequenceBarrier, DataProvider>::INITIAL_CURSOR_VALUE};
     std::atomic<std::shared_ptr<std::vector<std::shared_ptr<mo_sequence_t>>>> m_gating_sequences;
 };
-} // namespace mozi::disruptor
+} // namespace mozi::ring

@@ -1,7 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <type_traits>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class T> class mo_cursored_c
 {
@@ -21,4 +21,4 @@ template <class T> class mo_cursored_c
     }
 };
 template <class T> using mo_cursored_t = mo_cursored_c<T>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

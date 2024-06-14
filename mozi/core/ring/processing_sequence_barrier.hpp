@@ -1,12 +1,12 @@
 #pragma once
 
-#include "mozi/core/disruptor/gating_sequence.hpp"
-#include "mozi/core/disruptor/sequence.hpp"
-#include "mozi/core/disruptor/sequence_barrier.hpp"
-#include "mozi/core/disruptor/sequencer.hpp"
-#include "mozi/core/disruptor/wait_strategy.hpp"
+#include "mozi/core/ring/gating_sequence.hpp"
+#include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/sequence_barrier.hpp"
+#include "mozi/core/ring/sequencer.hpp"
+#include "mozi/core/ring/wait_strategy.hpp"
 #include <atomic>
-namespace mozi::disruptor
+namespace mozi::ring
 {
 template <class T, template <auto> class DataProvider, class WaitStrategy>
 class mo_processing_sequence_barrier_c
@@ -32,4 +32,4 @@ class mo_processing_sequence_barrier_c
 };
 template <class T, template <auto> class DataProvider, class WaitStrategy>
 using mo_processing_sequence_barrier_t = mo_processing_sequence_barrier_c<T, DataProvider, WaitStrategy>;
-} // namespace mozi::disruptor
+} // namespace mozi::ring

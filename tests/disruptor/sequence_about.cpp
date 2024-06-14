@@ -1,12 +1,12 @@
-#include "mozi/core/disruptor/gating_sequence.hpp"
-#include "mozi/core/disruptor/sequence.hpp"
+#include "mozi/core/ring/gating_sequence.hpp"
+#include "mozi/core/ring/sequence.hpp"
 #include "spdlog/spdlog.h"
 #include <gtest/gtest.h>
 
 // Demonstrate some basic assertions.
 TEST(MoziGatingSequenceTest, mo_gating_sequence_t)
 {
-    using namespace mozi::disruptor;
+    using namespace mozi::ring;
 
     mo_gating_sequence_t gatting_sequence{};
     EXPECT_EQ(gatting_sequence.value(), 0);
@@ -36,7 +36,7 @@ TEST(MoziGatingSequenceTest, mo_gating_sequence_t)
 
 TEST(MoziGatingSequenceTest, mo_sequence_t)
 {
-    using namespace mozi::disruptor;
+    using namespace mozi::ring;
 
     mo_sequence_t sequence{};
     EXPECT_EQ(sequence.value(), std::numeric_limits<size_t>::max());
