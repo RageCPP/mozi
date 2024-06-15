@@ -9,7 +9,7 @@
 
 namespace mozi::ring
 {
-template <class Sequencer, class SequenceBarrier, template <auto> class A> class mo_event_poller_c
+template <class Sequencer, class SequenceBarrier, typename Event> class mo_event_poller_c
 {
   public:
     enum class mo_poll_flags
@@ -62,9 +62,9 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
      */
     template <typename E> mo_poll_flags poll(mo_handler_c<E> event_handler)
     {
-        size_t current_sequence = m_sequence.value();
+        size_t current_sequence = m_sequence->value();
         size_t next_sequence = current_sequence + 1;
-        size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_gating_sequence.value());
+        size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_gating_sequence->value());
 
         if (next_sequence <= available_sequence)
         {
@@ -72,12 +72,12 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
             size_t processed_sequence = current_sequence;
             while (next_sequence <= available_sequence && process_next_event)
             {
-                E event = m_data_provider.get(next_sequence);
+                E event = m_data_provider->get(next_sequence);
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
                 next_sequence++;
             }
-            m_sequence.set(processed_sequence);
+            m_sequence->set(processed_sequence);
             return mo_poll_flags::MO_POLL_PROCESSING;
         }
         else if (m_sequencer->cursor() >= next_sequence)
@@ -91,10 +91,10 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
     }
 
     // clang-format off
-    template <class TSequencer, class TSequenceBarrier, template <auto> class TA, typename... Args>
-    static std::unique_ptr<mo_event_poller_c<TSequencer, TSequenceBarrier, TA>> new_poller(
-        mo_data_provider_t<TA> data_provider, 
-        mo_sequencer_c<Sequencer, SequenceBarrier, TA> *sequencer,
+    template < typename... Args>
+    static std::unique_ptr<mo_event_poller_c<Sequencer, SequenceBarrier, Event>> new_poller(
+        mo_data_provider_t<Sequencer, Event> data_provider, 
+        mo_sequencer_c<Sequencer, SequenceBarrier, Event> *sequencer,
         mo_sequence_t&& sequence, 
         mo_sequence_t& cursor_sequence, 
         Args... gating_sequences)
@@ -115,22 +115,22 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
         {
             gating_sequence.set_sequences(gating_sequences...);
         }
-        return std::make_unique<mo_event_poller_c<TSequencer, TSequenceBarrier, TA>>(
+        return std::make_unique<mo_event_poller_c<Sequencer, SequenceBarrier, Event>>(
             data_provider, sequencer, sequence, gating_sequence);
     }
     // clang-format on
 
-    mo_sequence_t sequence()
+    mo_sequence_t *sequence()
     {
         return m_sequence;
     }
 
   private:
     // clang-format off
-    explicit mo_event_poller_c(mo_data_provider_t<A> data_provider,
-                               mo_sequencer_c<Sequencer, SequenceBarrier, A> *sequencer,
-                               mo_sequence_t&& sequence,
-                               mo_gating_sequence_t gating_sequence)
+    explicit mo_event_poller_c(mo_data_provider_t<Sequencer, Event>* data_provider,
+                               mo_sequencer_c<Sequencer, SequenceBarrier, Event> *sequencer,
+                               mo_sequence_t* sequence,
+                               mo_gating_sequence_t* gating_sequence)
         : m_data_provider(data_provider),
           m_sequencer(sequencer),
           m_sequence(sequence),
@@ -138,11 +138,11 @@ template <class Sequencer, class SequenceBarrier, template <auto> class A> class
     {}
     // clang-format on
 
-    mo_data_provider_t<A> m_data_provider;
-    mo_sequencer_c<Sequencer, SequenceBarrier, A> *m_sequencer;
-    mo_sequence_t m_sequence;
-    mo_gating_sequence_t m_gating_sequence;
+    mo_data_provider_t<Sequencer, Event> *m_data_provider;
+    mo_sequencer_c<Sequencer, SequenceBarrier, Event> *m_sequencer;
+    mo_sequence_t *m_sequence;
+    mo_gating_sequence_t *m_gating_sequence;
 };
-template <class Sequencer, class SequenceBarrier, template <auto> class A>
-using mo_event_poller_t = mo_event_poller_c<Sequencer, SequenceBarrier, A>;
+template <class Sequencer, class SequenceBarrier, typename Event>
+using mo_event_poller_t = mo_event_poller_c<Sequencer, SequenceBarrier, Event>;
 } // namespace mozi::ring

@@ -1,4 +1,5 @@
 #pragma once
+#include <concepts>
 #include <cstddef>
 #include <functional>
 #include <type_traits>
@@ -89,5 +90,13 @@ template <> struct conditional_<true>
 template <bool V, typename T, typename F> using conditional_t = typename detail::conditional_<V>::template apply<T, F>;
 
 template <typename ReturnType, typename... Args> using mo_function_t = std::function<ReturnType(Args...)>;
+
+namespace function
+{
+template <typename ReturnType, typename A1>
+concept mo_function_trait = requires(ReturnType (*f)(A1)) {
+    { f };
+};
+} // namespace function
 
 } // namespace mozi

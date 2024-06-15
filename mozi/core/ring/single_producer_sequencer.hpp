@@ -14,16 +14,16 @@ namespace mozi::ring
 // next_value: 下一个要写入的序列
 // cache_value: 用户已经处理的最小序列
 // cursor: 生产者最后写入的序列
-template <class SequenceBarrier, template <auto> class DataProvider, class WaitStrategy>
+template <class SequenceBarrier, typename Event, class WaitStrategy>
 class mo_single_producer_sequencer_c
-    : public mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<SequenceBarrier, DataProvider, WaitStrategy>,
-                                     SequenceBarrier, DataProvider, WaitStrategy>
+    : public mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<SequenceBarrier, Event, WaitStrategy>,
+                                     SequenceBarrier, Event, WaitStrategy>
 {
   public:
     mo_single_producer_sequencer_c(uint16_t buffer_size,
                                    mo_wait_strategy_t<WaitStrategy, SequenceBarrier> wait_strategy)
-        : mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<SequenceBarrier, DataProvider, WaitStrategy>,
-                                  SequenceBarrier, DataProvider, WaitStrategy>(buffer_size, wait_strategy)
+        : mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<SequenceBarrier, Event, WaitStrategy>, SequenceBarrier,
+                                  Event, WaitStrategy>(buffer_size, wait_strategy)
     {
     }
     bool has_available_capacity(uint16_t required_capacity)
@@ -161,6 +161,6 @@ class mo_single_producer_sequencer_c
     }
 #endif
 };
-template <class SequenceBarrier, template <auto> class DataProvider, class WaitStrategy>
-using mo_single_producer_sequencer_t = mo_single_producer_sequencer_c<SequenceBarrier, DataProvider, WaitStrategy>;
+template <class SequenceBarrier, typename Event, class WaitStrategy>
+using mo_single_producer_sequencer_t = mo_single_producer_sequencer_c<SequenceBarrier, Event, WaitStrategy>;
 } // namespace mozi::ring

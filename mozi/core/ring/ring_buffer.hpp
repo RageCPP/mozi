@@ -1,41 +1,65 @@
 #pragma once
 
+#include "mozi/core/ring/cursored.hpp"
+#include "mozi/core/ring/event_factory.hpp"
+#include "mozi/core/ring/event_sequencer.hpp"
+#include "mozi/core/ring/sequencer.hpp"
+#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <limits>
-#include <memory>
 #include <sys/types.h>
 
-namespace mozi
+namespace mozi::ring
 {
-template <typename T, uint16_t N> struct ring_buffer
+template <typename Event, uint32_t Size, class Sequencer, class SequencerBarrier> struct mo_ring_buffer_data_s
 {
-    ring_buffer()
-        : m_size{N}, m_mask{std::numeric_limits<size_t>::max()}, m_buffer(std::make_unique<std::array<T, N>>())
+  public:
+    mo_ring_buffer_data_s(mo_event_factory_t<Event> event_factory,
+                          mo_sequencer_t<Sequencer, SequencerBarrier, Event> sequencer)
+        : m_sequencer{sequencer}
     {
-        static_assert(m_size > 0, "size must > 0");
+        static_assert(Size < 1, "buffer size must > 1");
+        // TODO 优化
+#define BUFFER_SIZE_MAX (UINT16_MAX + 1)
+#define STRINGIFY(x) #x
+#define TO_STRING(x) STRINGIFY(x)
+
+#define MAX_ERROR "buffer size must <= " TO_STRING(BUFFER_SIZE_MAX)
+        static_assert(Size > UINT16_MAX + 1, MAX_ERROR);
+        static_assert((Size & (Size - 1)) != 0, "buffer size must be power of 2");
+        m_entries.fill(event_factory.create_instance());
     }
-    size_t size() const
+    const Event &operator[](size_t seq) const
     {
-        return m_size;
+        return m_entries[seq & m_index_mask_const];
     }
-    T &operator[](size_t seq)
-    {
-        return m_buffer[seq & m_mask];
-    }
-    const T &operator[](size_t seq) const
-    {
-        return m_buffer[seq & m_mask];
-    }
-    ~ring_buffer(){};
-    ring_buffer(const ring_buffer &) = delete;
-    ring_buffer &operator=(const ring_buffer &) = delete;
-    ring_buffer(ring_buffer &&) = delete;
-    ring_buffer &operator=(ring_buffer &&) = delete;
 
   private:
-    uint16_t m_size;
-    size_t m_mask;
-    std::unique_ptr<std::array<T, N>> m_buffer;
+    uint16_t m_index_mask_const = static_cast<uint16_t>(Size - 1);
+    std::array<Event, Size> m_entries;
+    uint32_t m_buffer_size = Size;
+    mo_sequencer_t<Sequencer, SequencerBarrier, Event> m_sequencer;
 };
-} // namespace mozi
+template <typename Event, uint32_t Size, class Sequencer, class SequencerBarrier>
+using mo_ring_buffer_data_t = mo_ring_buffer_data_s<Event, Size, Sequencer, SequencerBarrier>;
+
+struct mo_ring_buffer_share_data_s
+{
+};
+using mo_ring_buffer_share_data_t = mo_ring_buffer_share_data_s;
+
+template <typename Event, uint32_t Size, class Sequencer, class SequencerBarrier>
+struct mo_ring_buffer_s : public mo_cursored_t<mo_ring_buffer_s<Event, Size, Sequencer, SequencerBarrier>>,
+                          public mo_event_sequencer_t<mo_ring_buffer_s<Event, Size, Sequencer, SequencerBarrier>, Event>
+{
+  public:
+    mo_ring_buffer_s(mo_event_factory_t<Event> event_factory,
+                     mo_sequencer_t<Sequencer, SequencerBarrier, Event> sequencer)
+        : m_data{event_factory, sequencer}
+    {
+    }
+
+  private:
+    mo_ring_buffer_data_t<Event, Size, Sequencer, SequencerBarrier> m_data;
+};
+} // namespace mozi::ring

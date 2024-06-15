@@ -9,9 +9,9 @@
 #include <type_traits>
 namespace mozi::ring
 {
-template <class Sequencer, class SequenceBarrier, template <auto> class DataProvider> class mo_event_poller_c;
+template <class Sequencer, class SequenceBarrier, typename Event> class mo_event_poller_c;
 
-template <class T, class SequenceBarrier, template <auto> class DataProvider>
+template <class T, class SequenceBarrier, typename Event>
 class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
 {
     size_t INITIAL_CURSOR_VALUE = -1;
@@ -104,8 +104,8 @@ class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
     struct mo_event_poller_t_new_poller_provider_gatingsequences<
         U,
         std::enable_if_t<std::is_same_v<decltype(std::declval<U>().new_poller(
-                                            std::declval<mo_data_provider_t<DataProvider>>(), std::declval<Args>()...)),
-                                        mo_event_poller_c<T, SequenceBarrier, DataProvider> *> &&
+                                            std::declval<mo_data_provider_t<T, Event>>(), std::declval<Args>()...)),
+                                        mo_event_poller_c<T, SequenceBarrier, Event> *> &&
                          (... && std::is_same_v<Args, std::shared_ptr<mo_sequence_t>>)>,
         Args...> : std::true_type
     {
@@ -187,6 +187,6 @@ class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
             "std::shared_ptr<mo_sequence_t>...)` method");
     }
 };
-template <class T, class SequenceBarrier, template <auto> class DataProvider>
-using mo_sequencer_t = mo_sequencer_c<T, SequenceBarrier, DataProvider>;
+template <class T, class SequenceBarrier, typename Event>
+using mo_sequencer_t = mo_sequencer_c<T, SequenceBarrier, Event>;
 } // namespace mozi::ring
