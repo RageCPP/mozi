@@ -41,7 +41,17 @@ set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
 FetchContent_Declare(nlohmann_json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_Declare(llhttp URL https://github.com/nodejs/llhttp/archive/refs/tags/release/v9.2.1.tar.gz)
-FetchContent_MakeAvailable(libpqxx jwt nlohmann_json fmt concurrentqueue spdlog llhttp googletest)
+FetchContent_MakeAvailable(
+  libpqxx
+  jwt
+  nlohmann_json
+  fmt
+  concurrentqueue
+  spdlog
+  llhttp
+
+  # googletest
+)
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/libuv")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/cuckoo")
@@ -55,7 +65,6 @@ find_package(libcuckoo REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PCRE2 REQUIRED libpcre2-8)
 pkg_check_modules(R3 REQUIRED r3)
-
 
 # include_directories(${PCRE2_INCLUDE_DIRS})
 link_directories(${PCRE2_LIBRARY_DIRS})
@@ -85,5 +94,6 @@ set(MOZI_INSTALL_BIN_DIR ${CMAKE_INSTALL_BINDIR})
 set(MOZI_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(mozi)
-# add_subdirectory(samples)
+add_subdirectory(samples)
+
 # add_subdirectory(tests)

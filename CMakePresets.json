@@ -50,6 +50,15 @@
       "targets": [
         "mozi"
       ]
+    },
+    {
+      "name": "samples",
+      "description": "Build the samples",
+      "configurePreset": "debug",
+      "jobs": 32,
+      "targets": [
+        "ring"
+      ]
     }
   ],
   "testPresets": [

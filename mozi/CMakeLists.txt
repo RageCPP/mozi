@@ -54,22 +54,31 @@ set(MOZI_HTTP_SOURCES
   http/llhttp/http.c
   http/llhttp/llhttp.c)
 
-set(MOZI_CORE_ring_HEADERS
+set(MOZI_CORE_RING_HEADERS
+  core/ring/abstruct_sequencer.hpp
   core/ring/cursored.hpp
-  core/ring/ring_buffer.hpp
-  core/ring/sequence.hpp
+  core/ring/data_provider.hpp
+  core/ring/event_factory.hpp
+  core/ring/event_poller.hpp
+  core/ring/event_sequencer.hpp
+  core/ring/event_sink.hpp
+  core/ring/event_translator.hpp
   core/ring/gating_sequence.hpp
+  core/ring/processing_sequence_barrier.hpp
+  core/ring/ring_buffer.hpp
+  core/ring/sequence_barrier.hpp
+  core/ring/sequence_group.hpp
+  core/ring/sequence.hpp
   core/ring/sequenced.hpp
   core/ring/sequencer.hpp
-  core/ring/data_provider.hpp
-  core/ring/event_poller.hpp
-  core/ring/abstruct_sequencer.hpp
   core/ring/single_producer_sequencer.hpp
-  core/ring/processing_sequence_barrier.hpp
-  core/ring/utils.hpp)
+  core/ring/utils.hpp
+  core/ring/wait_strategy_yielding.hpp
+  core/ring/wait_strategy.hpp)
 
 set(MOZI_HEADERS
   core/common.hpp
+  core/mail.hpp
   core/mo.hpp)
 
 add_library(${PROJECT_NAME} STATIC
@@ -81,7 +90,7 @@ add_library(${PROJECT_NAME} STATIC
   ${MOZI_HTTP_HEADERS}
   ${MOZI_HTTP_SOURCES}
   ${MOZI_UTILS_HEADERS}
-  ${MOZI_CORE_ring_HEADERS})
+  ${MOZI_CORE_RING_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 
@@ -124,3 +133,25 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<BUILD_INTERFACE:${R3_INCLUDE_DIRS}>
   $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
   $<INSTALL_INTERFACE:include/>)
+
+install(FILES
+  ${MOZI_COMPILE_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/compile")
+install(FILES
+  ${MOZI_NID_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/nid")
+install(FILES
+  ${MOZI_VARIABLES}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")
+install(FILES
+  ${MOZI_HTTP_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
+install(FILES
+  ${MOZI_UTILS_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/utils")
+install(FILES
+  ${MOZI_CORE_RING_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/ring")
+install(FILES
+  ${MOZI_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core")
