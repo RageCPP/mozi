@@ -11,8 +11,8 @@ namespace mozi::ring
 {
 template <class Sequencer, class SequenceBarrier, typename Event> class mo_event_poller_c;
 
-template <class T, class SequenceBarrier, typename Event>
-class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
+template <class SI, class SequenceBarrier, typename Event>
+class mo_sequencer_c : public mo_cursored_t<SI>, public mo_sequenced_t<SI>
 {
     size_t INITIAL_CURSOR_VALUE = -1;
     template <typename U, typename = void> struct void_claim_sequence : std::false_type
@@ -104,8 +104,8 @@ class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
     struct mo_event_poller_t_new_poller_provider_gatingsequences<
         U,
         std::enable_if_t<std::is_same_v<decltype(std::declval<U>().new_poller(
-                                            std::declval<mo_data_provider_t<T, Event>>(), std::declval<Args>()...)),
-                                        mo_event_poller_c<T, SequenceBarrier, Event> *> &&
+                                            std::declval<mo_data_provider_t<SI, Event>>(), std::declval<Args>()...)),
+                                        mo_event_poller_c<SI, SequenceBarrier, Event> *> &&
                          (... && std::is_same_v<Args, std::shared_ptr<mo_sequence_t>>)>,
         Args...> : std::true_type
     {
@@ -114,79 +114,79 @@ class mo_sequencer_c : public mo_cursored_t<T>, public mo_sequenced_t<T>
   public:
     mo_sequencer_c()
     {
-        static_assert(void_claim_sequence<T>::value, "T should have `void claim(size_t)` method");
-        static_assert(bool_is_available_sequence<T>::value, "T should have `bool is_available(size_t)` method");
+        static_assert(void_claim_sequence<SI>::value, "SI should have `void claim(size_t)` method");
+        static_assert(bool_is_available_sequence<SI>::value, "SI should have `bool is_available(size_t)` method");
         static_assert(
             std::disjunction<
-                void_add_gating_sequences_gating_sequences<T, std::shared_ptr<mo_sequence_t>>,
-                void_add_gating_sequences_gating_sequences<T, std::shared_ptr<mo_sequence_t>,
+                void_add_gating_sequences_gating_sequences<SI, std::shared_ptr<mo_sequence_t>>,
+                void_add_gating_sequences_gating_sequences<SI, std::shared_ptr<mo_sequence_t>,
                                                            std::shared_ptr<mo_sequence_t>>,
                 void_add_gating_sequences_gating_sequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 void_add_gating_sequences_gating_sequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>>,
                 void_add_gating_sequences_gating_sequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 void_add_gating_sequences_gating_sequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 void_add_gating_sequences_gating_sequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>>>::value,
-            "T should have `void add_gating_sequences(std::shared_ptr<mo_sequence_t>...)` method");
-        static_assert(bool_remove_gating_sequence_sequence<T>::value,
-                      "T should have `bool remove_gating_sequence(std::shared_ptr<mo_sequence_t>)` method");
+            "SI should have `void add_gating_sequences(std::shared_ptr<mo_sequence_t>...)` method");
+        static_assert(bool_remove_gating_sequence_sequence<SI>::value,
+                      "SI should have `bool remove_gating_sequence(std::shared_ptr<mo_sequence_t>)` method");
         static_assert(
             std::disjunction<
-                mo_sequence_barrier_t_new_barrier_sequences_to_track<T, std::shared_ptr<mo_sequence_t>>,
-                mo_sequence_barrier_t_new_barrier_sequences_to_track<T, std::shared_ptr<mo_sequence_t>,
+                mo_sequence_barrier_t_new_barrier_sequences_to_track<SI, std::shared_ptr<mo_sequence_t>>,
+                mo_sequence_barrier_t_new_barrier_sequences_to_track<SI, std::shared_ptr<mo_sequence_t>,
                                                                      std::shared_ptr<mo_sequence_t>>,
                 mo_sequence_barrier_t_new_barrier_sequences_to_track<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 mo_sequence_barrier_t_new_barrier_sequences_to_track<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>>,
                 mo_sequence_barrier_t_new_barrier_sequences_to_track<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 mo_sequence_barrier_t_new_barrier_sequences_to_track<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 mo_sequence_barrier_t_new_barrier_sequences_to_track<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>>>::value,
-            "T should have `mo_sequence_barrier_t new_barrier(std::shared_ptr<mo_sequence_t>...)` method");
-        static_assert(size_t_minimum_sequence<T>::value, "T should have `size_t minimum_sequence()` method");
-        static_assert(size_t_highest_published_sequence_next_sequence_available_sequence<T>::value,
-                      "T should have `size_t highest_published_sequence(size_t, size_t)` method");
+            "SI should have `mo_sequence_barrier_t new_barrier(std::shared_ptr<mo_sequence_t>...)` method");
+        static_assert(size_t_minimum_sequence<SI>::value, "SI should have `size_t minimum_sequence()` method");
+        static_assert(size_t_highest_published_sequence_next_sequence_available_sequence<SI>::value,
+                      "SI should have `size_t highest_published_sequence(size_t, size_t)` method");
         static_assert(
             std::disjunction<
-                mo_event_poller_t_new_poller_provider_gatingsequences<T, std::shared_ptr<mo_sequence_t>>,
-                mo_event_poller_t_new_poller_provider_gatingsequences<T, std::shared_ptr<mo_sequence_t>,
+                mo_event_poller_t_new_poller_provider_gatingsequences<SI, std::shared_ptr<mo_sequence_t>>,
+                mo_event_poller_t_new_poller_provider_gatingsequences<SI, std::shared_ptr<mo_sequence_t>,
                                                                       std::shared_ptr<mo_sequence_t>>,
                 mo_event_poller_t_new_poller_provider_gatingsequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 mo_event_poller_t_new_poller_provider_gatingsequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>>,
                 mo_event_poller_t_new_poller_provider_gatingsequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 mo_event_poller_t_new_poller_provider_gatingsequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
                 mo_event_poller_t_new_poller_provider_gatingsequences<
-                    T, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
+                    SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
                     std::shared_ptr<mo_sequence_t>>>::value,
-            "T should have `mo_event_poller_t* new_poller(mo_data_provider_t<DataProvider>, "
+            "SI should have `mo_event_poller_t* new_poller(mo_data_provider_t<DataProvider>, "
             "std::shared_ptr<mo_sequence_t>...)` method");
     }
 };
-template <class T, class SequenceBarrier, typename Event>
-using mo_sequencer_t = mo_sequencer_c<T, SequenceBarrier, Event>;
+template <class SI, class SequenceBarrier, typename Event>
+using mo_sequencer_t = mo_sequencer_c<SI, SequenceBarrier, Event>;
 } // namespace mozi::ring

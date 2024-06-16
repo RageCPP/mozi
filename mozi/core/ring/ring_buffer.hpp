@@ -15,11 +15,11 @@
 
 namespace mozi::ring
 {
-template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier> struct mo_ring_buffer_data_s
+template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier, class EventFactory>
+struct mo_ring_buffer_data_s
 {
   public:
-    mo_ring_buffer_data_s(mo_event_factory_t<Event> event_factory,
-                          std::unique_ptr<mo_sequencer_t<Sequencer, SequenceBarrier, Event>> sequencer)
+    mo_ring_buffer_data_s(std::unique_ptr<mo_sequencer_t<Sequencer, SequenceBarrier, Event>> sequencer)
         : m_sequencer{std::move(sequencer)}
     {
         static_assert(Size > 1, "buffer size must > 1");
@@ -31,7 +31,7 @@ template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier>
 #define MAX_ERROR "buffer size must <= " TO_STRING(BUFFER_SIZE_MAX)
         static_assert(Size < UINT16_MAX + 1, MAX_ERROR);
         static_assert((Size & (Size - 1)) == 0, "buffer size must be power of 2");
-        m_entries.fill(event_factory.create_instance());
+        m_entries.fill(mo_event_factory_t<EventFactory, Event>::create_instance());
     }
     const Event &operator[](size_t seq) const
     {
@@ -44,41 +44,40 @@ template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier>
     uint32_t m_buffer_size = Size;
     std::unique_ptr<mo_sequencer_t<Sequencer, SequenceBarrier, Event>> m_sequencer;
 };
-template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier>
-using mo_ring_buffer_data_t = mo_ring_buffer_data_s<Event, Size, Sequencer, SequenceBarrier>;
+template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier, class EventFactory>
+using mo_ring_buffer_data_t = mo_ring_buffer_data_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>;
 
 struct mo_ring_buffer_share_data_s
 {
 };
 using mo_ring_buffer_share_data_t = mo_ring_buffer_share_data_s;
 
-template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier>
-struct mo_ring_buffer_s : public mo_cursored_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier>>,
-                          public mo_event_sequencer_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier>, Event>,
-                          public mo_event_sink_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier>, Event>
+template <typename Event, uint32_t Size, class Sequencer, class SequenceBarrier, class EventFactory>
+struct mo_ring_buffer_s
+    : public mo_cursored_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>>,
+      public mo_event_sequencer_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>, Event>,
+      public mo_event_sink_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>, Event>
 {
-    using mo_ring_buffer_t = mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier>;
+    using mo_ring_buffer_t = mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>;
 
   public:
     static constexpr size_t INITIAL_CURSOR_VALUE = mo_sequence_t::INITIAL_VALUE;
-    mo_ring_buffer_s(mo_event_factory_t<Event> event_factory,
-                     mo_sequencer_t<Sequencer, SequenceBarrier, Event> sequencer)
-        : m_data{event_factory, sequencer}
+    mo_ring_buffer_s(mo_sequencer_t<Sequencer, SequenceBarrier, Event> sequencer) : m_data{sequencer}
     {
     }
 
     // TODO: 完善
     static mo_ring_buffer_t *create_multi_producer(
-        [[maybe_unused]] mo_event_factory_t<Event> event_factory,
+        [[maybe_unused]] mo_event_factory_t<EventFactory, Event> event_factory,
         [[maybe_unused]] mo_sequencer_t<Sequencer, SequenceBarrier, Event> sequencer)
     {
     }
 
     static std::unique_ptr<mo_ring_buffer_t> create_single_producer(
-        mo_event_factory_t<Event> event_factory, mo_wait_strategy_t<Sequencer, SequenceBarrier> wait_strategy)
+        mo_event_factory_t<EventFactory, Event> event_factory,
+        mo_wait_strategy_t<Sequencer, SequenceBarrier> wait_strategy)
     {
-        using single_producer =
-            mo_single_producer_sequencer_t<SequenceBarrier, Event, mo_wait_strategy_t<Sequencer, SequenceBarrier>>;
+        using single_producer = mo_single_producer_sequencer_t<Event, mo_wait_strategy_t<Sequencer, SequenceBarrier>>;
         std::unique_ptr<single_producer> sequencer = std::make_unique<single_producer>(Size, wait_strategy);
         std::unique_ptr<mo_ring_buffer_t> ring_buffer =
             std::make_unique<mo_ring_buffer_t>(event_factory, std::move(sequencer));
@@ -86,6 +85,6 @@ struct mo_ring_buffer_s : public mo_cursored_t<mo_ring_buffer_s<Event, Size, Seq
     }
 
   private:
-    mo_ring_buffer_data_t<Event, Size, Sequencer, SequenceBarrier> m_data;
+    mo_ring_buffer_data_t<Event, Size, Sequencer, SequenceBarrier, EventFactory> m_data;
 };
 } // namespace mozi::ring

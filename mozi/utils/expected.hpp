@@ -35,12 +35,12 @@ struct ExpectedHelper;
 
 /**
  * Unexpected - a helper type used to disambiguate the construction of
- * Expected objects in the error state.
+ * mo_expected_t objects in the error state.
  */
 template <class Error> class Unexpected final
 {
     template <class E> friend class Unexpected;
-    template <class V, class E> friend class Expected;
+    template <class V, class E> friend class mo_expected_t;
     friend struct expected_detail::ExpectedHelper;
 
   public:
@@ -111,11 +111,11 @@ inline bool operator!=(const Unexpected<Error> &lhs, const Unexpected<Error> &rh
 
 /**
  * For constructing an Unexpected object from an error code. Unexpected objects
- * are implicitly convertible to Expected object in the error state. Usage is
+ * are implicitly convertible to mo_expected_t object in the error state. Usage is
  * as follows:
  *
  * enum class MyErrorCode { BAD_ERROR, WORSE_ERROR };
- * Expected<int, MyErrorCode> myAPI() {
+ * mo_expected_t<int, MyErrorCode> myAPI() {
  *   int i = // ...;
  *   return i ? makeExpected<MyErrorCode>(i)
  *            : makeUnexpected(MyErrorCode::BAD_ERROR);
@@ -130,7 +130,7 @@ template <class Error>
 template <class Error> class MO_EXPORT BadExpectedAccess;
 
 /**
- * A common base type for exceptions thrown by Expected when the caller
+ * A common base type for exceptions thrown by mo_expected_t when the caller
  * erroneously requests a value.
  */
 template <> class MO_EXPORT BadExpectedAccess<void> : public std::exception
@@ -152,8 +152,8 @@ template <> class MO_EXPORT BadExpectedAccess<void> : public std::exception
 };
 
 /**
- * An exception type thrown by Expected on catastrophic logic errors, i.e., when
- * the caller tries to access the value within an Expected but when the Expected
+ * An exception type thrown by mo_expected_t on catastrophic logic errors, i.e., when
+ * the caller tries to access the value within an mo_expected_t but when the mo_expected_t
  * instead contains an error.
  */
 template <class Error> class MO_EXPORT BadExpectedAccess : public BadExpectedAccess<void>
@@ -164,7 +164,7 @@ template <class Error> class MO_EXPORT BadExpectedAccess : public BadExpectedAcc
     }
 
     /**
-     * The error code that was held by the Expected object when the caller
+     * The error code that was held by the mo_expected_t object when the caller
      * erroneously requested the value.
      */
     Error &error() &
@@ -191,20 +191,22 @@ template <class Error> class MO_EXPORT BadExpectedAccess : public BadExpectedAcc
 /**
  * Forward declarations
  */
-template <class Value, class Error> class Expected;
+template <class Value, class Error> class mo_expected_t;
 
 template <class Error, class Value>
-[[MO_NODISCARD]] constexpr Expected<typename std::decay<Value>::type, Error> makeExpected(Value &&);
+[[MO_NODISCARD]] constexpr mo_expected_t<typename std::decay<Value>::type, Error> makeExpected(Value &&);
 
 /**
- * Alias for an Expected type's associated value_type
+ * Alias for an mo_expected_t type's associated value_type
  */
-template <class Expected> using ExpectedValueType = typename std::remove_reference<Expected>::type::value_type;
+template <class mo_expected_t>
+using ExpectedValueType = typename std::remove_reference<mo_expected_t>::type::value_type;
 
 /**
- * Alias for an Expected type's associated error_type
+ * Alias for an mo_expected_t type's associated error_type
  */
-template <class Expected> using ExpectedErrorType = typename std::remove_reference<Expected>::type::error_type;
+template <class mo_expected_t>
+using ExpectedErrorType = typename std::remove_reference<mo_expected_t>::type::error_type;
 
 // Details...
 namespace expected_detail
@@ -317,7 +319,7 @@ struct ExpectedStorage
     static constexpr bool uninitializedByException() noexcept
     {
         // Although which_ may temporarily be eEmpty during construction, it
-        // is always either eValue or eError for a fully-constructed Expected.
+        // is always either eValue or eError for a fully-constructed mo_expected_t.
         return false;
     }
     template <class... Vs> void assignValue(Vs &&...vs)
@@ -731,7 +733,7 @@ template <class Value, class Error> struct ExpectedStorage<Value, Error, Storage
 
 namespace expected_detail_ExpectedHelper
 {
-// Tricky hack so that Expected::then can handle lambdas that return void
+// Tricky hack so that mo_expected_t::then can handle lambdas that return void
 template <class T> inline T &&operator,(T &&t, Unit) noexcept
 {
     return static_cast<T &&>(t);
@@ -739,20 +741,20 @@ template <class T> inline T &&operator,(T &&t, Unit) noexcept
 
 struct ExpectedHelper
 {
-    template <typename V, typename E> MO_ERASE static void assume_empty(Expected<V, E> const &x)
+    template <typename V, typename E> MO_ERASE static void assume_empty(mo_expected_t<V, E> const &x)
     {
         compiler_may_unsafely_assume(x.which_ == Which::eEmpty);
     }
 
-    template <class Error, class T> static constexpr Expected<typename std::decay<T>::type, Error> return_(T &&t)
+    template <class Error, class T> static constexpr mo_expected_t<typename std::decay<T>::type, Error> return_(T &&t)
     {
         return mozi::makeExpected<Error>(static_cast<T &&>(t));
     }
 
     template <class Error, class T, class U MO_NEED_TRAILING(expected_detail::IsConvertible<U &&, Error>::value)>
-    static constexpr Expected<T, Error> return_(Expected<T, U> &&t)
+    static constexpr mo_expected_t<T, Error> return_(mo_expected_t<T, U> &&t)
     {
-        return Expected<T, Error>(static_cast<Expected<T, U> &&>(t));
+        return mo_expected_t<T, Error>(static_cast<mo_expected_t<T, U> &&>(t));
     }
 
     template <class This> static typename std::decay<This>::type then_(This &&ex)
@@ -820,7 +822,7 @@ struct ExpectedHelper
                                               std::remove_reference<mozi::Unit &&>>::value>::type * = nullptr,
         class Err =
             decltype(std::declval<No>()(std::declval<This &>().error())) MO_NEED_TRAILING(!std::is_void<Err>::value)>
-    static auto orElse_(This &&ex, No &&no, AndFns &&...fns) -> Expected<V, E>
+    static auto orElse_(This &&ex, No &&no, AndFns &&...fns) -> mo_expected_t<V, E>
     {
         // Note - this basically decays into then_ once the first type (No) is
         // called for the error.
@@ -849,7 +851,7 @@ struct ExpectedHelper
                                              std::remove_reference<mozi::Unit &&>>::value>::type * = nullptr,
         class Err =
             decltype(std::declval<No>()(std::declval<This &>().error())) MO_NEED_TRAILING(!std::is_void<Err>::value)>
-    static auto orElse_(This &&ex, No &&no, AndFns &&...fns) -> Expected<mozi::Unit, E>
+    static auto orElse_(This &&ex, No &&no, AndFns &&...fns) -> mo_expected_t<mozi::Unit, E>
     {
         // Note - this basically decays into then_ once the first type (No) is
         // called for the error.
@@ -872,7 +874,7 @@ struct ExpectedHelper
               class V = ExpectedValueType<This>, class T = ExpectedHelper,
               class Err = decltype(std::declval<No>()(std::declval<This &>().error())) MO_NEED_TRAILING(
                   std::is_void<Err>::value)>
-    static auto orElse_(This &&ex, No &&no, AndFns &&...) -> Expected<V, E>
+    static auto orElse_(This &&ex, No &&no, AndFns &&...) -> mo_expected_t<V, E>
     {
         if (ex.which_ == expected_detail::Which::eValue) [[MO_LIKELY]]
         {
@@ -905,30 +907,30 @@ namespace expected_detail
 } // namespace expected_detail
 
 /**
- * Expected - For holding a value or an error. Useful as an alternative to
+ * mo_expected_t - For holding a value or an error. Useful as an alternative to
  * exceptions, for APIs where throwing on failure would be too expensive.
  *
- * Expected<Value, Error> is a variant over the types Value and Error.
+ * mo_expected_t<Value, Error> is a variant over the types Value and Error.
  *
- * Expected does not offer support for references. Use
- * Expected<std::reference_wrapper<T>, Error> if your API needs to return a
+ * mo_expected_t does not offer support for references. Use
+ * mo_expected_t<std::reference_wrapper<T>, Error> if your API needs to return a
  * reference or an error.
  *
- * Expected offers a continuation-based interface to reduce the boilerplate
- * of checking error codes. The Expected::then member function takes a lambda
- * that is to execute should the Expected object contain a value. The return
- * value of the lambda is wrapped in an Expected and returned. If the lambda is
- * not executed because the Expected contains an error, the error is returned
- * immediately in a new Expected object.
+ * mo_expected_t offers a continuation-based interface to reduce the boilerplate
+ * of checking error codes. The mo_expected_t::then member function takes a lambda
+ * that is to execute should the mo_expected_t object contain a value. The return
+ * value of the lambda is wrapped in an mo_expected_t and returned. If the lambda is
+ * not executed because the mo_expected_t contains an error, the error is returned
+ * immediately in a new mo_expected_t object.
  *
- * Expected<int, Error> funcTheFirst();
- * Expected<std::string, Error> funcTheSecond() {
+ * mo_expected_t<int, Error> funcTheFirst();
+ * mo_expected_t<std::string, Error> funcTheSecond() {
  *   return funcTheFirst().then([](int i) { return std::to_string(i); });
  * }
  *
  * The above line of code could more verbosely written as:
  *
- * Expected<std::string, Error> funcTheSecond() {
+ * mo_expected_t<std::string, Error> funcTheSecond() {
  *   if (auto ex = funcTheFirst()) {
  *     return std::to_string(*ex);
  *   }
@@ -937,7 +939,7 @@ namespace expected_detail
  *
  * Continuations can chain, like:
  *
- * Expected<D, Error> maybeD = someFunc()
+ * mo_expected_t<D, Error> maybeD = someFunc()
  *     .then([](A a){return B(a);})
  *     .then([](B b){return C(b);})
  *     .then([](C c){return D(c);});
@@ -946,34 +948,34 @@ namespace expected_detail
  * front of the chain returns an error, these call chains can be collaped into
  * a single call to .then:
  *
- * Expected<D, Error> maybeD = someFunc()
+ * mo_expected_t<D, Error> maybeD = someFunc()
  *     .then([](A a){return B(a);},
  *           [](B b){return C(b);},
  *           [](C c){return D(c);});
  *
- * The result of .then() is wrapped into Expected< ~, Error > if it isn't
+ * The result of .then() is wrapped into mo_expected_t< ~, Error > if it isn't
  * of that form already. Consider the following code:
  *
- * extern Expected<std::string, Error> readLineFromIO();
- * extern Expected<int, Error> parseInt(std::string);
+ * extern mo_expected_t<std::string, Error> readLineFromIO();
+ * extern mo_expected_t<int, Error> parseInt(std::string);
  * extern int increment(int);
  *
- * Expected<int, Error> x = readLineFromIO().then(parseInt).then(increment);
+ * mo_expected_t<int, Error> x = readLineFromIO().then(parseInt).then(increment);
  *
  * From the code above, we see that .then() works both with functions that
- * return an Expected< ~, Error > (like parseInt) and with ones that return
+ * return an mo_expected_t< ~, Error > (like parseInt) and with ones that return
  * a plain value (like increment). In the case of parseInt, .then() returns
  * the result of parseInt as-is. In the case of increment, it wraps the int
- * that increment returns into an Expected< int, Error >.
+ * that increment returns into an mo_expected_t< int, Error >.
  *
  * Sometimes when using a continuation you would prefer an exception to be
- * thrown for a value-less Expected. For that you can use .thenOrThrow, as
+ * thrown for a value-less mo_expected_t. For that you can use .thenOrThrow, as
  * follows:
  *
  * B b = someFunc()
  *     .thenOrThrow([](A a){return B(a);});
  *
- * The above call to thenOrThrow will invoke the lambda if the Expected returned
+ * The above call to thenOrThrow will invoke the lambda if the mo_expected_t returned
  * by someFunc() contains a value. Otherwise, it will throw an exception of type
  * Unexpected<Error>::BadExpectedAccess. If you prefer it throw an exception of
  * a different type, you can pass a second lambda to thenOrThrow:
@@ -982,25 +984,25 @@ namespace expected_detail
  *     .thenOrThrow([](A a){return B(a);},
  *                  [](Error e) {throw MyException(e);});
  *
- * Like C++17's std::variant, Expected offers the almost-never-empty guarantee;
- * that is, an Expected<Value, Error> almost always contains either a Value or
- * and Error. Partially-formed Expected objects occur when an assignment to
- * an Expected object that would change the type of the contained object (Value-
+ * Like C++17's std::variant, mo_expected_t offers the almost-never-empty guarantee;
+ * that is, an mo_expected_t<Value, Error> almost always contains either a Value or
+ * and Error. Partially-formed mo_expected_t objects occur when an assignment to
+ * an mo_expected_t object that would change the type of the contained object (Value-
  * to-Error or vice versa) throws. Trying to access either the contained value
- * or error object causes Expected to throw folly::BadExpectedAccess.
+ * or error object causes mo_expected_t to throw folly::BadExpectedAccess.
  *
- * Expected models OptionalPointer, so calling 'get_pointer(ex)' will return a
+ * mo_expected_t models OptionalPointer, so calling 'get_pointer(ex)' will return a
  * pointer to nullptr if the 'ex' is in the error state, and a pointer to the
  * value otherwise:
  *
- *  Expected<int, Error> maybeInt = ...;
+ *  mo_expected_t<int, Error> maybeInt = ...;
  *  if (int* v = get_pointer(maybeInt)) {
  *    cout << *v << endl;
  *  }
  */
-template <class Value, class Error> class Expected final : expected_detail::ExpectedStorage<Value, Error>
+template <class Value, class Error> class mo_expected_t final : expected_detail::ExpectedStorage<Value, Error>
 {
-    template <class, class> friend class Expected;
+    template <class, class> friend class mo_expected_t;
     template <class, class, expected_detail::StorageType> friend struct expected_detail::ExpectedStorage;
     friend struct expected_detail::ExpectedHelper;
     using Base = expected_detail::ExpectedStorage<Value, Error>;
@@ -1029,115 +1031,117 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
     using value_type = Value;
     using error_type = Error;
 
-    template <class U> using rebind = Expected<U, Error>;
+    template <class U> using rebind = mo_expected_t<U, Error>;
 
     using promise_type = expected_detail::Promise<Value, Error>;
 
-    static_assert(!std::is_reference<Value>::value, "Expected may not be used with reference types");
-    static_assert(!std::is_abstract<Value>::value, "Expected may not be used with abstract types");
+    static_assert(!std::is_reference<Value>::value, "mo_expected_t may not be used with reference types");
+    static_assert(!std::is_abstract<Value>::value, "mo_expected_t may not be used with abstract types");
 
     /*
      * Constructors
      */
-    template <class B = Base, class = decltype(B{})> Expected() noexcept(noexcept(B{})) : Base{}
+    template <class B = Base, class = decltype(B{})> mo_expected_t() noexcept(noexcept(B{})) : Base{}
     {
     }
-    Expected(const Expected &that) = default;
-    Expected(Expected &&that) = default;
+    mo_expected_t(const mo_expected_t &that) = default;
+    mo_expected_t(mo_expected_t &&that) = default;
 
-    template <class V, class E MO_NEED_TRAILING(!std::is_same<Expected<V, E>, Expected>::value &&
+    template <class V, class E MO_NEED_TRAILING(!std::is_same<mo_expected_t<V, E>, mo_expected_t>::value &&
                                                 std::is_constructible<Value, V &&>::value &&
                                                 std::is_constructible<Error, E &&>::value)>
-    Expected(Expected<V, E> that) : Base{expected_detail::EmptyTag{}}
+    mo_expected_t(mo_expected_t<V, E> that) : Base{expected_detail::EmptyTag{}}
     {
         this->assign(std::move(that));
     }
 
-    // Implicit then-chaining conversion: if `Expected<Value, Error>` can be
-    // constructed from `V`, then we can directly convert `Expected<V, E>` to
-    // `Expected<Value, Error>`.
+    // Implicit then-chaining conversion: if `mo_expected_t<Value, Error>` can be
+    // constructed from `V`, then we can directly convert `mo_expected_t<V, E>` to
+    // `mo_expected_t<Value, Error>`.
     //
     // Specifically, this allows a user-defined conversions of `V` to
-    // `Expected<Value, Error>` to work as desired with range-based iteration
-    // over containers of `Expected<V, E>`.
-    template <class V, class E MO_NEED_TRAILING(!std::is_same<Expected<V, E>, Expected>::value &&
+    // `mo_expected_t<Value, Error>` to work as desired with range-based iteration
+    // over containers of `mo_expected_t<V, E>`.
+    template <class V, class E MO_NEED_TRAILING(!std::is_same<mo_expected_t<V, E>, mo_expected_t>::value &&
                                                 !std::is_constructible<Value, V &&>::value &&
-                                                std::is_constructible<Expected<Value, Error>, V &&>::value &&
+                                                std::is_constructible<mo_expected_t<Value, Error>, V &&>::value &&
                                                 std::is_constructible<Error, E &&>::value)>
-    /* implicit */ Expected(Expected<V, E> that) : Base{expected_detail::EmptyTag{}}
+    /* implicit */ mo_expected_t(mo_expected_t<V, E> that) : Base{expected_detail::EmptyTag{}}
     {
-        this->assign(std::move(that).then([](V &&v) -> Expected<Value, Error> { return Expected<Value, Error>{v}; }));
+        this->assign(
+            std::move(that).then([](V &&v) -> mo_expected_t<Value, Error> { return mo_expected_t<Value, Error>{v}; }));
     }
 
     MO_NEED(std::is_copy_constructible<Value>::value)
-    constexpr /* implicit */ Expected(const Value &val) noexcept(noexcept(Value(val)))
+    constexpr /* implicit */ mo_expected_t(const Value &val) noexcept(noexcept(Value(val)))
         : Base{expected_detail::ValueTag{}, val}
     {
     }
 
     MO_NEED(std::is_move_constructible<Value>::value)
-    constexpr /* implicit */ Expected(Value &&val) noexcept(noexcept(Value(std::move(val))))
+    constexpr /* implicit */ mo_expected_t(Value &&val) noexcept(noexcept(Value(std::move(val))))
         : Base{expected_detail::ValueTag{}, std::move(val)}
     {
     }
 
     template <class T MO_NEED_TRAILING(std::is_convertible<T, Value>::value && !std::is_convertible<T, Error>::value)>
-    constexpr /* implicit */ Expected(T &&val) noexcept(noexcept(Value(static_cast<T &&>(val))))
+    constexpr /* implicit */ mo_expected_t(T &&val) noexcept(noexcept(Value(static_cast<T &&>(val))))
         : Base{expected_detail::ValueTag{}, static_cast<T &&>(val)}
     {
     }
 
     template <class... Ts MO_NEED_TRAILING(std::is_constructible<Value, Ts &&...>::value)>
-    explicit constexpr Expected(std::in_place_t, Ts &&...ts) noexcept(noexcept(Value(std::declval<Ts>()...)))
+    explicit constexpr mo_expected_t(std::in_place_t, Ts &&...ts) noexcept(noexcept(Value(std::declval<Ts>()...)))
         : Base{expected_detail::ValueTag{}, static_cast<Ts &&>(ts)...}
     {
     }
 
     template <class U,
               class... Ts MO_NEED_TRAILING(std::is_constructible<Value, std::initializer_list<U> &, Ts &&...>::value)>
-    explicit constexpr Expected(std::in_place_t, std::initializer_list<U> il,
-                                Ts &&...ts) noexcept(noexcept(Value(std::declval<Ts>()...)))
+    explicit constexpr mo_expected_t(std::in_place_t, std::initializer_list<U> il,
+                                     Ts &&...ts) noexcept(noexcept(Value(std::declval<Ts>()...)))
         : Base{expected_detail::ValueTag{}, il, static_cast<Ts &&>(ts)...}
     {
     }
 
     // If overload resolution selects one of these deleted functions, that
     // means you need to use makeUnexpected
-    /* implicit */ Expected(const Error &) = delete;
-    /* implicit */ Expected(Error &&) = delete;
+    /* implicit */ mo_expected_t(const Error &) = delete;
+    /* implicit */ mo_expected_t(Error &&) = delete;
 
     MO_NEED(std::is_copy_constructible<Error>::value)
-    constexpr Expected(unexpected_t, const Error &err) noexcept(noexcept(Error(err)))
+    constexpr mo_expected_t(unexpected_t, const Error &err) noexcept(noexcept(Error(err)))
         : Base{expected_detail::ErrorTag{}, err}
     {
     }
 
     MO_NEED(std::is_move_constructible<Error>::value)
-    constexpr Expected(unexpected_t, Error &&err) noexcept(noexcept(Error(std::move(err))))
+    constexpr mo_expected_t(unexpected_t, Error &&err) noexcept(noexcept(Error(std::move(err))))
         : Base{expected_detail::ErrorTag{}, std::move(err)}
     {
     }
 
     MO_NEED(std::is_copy_constructible<Error>::value)
-    constexpr /* implicit */ Expected(const Unexpected<Error> &err) noexcept(noexcept(Error(err.error())))
+    constexpr /* implicit */ mo_expected_t(const Unexpected<Error> &err) noexcept(noexcept(Error(err.error())))
         : Base{expected_detail::ErrorTag{}, err.error()}
     {
     }
 
     MO_NEED(std::is_move_constructible<Error>::value)
-    constexpr /* implicit */ Expected(Unexpected<Error> &&err) noexcept(noexcept(Error(std::move(err.error()))))
+    constexpr /* implicit */ mo_expected_t(Unexpected<Error> &&err) noexcept(noexcept(Error(std::move(err.error()))))
         : Base{expected_detail::ErrorTag{}, std::move(err.error())}
     {
     }
 
     template <class OtherError MO_NEED_TRAILING(std::is_convertible<const OtherError &, Error>::value)>
-    constexpr /* implicit */ Expected(const Unexpected<OtherError> &err) noexcept(noexcept(Error(err.error())))
+    constexpr /* implicit */ mo_expected_t(const Unexpected<OtherError> &err) noexcept(noexcept(Error(err.error())))
         : Base{expected_detail::ErrorTag{}, Error(err.error())}
     {
     }
 
     template <class OtherError MO_NEED_TRAILING(std::is_convertible<OtherError &&, Error>::value)>
-    constexpr /* implicit  */ Expected(Unexpected<OtherError> &&err) noexcept(noexcept(Error(std::move(err.error()))))
+    constexpr /* implicit  */ mo_expected_t(Unexpected<OtherError> &&err) noexcept(
+        noexcept(Error(std::move(err.error()))))
         : Base{expected_detail::ErrorTag{}, Error(std::move(err.error()))}
     {
     }
@@ -1145,48 +1149,48 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
     /*
      * Assignment operators
      */
-    Expected &operator=(const Expected &that) = default;
-    Expected &operator=(Expected &&that) = default;
+    mo_expected_t &operator=(const mo_expected_t &that) = default;
+    mo_expected_t &operator=(mo_expected_t &&that) = default;
 
-    template <class V, class E MO_NEED_TRAILING(!std::is_same<Expected<V, E>, Expected>::value &&
+    template <class V, class E MO_NEED_TRAILING(!std::is_same<mo_expected_t<V, E>, mo_expected_t>::value &&
                                                 expected_detail::IsConvertible<V &&, Value>::value &&
                                                 expected_detail::IsConvertible<E &&, Error>::value)>
-    Expected &operator=(Expected<V, E> that)
+    mo_expected_t &operator=(mo_expected_t<V, E> that)
     {
         this->assign(std::move(that));
         return *this;
     }
 
     MO_NEED(expected_detail::IsCopyable<Value>::value)
-    Expected &operator=(const Value &val) noexcept(expected_detail::IsNothrowCopyable<Value>::value)
+    mo_expected_t &operator=(const Value &val) noexcept(expected_detail::IsNothrowCopyable<Value>::value)
     {
         this->assignValue(val);
         return *this;
     }
 
     MO_NEED(expected_detail::IsMovable<Value>::value)
-    Expected &operator=(Value &&val) noexcept(expected_detail::IsNothrowMovable<Value>::value)
+    mo_expected_t &operator=(Value &&val) noexcept(expected_detail::IsNothrowMovable<Value>::value)
     {
         this->assignValue(std::move(val));
         return *this;
     }
 
     template <class T MO_NEED_TRAILING(std::is_convertible<T, Value>::value && !std::is_convertible<T, Error>::value)>
-    Expected &operator=(T &&val)
+    mo_expected_t &operator=(T &&val)
     {
         this->assignValue(static_cast<T &&>(val));
         return *this;
     }
 
     MO_NEED(expected_detail::IsCopyable<Error>::value)
-    Expected &operator=(const Unexpected<Error> &err) noexcept(expected_detail::IsNothrowCopyable<Error>::value)
+    mo_expected_t &operator=(const Unexpected<Error> &err) noexcept(expected_detail::IsNothrowCopyable<Error>::value)
     {
         this->assignError(err.error());
         return *this;
     }
 
     MO_NEED(expected_detail::IsMovable<Error>::value)
-    Expected &operator=(Unexpected<Error> &&err) noexcept(expected_detail::IsNothrowMovable<Error>::value)
+    mo_expected_t &operator=(Unexpected<Error> &&err) noexcept(expected_detail::IsNothrowMovable<Error>::value)
     {
         this->assignError(std::move(err.error()));
         return *this;
@@ -1200,7 +1204,7 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
     /**
      * swap
      */
-    void swap(Expected &that) noexcept(std::is_nothrow_swappable_v<Value> && std::is_nothrow_swappable_v<Error>)
+    void swap(mo_expected_t &that) noexcept(std::is_nothrow_swappable_v<Value> && std::is_nothrow_swappable_v<Error>)
     {
         if (this->uninitializedByException() || that.uninitializedByException())
         {
@@ -1237,18 +1241,18 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
 
     // If overload resolution selects one of these deleted functions, that
     // means you need to use makeUnexpected
-    /* implicit */ Expected &operator=(const Error &) = delete;
-    /* implicit */ Expected &operator=(Error &&) = delete;
+    /* implicit */ mo_expected_t &operator=(const Error &) = delete;
+    /* implicit */ mo_expected_t &operator=(Error &&) = delete;
 
     /**
      * Relational Operators
      */
     template <class Val, class Err>
     friend typename std::enable_if<IsEqualityComparable<Val>::value, bool>::type operator==(
-        const Expected<Val, Err> &lhs, const Expected<Val, Err> &rhs);
+        const mo_expected_t<Val, Err> &lhs, const mo_expected_t<Val, Err> &rhs);
     template <class Val, class Err>
     friend typename std::enable_if<IsLessThanComparable<Val>::value, bool>::type operator<(
-        const Expected<Val, Err> &lhs, const Expected<Val, Err> &rhs);
+        const mo_expected_t<Val, Err> &lhs, const mo_expected_t<Val, Err> &rhs);
 
     /*
      * Accessors
@@ -1495,15 +1499,15 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
     }
 
     // Quasi-private, exposed only for implementing efficient short-circuiting
-    // coroutines on top of `Expected`.  Do NOT use this instead of
-    // `optional<Expected<>>`, for these reasons:
+    // coroutines on top of `mo_expected_t`.  Do NOT use this instead of
+    // `optional<mo_expected_t<>>`, for these reasons:
     //   - This public ctor again become private in the future.
     //   - It is incompatible with upcoming `std::expected`.
-    //   - It violates `folly::Expected`'s almost-never-empty guarantee.
+    //   - It violates `folly::mo_expected_t`'s almost-never-empty guarantee.
     //   - There's no native `empty()` test -- `uninitializedByException()` is
     //     always `false` for some value types, and `!hasValue() && !hasError()`
     //     is less efficient.
-    explicit Expected(expected_detail::EmptyTag tag) noexcept : Base{tag}
+    explicit mo_expected_t(expected_detail::EmptyTag tag) noexcept : Base{tag}
     {
     }
 
@@ -1511,7 +1515,7 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
     friend struct expected_detail::PromiseReturn<Value, Error>;
 
     // for when coroutine promise return-object conversion is eager
-    Expected(expected_detail::EmptyTag tag, Expected *&pointer) noexcept : Base{tag}
+    mo_expected_t(expected_detail::EmptyTag tag, mo_expected_t *&pointer) noexcept : Base{tag}
     {
         pointer = this;
     }
@@ -1564,7 +1568,7 @@ template <class Value, class Error> class Expected final : expected_detail::Expe
 };
 template <class Value, class Error>
 inline typename std::enable_if<IsEqualityComparable<Value>::value, bool>::type operator==(
-    const Expected<Value, Error> &lhs, const Expected<Value, Error> &rhs)
+    const mo_expected_t<Value, Error> &lhs, const mo_expected_t<Value, Error> &rhs)
 {
     if (lhs.uninitializedByException()) [[MO_UNLIKELY]]
     {
@@ -1586,14 +1590,14 @@ inline typename std::enable_if<IsEqualityComparable<Value>::value, bool>::type o
 }
 
 template <class Value, class Error MO_NEED_TRAILING(IsEqualityComparable<Value>::value)>
-inline bool operator!=(const Expected<Value, Error> &lhs, const Expected<Value, Error> &rhs)
+inline bool operator!=(const mo_expected_t<Value, Error> &lhs, const mo_expected_t<Value, Error> &rhs)
 {
     return !(rhs == lhs);
 }
 
 template <class Value, class Error>
 inline typename std::enable_if<IsLessThanComparable<Value>::value, bool>::type operator<(
-    const Expected<Value, Error> &lhs, const Expected<Value, Error> &rhs)
+    const mo_expected_t<Value, Error> &lhs, const mo_expected_t<Value, Error> &rhs)
 {
     if (lhs.uninitializedByException() || rhs.uninitializedByException()) [[MO_UNLIKELY]]
     {
@@ -1611,72 +1615,73 @@ inline typename std::enable_if<IsLessThanComparable<Value>::value, bool>::type o
 }
 
 template <class Value, class Error MO_NEED_TRAILING(IsLessThanComparable<Value>::value)>
-inline bool operator<=(const Expected<Value, Error> &lhs, const Expected<Value, Error> &rhs)
+inline bool operator<=(const mo_expected_t<Value, Error> &lhs, const mo_expected_t<Value, Error> &rhs)
 {
     return !(rhs < lhs);
 }
 
 template <class Value, class Error MO_NEED_TRAILING(IsLessThanComparable<Value>::value)>
-inline bool operator>(const Expected<Value, Error> &lhs, const Expected<Value, Error> &rhs)
+inline bool operator>(const mo_expected_t<Value, Error> &lhs, const mo_expected_t<Value, Error> &rhs)
 {
     return rhs < lhs;
 }
 
 template <class Value, class Error MO_NEED_TRAILING(IsLessThanComparable<Value>::value)>
-inline bool operator>=(const Expected<Value, Error> &lhs, const Expected<Value, Error> &rhs)
+inline bool operator>=(const mo_expected_t<Value, Error> &lhs, const mo_expected_t<Value, Error> &rhs)
 {
     return !(lhs < rhs);
 }
 
 /**
- * swap Expected values
+ * swap mo_expected_t values
  */
 template <class Value, class Error>
-void swap(Expected<Value, Error> &lhs, Expected<Value, Error> &rhs) noexcept(std::is_nothrow_swappable_v<Value> &&
-                                                                             std::is_nothrow_swappable_v<Error>)
+void swap(mo_expected_t<Value, Error> &lhs,
+          mo_expected_t<Value, Error> &rhs) noexcept(std::is_nothrow_swappable_v<Value> &&
+                                                     std::is_nothrow_swappable_v<Error>)
 {
     lhs.swap(rhs);
 }
 
-template <class Value, class Error> const Value *get_pointer(const Expected<Value, Error> &ex) noexcept
+template <class Value, class Error> const Value *get_pointer(const mo_expected_t<Value, Error> &ex) noexcept
 {
     return ex.get_pointer();
 }
 
-template <class Value, class Error> Value *get_pointer(Expected<Value, Error> &ex) noexcept
+template <class Value, class Error> Value *get_pointer(mo_expected_t<Value, Error> &ex) noexcept
 {
     return ex.get_pointer();
 }
 
 /**
- * For constructing an Expected object from a value, with the specified
+ * For constructing an mo_expected_t object from a value, with the specified
  * Error type. Usage is as follows:
  *
  * enum MyErrorCode { BAD_ERROR, WORSE_ERROR };
- * Expected<int, MyErrorCode> myAPI() {
+ * mo_expected_t<int, MyErrorCode> myAPI() {
  *   int i = // ...;
  *   return i ? makeExpected<MyErrorCode>(i) : makeUnexpected(BAD_ERROR);
  * }
  */
 template <class Error, class Value>
-[[MO_NODISCARD]] constexpr Expected<typename std::decay<Value>::type, Error> makeExpected(Value &&val)
+[[MO_NODISCARD]] constexpr mo_expected_t<typename std::decay<Value>::type, Error> makeExpected(Value &&val)
 {
-    return Expected<typename std::decay<Value>::type, Error>{std::in_place, static_cast<Value &&>(val)};
+    return mo_expected_t<typename std::decay<Value>::type, Error>{std::in_place, static_cast<Value &&>(val)};
 }
 
 // Suppress comparability of Optional<T> with T, despite implicit conversion.
-template <class Value, class Error> bool operator==(const Expected<Value, Error> &, const Value &other) = delete;
-template <class Value, class Error> bool operator!=(const Expected<Value, Error> &, const Value &other) = delete;
-template <class Value, class Error> bool operator<(const Expected<Value, Error> &, const Value &other) = delete;
-template <class Value, class Error> bool operator<=(const Expected<Value, Error> &, const Value &other) = delete;
-template <class Value, class Error> bool operator>=(const Expected<Value, Error> &, const Value &other) = delete;
-template <class Value, class Error> bool operator>(const Expected<Value, Error> &, const Value &other) = delete;
-template <class Value, class Error> bool operator==(const Value &other, const Expected<Value, Error> &) = delete;
-template <class Value, class Error> bool operator!=(const Value &other, const Expected<Value, Error> &) = delete;
-template <class Value, class Error> bool operator<(const Value &other, const Expected<Value, Error> &) = delete;
-template <class Value, class Error> bool operator<=(const Value &other, const Expected<Value, Error> &) = delete;
-template <class Value, class Error> bool operator>=(const Value &other, const Expected<Value, Error> &) = delete;
-template <class Value, class Error> bool operator>(const Value &other, const Expected<Value, Error> &) = delete;
+template <class Value, class Error> bool operator==(const mo_expected_t<Value, Error> &, const Value &other) = delete;
+template <class Value, class Error> bool operator!=(const mo_expected_t<Value, Error> &, const Value &other) = delete;
+template <class Value, class Error> bool operator<(const mo_expected_t<Value, Error> &, const Value &other) = delete;
+template <class Value, class Error> bool operator<=(const mo_expected_t<Value, Error> &, const Value &other) = delete;
+template <class Value, class Error> bool operator>=(const mo_expected_t<Value, Error> &, const Value &other) = delete;
+template <class Value, class Error> bool operator>(const mo_expected_t<Value, Error> &, const Value &other) = delete;
+template <class Value, class Error> bool operator==(const Value &other, const mo_expected_t<Value, Error> &) = delete;
+template <class Value, class Error> bool operator!=(const Value &other, const mo_expected_t<Value, Error> &) = delete;
+template <class Value, class Error> bool operator<(const Value &other, const mo_expected_t<Value, Error> &) = delete;
+template <class Value, class Error> bool operator<=(const Value &other, const mo_expected_t<Value, Error> &) = delete;
+template <class Value, class Error> bool operator>=(const Value &other, const mo_expected_t<Value, Error> &) = delete;
+template <class Value, class Error> bool operator>(const Value &other, const mo_expected_t<Value, Error> &) = delete;
 }; // namespace mozi
 #undef MO_NEED
 #undef MO_NEED_TRAILING

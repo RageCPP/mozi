@@ -15,13 +15,14 @@
 #include <vector>
 namespace mozi::ring
 {
-template <class T, class SequenceBarrier, typename Event, class WaitStrategy>
-class mo_abstruct_sequencer_c
-    : public mo_sequencer_t<T, SequenceBarrier, Event>,
-      public std::enable_shared_from_this<mo_abstruct_sequencer_c<T, SequenceBarrier, Event, WaitStrategy>>
+template <class T, typename Event, class WaitStrategy>
+class mo_abstruct_sequencer_c : public mo_sequencer_t<T, mo_processing_sequence_barrier_t<T, WaitStrategy>, Event>,
+                                public std::enable_shared_from_this<mo_abstruct_sequencer_c<T, Event, WaitStrategy>>
 {
   public:
-    mo_abstruct_sequencer_c(uint16_t buffer_size, mo_wait_strategy_t<WaitStrategy, SequenceBarrier> wait_strategy)
+    mo_abstruct_sequencer_c(
+        uint16_t buffer_size,
+        mo_wait_strategy_t<WaitStrategy, mo_processing_sequence_barrier_t<T, WaitStrategy>> wait_strategy)
         : m_buffer_size(buffer_size), m_wait_strategy(wait_strategy),
           m_gating_sequences(std::make_shared<std::vector<std::shared_ptr<mo_sequence_t>>>())
     {
@@ -62,15 +63,14 @@ class mo_abstruct_sequencer_c
         {
             gating_sequence.set_sequences(sequences_to_track...);
         }
-        return mo_processing_sequence_barrier_t<T, Event, WaitStrategy>(this, gating_sequence, &m_wait_strategy,
-                                                                        &m_cursor);
+        return mo_processing_sequence_barrier_t<T, WaitStrategy>(this, gating_sequence, &m_wait_strategy, &m_cursor);
     }
 
     // clang-format off
     template <typename... Args>
     inline decltype(auto) new_poller(mo_data_provider_t<T, Event> data_provider, Args... gating_sequences) noexcept
     {
-        return mo_event_poller_t<T, SequenceBarrier, Event>::new_poller(
+        return mo_event_poller_t<T, mo_processing_sequence_barrier_t<T, WaitStrategy>, Event>::new_poller(
             data_provider,
             this,
             {},
@@ -95,8 +95,9 @@ class mo_abstruct_sequencer_c
 
   protected:
     uint16_t m_buffer_size;
-    mo_wait_strategy_t<WaitStrategy, SequenceBarrier> m_wait_strategy;
-    mo_sequence_t m_cursor{mo_sequencer_t<T, SequenceBarrier, Event>::INITIAL_CURSOR_VALUE};
+    mo_wait_strategy_t<WaitStrategy, mo_processing_sequence_barrier_t<T, WaitStrategy>> m_wait_strategy;
+    mo_sequence_t m_cursor{
+        mo_sequencer_t<T, mo_processing_sequence_barrier_t<T, WaitStrategy>, Event>::INITIAL_CURSOR_VALUE};
     std::atomic<std::shared_ptr<std::vector<std::shared_ptr<mo_sequence_t>>>> m_gating_sequences;
 };
 } // namespace mozi::ring

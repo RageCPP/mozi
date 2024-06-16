@@ -4,7 +4,7 @@
 
 namespace mozi::ring
 {
-template <class T> class mo_sequence_barrier_c
+template <class I> class mo_sequence_barrier_c
 {
     template <typename U, typename = void> struct size_t_wait_for_sequence : std::false_type
     {
@@ -63,13 +63,13 @@ template <class T> class mo_sequence_barrier_c
   public:
     mo_sequence_barrier_c()
     {
-        static_assert(size_t_wait_for_sequence<T>::value, "T should have `size_t wait_for(size_t)` method");
-        static_assert(size_t_cursor<T>::value, "T should have `size_t cursor()` method");
-        static_assert(bool_is_alerted<T>::value, "T should have `bool is_alerted()` method");
-        static_assert(void_alert<T>::value, "T should have `void alert()` method");
-        static_assert(void_clear_alert<T>::value, "T should have `void clear_alert()` method");
-        static_assert(void_check_alert<T>::value, "T should have `void check_alert()` method");
+        static_assert(size_t_wait_for_sequence<I>::value, "I should have `size_t wait_for(size_t)` method");
+        static_assert(size_t_cursor<I>::value, "I should have `size_t cursor()` method");
+        static_assert(bool_is_alerted<I>::value, "I should have `bool is_alerted()` method");
+        static_assert(void_alert<I>::value, "I should have `void alert()` method");
+        static_assert(void_clear_alert<I>::value, "I should have `void clear_alert()` method");
+        static_assert(void_check_alert<I>::value, "I should have `void check_alert()` method");
     }
 };
-template <class T> using mo_sequence_barrier_t = mo_sequence_barrier_c<T>;
+template <class I> using mo_sequence_barrier_t = mo_sequence_barrier_c<I>;
 } // namespace mozi::ring

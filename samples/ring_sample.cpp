@@ -1,19 +1,18 @@
 #include "fmt/core.h"
-#include "mozi/core/ring/sequence.hpp"
-#include "mozi/core/ring/single_producer_sequencer.hpp"
+#include "mozi/core/mail_cache.hpp"
+#include "mozi/core/ring/yield_wait_strategy.hpp"
 #include <chrono>
 #include <cstdint>
 #include <random>
 #include <tuple>
 #include <vector>
-
-int random_1_to_5()
-{
-    std::random_device rd;                         // 用于获取随机数种子
-    std::mt19937 gen(rd());                        // 使用Mersenne Twister算法生成随机数
-    std::uniform_int_distribution<> distrib(1, 5); // 定义一个均匀分布的随机数生成器，范围是1到5
-    return distrib(gen);
-}
+// int random_1_to_5()
+// {
+//     std::random_device rd;                         // 用于获取随机数种子
+//     std::mt19937 gen(rd());                        // 使用Mersenne Twister算法生成随机数
+//     std::uniform_int_distribution<> distrib(1, 5); // 定义一个均匀分布的随机数生成器，范围是1到5
+//     return distrib(gen);
+// }
 
 // int main()
 // {
@@ -148,16 +147,26 @@ int random_1_to_5()
 //     return 0;
 // }
 
+// int main()
+// {
+// mozi::ring::mo_sequence_t sequence;
+// sequence.set(1);
+// fmt::println("{}", sequence.value());
+// sequence.compare_and_set(1, 2);
+// fmt::println("{}", sequence.value());
+// sequence.compare_and_set(1, 2);
+// fmt::println("{}", sequence.value());
+
+// [[maybe_unused]] mozi::ring::mo_single_producer_sequencer_t sequencer{};
+// sequencer.publish(1, 1);
+// }
+
 int main()
 {
-    // mozi::ring::mo_sequence_t sequence;
-    // sequence.set(1);
-    // fmt::println("{}", sequence.value());
-    // sequence.compare_and_set(1, 2);
-    // fmt::println("{}", sequence.value());
-    // sequence.compare_and_set(1, 2);
-    // fmt::println("{}", sequence.value());
-
-    // [[maybe_unused]] mozi::ring::mo_single_producer_sequencer_t sequencer{};
-    // sequencer.publish(1, 1);
+    [[maybe_unused]] auto info = mozi::mail::mo_mail_factory_t::create_instance();
+    [[maybe_unused]] auto yield_wait_strategy = mozi::ring::yield_wait_strategy_t<uint8_t>{};
+}
+template <typename T, typename U> auto add(T t, U u)
+{
+    return t + u;
 }

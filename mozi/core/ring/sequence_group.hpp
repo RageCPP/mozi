@@ -8,8 +8,8 @@ namespace mozi::ring::sequence_group
 {
 namespace
 {
-template <typename T>
-size_t count_matching([[MO_UNUSED]] const std::vector<T> &gating_sequences, [[MO_UNUSED]] const T &sequence) {};
+// template <typename T>
+// size_t count_matching([[MO_UNUSED]] const std::vector<T> &gating_sequences, [[MO_UNUSED]] const T &sequence) {};
 };
 template <class Sequencer, typename... Args> void add_sequences(Sequencer &sequences, Args... sequence)
 {
