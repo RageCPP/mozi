@@ -3,7 +3,7 @@
 #include <type_traits>
 namespace mozi::ring
 {
-template <class T> class mo_cursored_c
+template <class SI> class mo_cursored_c
 {
     template <typename U, typename = void> struct size_t_cursor : std::false_type
     {
@@ -17,8 +17,8 @@ template <class T> class mo_cursored_c
   public:
     mo_cursored_c()
     {
-        static_assert(size_t_cursor<T>::value, "T should have `size_t cursor()` method");
+        static_assert(size_t_cursor<SI>::value, "SI should have `size_t cursor()` method");
     }
 };
-template <class T> using mo_cursored_t = mo_cursored_c<T>;
+template <class SI> using mo_cursored_t = mo_cursored_c<SI>;
 } // namespace mozi::ring

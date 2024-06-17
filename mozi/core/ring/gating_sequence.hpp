@@ -1,7 +1,6 @@
 #pragma once
 #include "mozi/compile/attributes_cpp.hpp"
 #include "mozi/core/ring/sequence.hpp"
-#include "spdlog/spdlog.h"
 #include <cstddef>
 namespace mozi::ring
 {

@@ -1,38 +1,55 @@
 #pragma once
 
 #include "mozi/core/ring/gating_sequence.hpp"
-#include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequence_barrier.hpp"
-#include "mozi/core/ring/wait_strategy.hpp"
 #include <atomic>
 namespace mozi::ring
 {
-template <class SI, class WaitStrategy>
-class mo_processing_sequence_barrier_c
-    : public mo_sequence_barrier_t<mo_processing_sequence_barrier_c<SI, WaitStrategy>>
+struct mo_alerted_true
 {
-    using mo__wait_strategy = mo_wait_strategy_t<WaitStrategy, mo_processing_sequence_barrier_c>;
-
+};
+// TODO: alerted 读取与写入是否可以使用内存顺序优化 避免不必要的内存同步
+template <class SI>
+class mo_processing_sequence_barrier_c : public mo_sequence_barrier_t<mo_processing_sequence_barrier_c<SI>>
+{
   public:
     // clang-format off
     mo_processing_sequence_barrier_c(
       SI *sequencer,
-      mo_gating_sequence_t dependent_sequence,
-      mo__wait_strategy *wait_strategy,
-      mo_sequence_t *cursor_sequence) noexcept
+      mo_gating_sequence_t dependent_sequence) noexcept
         : m_sequencer(sequencer),
-          m_dependent_sequence(dependent_sequence),
-          m_wait_strategy(wait_strategy),
-          m_cursor_sequence(cursor_sequence) {}
+          m_dependent_sequence(dependent_sequence) {}
     // clang-format on
+
+    size_t wait_for(size_t sequence) noexcept
+    {
+        return m_sequencer->highest_published_sequence(sequence, m_dependent_sequence.value());
+    }
+
+    void clear_alert() noexcept
+    {
+        alerted.store(false);
+    }
+
+    void alert() noexcept
+    {
+        alerted.store(true);
+    }
+
+    bool is_alerted() const noexcept
+    {
+        return alerted.load();
+    }
+
+    size_t cursor() const noexcept
+    {
+        return m_dependent_sequence.value();
+    }
 
   private:
     SI *m_sequencer;
     mo_gating_sequence_t m_dependent_sequence;
     std::atomic<bool> alerted = false;
-    mo__wait_strategy *m_wait_strategy;
-    mo_sequence_t *m_cursor_sequence;
 };
-template <class SI, class WaitStrategy>
-using mo_processing_sequence_barrier_t = mo_processing_sequence_barrier_c<SI, WaitStrategy>;
+template <class SI> using mo_processing_sequence_barrier_t = mo_processing_sequence_barrier_c<SI>;
 } // namespace mozi::ring

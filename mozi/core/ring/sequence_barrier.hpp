@@ -51,15 +51,6 @@ template <class I> class mo_sequence_barrier_c
     {
     };
 
-    template <typename U, typename = void> struct void_check_alert : std::false_type
-    {
-    };
-    template <typename U>
-    struct void_check_alert<U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>().check_alert()), void>>>
-        : std::true_type
-    {
-    };
-
   public:
     mo_sequence_barrier_c()
     {
@@ -68,7 +59,6 @@ template <class I> class mo_sequence_barrier_c
         static_assert(bool_is_alerted<I>::value, "I should have `bool is_alerted()` method");
         static_assert(void_alert<I>::value, "I should have `void alert()` method");
         static_assert(void_clear_alert<I>::value, "I should have `void clear_alert()` method");
-        static_assert(void_check_alert<I>::value, "I should have `void check_alert()` method");
     }
 };
 template <class I> using mo_sequence_barrier_t = mo_sequence_barrier_c<I>;

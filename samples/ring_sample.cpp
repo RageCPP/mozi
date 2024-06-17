@@ -1,5 +1,9 @@
 #include "fmt/core.h"
+#include "mozi/core/mail.hpp"
 #include "mozi/core/mail_cache.hpp"
+#include "mozi/core/ring/processing_sequence_barrier.hpp"
+#include "mozi/core/ring/ring_buffer.hpp"
+#include "mozi/core/ring/single_producer_sequencer.hpp"
 #include "mozi/core/ring/yield_wait_strategy.hpp"
 #include <chrono>
 #include <cstdint>
@@ -163,10 +167,17 @@
 
 int main()
 {
-    [[maybe_unused]] auto info = mozi::mail::mo_mail_factory_t::create_instance();
-    [[maybe_unused]] auto yield_wait_strategy = mozi::ring::yield_wait_strategy_t<uint8_t>{};
+    using mail = mozi::mail::mo_mail_t;
+    using mail_factory = mozi::mail::mo_mail_factory_t;
+    using producer = mozi::ring::mo_single_producer_sequencer_t<mail>;
+    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 1024, producer, mail_factory>;
+    [[maybe_unused]] auto info = mail_factory::create_instance();
+    producer single_producer{1024};
+    [[maybe_unused]] auto barrier =
+        mozi::ring::mo_processing_sequence_barrier_t<producer>{&single_producer, mozi::ring::mo_gating_sequence_t{}};
+    [[maybe_unused]] auto ring = ring_buffer::create_single_producer();
 }
-template <typename T, typename U> auto add(T t, U u)
-{
-    return t + u;
-}
+// template <typename T, typename U> auto add(T t, U u)
+// {
+//     return t + u;
+// }

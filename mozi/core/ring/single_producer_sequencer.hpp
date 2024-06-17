@@ -14,17 +14,12 @@ namespace mozi::ring
 // next_value: 下一个要写入的序列
 // cache_value: 用户已经处理的最小序列
 // cursor: 生产者最后写入的序列
-template <typename Event, class WaitStrategy>
-class mo_single_producer_sequencer_c
-    : public mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<Event, WaitStrategy>, Event, WaitStrategy>
+template <typename Event>
+class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<Event>, Event>
 {
   public:
-    mo_single_producer_sequencer_c(
-        uint16_t buffer_size,
-        mo_wait_strategy_t<WaitStrategy, mo_processing_sequence_barrier_t<mo_single_producer_sequencer_c, WaitStrategy>>
-            wait_strategy)
-        : mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<Event, WaitStrategy>, Event, WaitStrategy>(
-              buffer_size, wait_strategy)
+    mo_single_producer_sequencer_c(uint32_t buffer_size)
+        : mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<Event>, Event>(buffer_size)
     {
     }
     bool has_available_capacity(uint16_t required_capacity)
@@ -93,10 +88,10 @@ class mo_single_producer_sequencer_c
     {
         m_next_value = sequence;
     }
-    void publish(const size_t sequence) noexcept
+    void publish([[maybe_unused]] const size_t sequence) noexcept
     {
-        this->m_cursor.set(sequence);
-        this->m_wait_strategy.signal_all_when_blocking();
+        //     this->m_cursor.set(sequence);
+        //     this->m_wait_strategy.signal_all_when_blocking();
     }
     void publish([[MO_UNUSED]] const size_t lo, const size_t hi) noexcept
     {
@@ -112,20 +107,20 @@ class mo_single_producer_sequencer_c
         return available_sequence;
     }
     // clang-format off
-    std::string to_string() noexcept
-    {
-        std::string gating_sequences{};
-        for (auto &sequence : *this->m_gating_sequences.load())
-        {
-            gating_sequences += sequence->to_string() + ", ";
-        }
-        return std::string{"mo_single_producer_sequencer_c{"} + 
-               "buffer_size=" + std::to_string(this->m_buffer_size) +
-               ", wait_strategy=" + this->m_wait_strategy.to_string() +
-               ", cursor=" + this->m_cursor.to_string() +
-               ", gating_sequences=" + gating_sequences + 
-               "}";
-    }
+    // std::string to_string() noexcept
+    // {
+    //     std::string gating_sequences{};
+    //     for (auto &sequence : *this->m_gating_sequences.load())
+    //     {
+    //         gating_sequences += sequence->to_string() + ", ";
+    //     }
+    //     return std::string{"mo_single_producer_sequencer_c{"} + 
+    //            "buffer_size=" + std::to_string(this->m_buffer_size) +
+    //            ", wait_strategy=" + this->m_wait_strategy.to_string() +
+    //            ", cursor=" + this->m_cursor.to_string() +
+    //            ", gating_sequences=" + gating_sequences + 
+    //            "}";
+    // }
     // clang-format on
 
   private:
@@ -162,6 +157,5 @@ class mo_single_producer_sequencer_c
     }
 #endif
 };
-template <typename Event, class WaitStrategy>
-using mo_single_producer_sequencer_t = mo_single_producer_sequencer_c<Event, WaitStrategy>;
+template <typename Event> using mo_single_producer_sequencer_t = mo_single_producer_sequencer_c<Event>;
 } // namespace mozi::ring

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "mozi/core/ring/cursored.hpp"
 #include "mozi/core/ring/data_provider.hpp"
 #include "mozi/core/ring/gating_sequence.hpp"
 #include "mozi/core/ring/sequence.hpp"
@@ -9,7 +10,10 @@
 
 namespace mozi::ring
 {
-template <class Sequencer, class SequenceBarrier, typename Event> class mo_event_poller_c
+template <class SI, typename Event>
+class mo_event_poller_c : public mo_data_provider_t<SI, Event>,
+                          public mo_cursored_t<SI>,
+                          public mo_sequencer_t<SI, Event>
 {
   public:
     enum class mo_poll_flags
@@ -72,7 +76,7 @@ template <class Sequencer, class SequenceBarrier, typename Event> class mo_event
             size_t processed_sequence = current_sequence;
             while (next_sequence <= available_sequence && process_next_event)
             {
-                E event = m_data_provider->get(next_sequence);
+                E event = (*m_sequencer)[next_sequence];
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
                 next_sequence++;
@@ -92,9 +96,8 @@ template <class Sequencer, class SequenceBarrier, typename Event> class mo_event
 
     // clang-format off
     template < typename... Args>
-    static std::unique_ptr<mo_event_poller_c<Sequencer, SequenceBarrier, Event>> new_poller(
-        mo_data_provider_t<Sequencer, Event> data_provider, 
-        mo_sequencer_c<Sequencer, SequenceBarrier, Event> *sequencer,
+    static std::unique_ptr<mo_event_poller_c<SI,  Event>> new_poller(
+        SI* sequencer,
         mo_sequence_t&& sequence, 
         mo_sequence_t& cursor_sequence, 
         Args... gating_sequences)
@@ -115,8 +118,7 @@ template <class Sequencer, class SequenceBarrier, typename Event> class mo_event
         {
             gating_sequence.set_sequences(gating_sequences...);
         }
-        return std::make_unique<mo_event_poller_c<Sequencer, SequenceBarrier, Event>>(
-            data_provider, sequencer, sequence, gating_sequence);
+        return std::make_unique<mo_event_poller_c<SI,  Event>>(sequencer, sequence, gating_sequence);
     }
     // clang-format on
 
@@ -127,22 +129,17 @@ template <class Sequencer, class SequenceBarrier, typename Event> class mo_event
 
   private:
     // clang-format off
-    explicit mo_event_poller_c(mo_data_provider_t<Sequencer, Event>* data_provider,
-                               mo_sequencer_c<Sequencer, SequenceBarrier, Event> *sequencer,
+    explicit mo_event_poller_c(SI *sequencer,
                                mo_sequence_t* sequence,
                                mo_gating_sequence_t* gating_sequence)
-        : m_data_provider(data_provider),
-          m_sequencer(sequencer),
+        : m_sequencer(sequencer),
           m_sequence(sequence),
-          m_gating_sequence(gating_sequence)
-    {}
+          m_gating_sequence(gating_sequence) {}
     // clang-format on
 
-    mo_data_provider_t<Sequencer, Event> *m_data_provider;
-    mo_sequencer_c<Sequencer, SequenceBarrier, Event> *m_sequencer;
+    SI *m_sequencer;
     mo_sequence_t *m_sequence;
     mo_gating_sequence_t *m_gating_sequence;
 };
-template <class Sequencer, class SequenceBarrier, typename Event>
-using mo_event_poller_t = mo_event_poller_c<Sequencer, SequenceBarrier, Event>;
+template <class SI, typename Event> using mo_event_poller_t = mo_event_poller_c<SI, Event>;
 } // namespace mozi::ring
