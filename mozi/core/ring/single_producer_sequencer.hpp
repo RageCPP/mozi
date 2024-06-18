@@ -22,11 +22,11 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
         : mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<Event>, Event>(buffer_size)
     {
     }
-    bool has_available_capacity(uint16_t required_capacity)
+    bool has_available_capacity(uint16_t required_capacity) noexcept
     {
         return has_available_capacity(required_capacity, false);
     }
-    bool has_available_capacity(uint16_t required_capacity, bool do_store)
+    bool has_available_capacity(uint16_t required_capacity, bool do_store) noexcept
     {
         size_t next_value = m_next_value;
         size_t wrap_point = (m_next_value + required_capacity) - this->m_buffer_size;
@@ -48,7 +48,7 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
         return true;
     }
     /// 获取生产者下一个要写入的序列
-    std::optional<size_t> next()
+    std::optional<size_t> next() noexcept
     {
         return next(1);
     }

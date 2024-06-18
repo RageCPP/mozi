@@ -10,15 +10,17 @@
 
 namespace mozi::ring
 {
-template <class SI, typename Event> class mo_event_poller_c : public mo_cursored_t<SI>, public mo_sequencer_t<SI, Event>
-//    public mo_data_provider_t<SI, Event>,
+template <class DataProvider, class SI, typename Event>
+class mo_event_poller_c : public mo_sequencer_t<SI, Event>, public mo_data_provider_t<DataProvider, Event>
 {
   public:
     // clang-format off
-    explicit mo_event_poller_c(SI *sequencer,
+    explicit mo_event_poller_c(DataProvider *data_provider,
+                               SI *sequencer,
                                std::unique_ptr<mo_sequence_t> sequence,
                                mo_gating_sequence_t gating_sequence)
-        : m_sequencer(sequencer),
+        : m_data_provider(data_provider),
+          m_sequencer(sequencer),
           m_sequence(std::move(sequence)),
           m_gating_sequence(gating_sequence) {}
     // clang-format on
@@ -83,7 +85,7 @@ template <class SI, typename Event> class mo_event_poller_c : public mo_cursored
             size_t processed_sequence = current_sequence;
             while (next_sequence <= available_sequence && process_next_event)
             {
-                E event = (*m_sequencer)[next_sequence];
+                E event = (*m_data_provider)[next_sequence];
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
                 next_sequence++;
@@ -107,9 +109,11 @@ template <class SI, typename Event> class mo_event_poller_c : public mo_cursored
     }
 
   private:
+    DataProvider *m_data_provider;
     SI *m_sequencer;
     std::unique_ptr<mo_sequence_t> m_sequence;
     mo_gating_sequence_t m_gating_sequence;
 };
-template <class SI, typename Event> using mo_event_poller_t = mo_event_poller_c<SI, Event>;
+template <class DataProvider, class SI, typename Event>
+using mo_event_poller_t = mo_event_poller_c<DataProvider, SI, Event>;
 } // namespace mozi::ring

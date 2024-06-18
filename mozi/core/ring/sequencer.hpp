@@ -6,7 +6,7 @@
 #include <type_traits>
 namespace mozi::ring
 {
-template <class Sequencer, typename Event> class mo_event_poller_c;
+template <class DataProvider, class Sequencer, typename Event> class mo_event_poller_c;
 
 template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<SI>, public mo_sequenced_t<SI>
 {

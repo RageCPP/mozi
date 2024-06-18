@@ -176,6 +176,7 @@ int main()
     producer single_producer{1024};
     [[maybe_unused]] auto ring = ring_buffer::create_single_producer();
     [[maybe_unused]] auto barrier = ring->create_barrier();
+    [[maybe_unused]] auto poller = ring->create_poller();
     return 0;
 }
 // template <typename T, typename U> auto add(T t, U u)

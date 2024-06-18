@@ -31,6 +31,10 @@ template <class I, typename Event> class mo_event_sink_c
     {
     };
 
+    template <typename U, typename = void> struct bool_try_publish_event_translator : std::false_type
+    {
+    };
+
   public:
     mo_event_sink_c()
     {

@@ -62,15 +62,12 @@ using mo_ring_buffer_share_data_t = mo_ring_buffer_share_data_s;
 // clang-format off
 template <typename Event, uint32_t Size, class Sequencer, class EventFactory>
 class mo_ring_buffer_s : 
-  public mo_sequence_barrier_factory_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, mo_processing_sequence_barrier_t<Sequencer>>,
-  public mo_poller_factory_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, mo_event_poller_t<Sequencer, Event>>
+    public mo_sequence_barrier_factory_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, mo_processing_sequence_barrier_t<Sequencer>>,
+    public mo_poller_factory_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, mo_event_poller_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, Sequencer, Event>>,
+    public mo_event_sequencer_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, Event>,
+    public mo_event_sink_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, Event>
 // clang-format on
-
 // : public mo_cursored_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>>,
-//   public mo_event_sequencer_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>,
-//                               Event>,
-//   public mo_event_sink_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>,
-//                          Event>
 {
     using mo_ring_buffer_t = mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>;
 
@@ -86,6 +83,38 @@ class mo_ring_buffer_s :
     //     [[maybe_unused]] mo_sequencer_t<Sequencer, Event> sequencer)
     // {
     // }
+    const Event &operator[](size_t seq) const
+    {
+        return this->m_data[seq];
+    }
+    std::optional<size_t> next() noexcept
+    {
+        return this->m_data.m_sequencer->next();
+    }
+    std::optional<size_t> next(uint16_t n) noexcept
+    {
+        return this->m_data.m_sequencer->next(n);
+    }
+    size_t remaining_capacity() noexcept
+    {
+        return this->m_data.m_sequencer->remaining_capacity();
+    }
+    bool has_available_capacity(uint16_t required_capacity) noexcept
+    {
+        return this->m_data.m_sequencer->has_available_capacity(required_capacity);
+    }
+    inline uint32_t buffer_size() const noexcept
+    {
+        return this->m_data.m_buffer_size;
+    }
+    void publish(size_t sequence) noexcept
+    {
+        this->m_data.m_sequencer->publish(sequence);
+    }
+    void publish(size_t lo, size_t hi) noexcept
+    {
+        this->m_data.m_sequencer->publish(lo, hi);
+    }
 
     using single_producer = mo_single_producer_sequencer_t<Event>;
     static std::unique_ptr<mo_ring_buffer_t> create_single_producer()
@@ -114,8 +143,9 @@ class mo_ring_buffer_s :
     }
 
     template <typename... Sequences>
-    [[MO_NODISCARD]] inline std::unique_ptr<mo_event_poller_t<Sequencer, Event>> create_poller(
-        const Sequences &...gating_sequences)
+    [[MO_NODISCARD]] inline std::unique_ptr<
+        mo_event_poller_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, Sequencer, Event>>
+    create_poller(const Sequences &...gating_sequences)
     {
         mo_gating_sequence_t gating_sequence{};
         auto len = sizeof...(Sequences);
@@ -127,8 +157,9 @@ class mo_ring_buffer_s :
         {
             gating_sequence.set_sequences(gating_sequences...);
         }
-        return std::make_unique<mo_event_poller_t<Sequencer, Event>>(
-            this->m_data.m_sequencer.get(), std::make_unique<mo_sequence_t>(), gating_sequence);
+        return std::make_unique<
+            mo_event_poller_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, Sequencer, Event>>(
+            this, this->m_data.m_sequencer.get(), std::make_unique<mo_sequence_t>(), gating_sequence);
     }
 
   private:
