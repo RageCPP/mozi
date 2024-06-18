@@ -1,10 +1,14 @@
 #pragma once
 
-#include "mozi/core/ring/cursored.hpp"
+#include "mozi/compile/attributes_cpp.hpp"
 #include "mozi/core/ring/event_factory.hpp"
+#include "mozi/core/ring/event_poller.hpp"
 #include "mozi/core/ring/event_sequencer.hpp"
 #include "mozi/core/ring/event_sink.hpp"
+#include "mozi/core/ring/poller_factory.hpp"
+#include "mozi/core/ring/processing_sequence_barrier.hpp"
 #include "mozi/core/ring/sequence.hpp"
+#include "mozi/core/ring/sequence_barrier_factory.hpp"
 #include "mozi/core/ring/sequencer.hpp"
 #include "mozi/core/ring/single_producer_sequencer.hpp"
 #include <array>
@@ -15,7 +19,11 @@
 
 namespace mozi::ring
 {
-template <typename Event, uint32_t Size, class Sequencer, class EventFactory> struct mo_ring_buffer_data_s
+
+template <typename Event, uint32_t Size, class Sequencer, class EventFactory> class mo_ring_buffer_s;
+
+template <typename Event, uint32_t Size, class Sequencer, class EventFactory>
+struct mo_ring_buffer_data_s : public mo_event_factory_t<EventFactory, Event>, public mo_sequencer_t<Sequencer, Event>
 {
   public:
     mo_ring_buffer_data_s(std::unique_ptr<Sequencer> sequencer) : m_sequencer{std::move(sequencer)}
@@ -35,6 +43,7 @@ template <typename Event, uint32_t Size, class Sequencer, class EventFactory> st
     {
         return m_entries[seq & m_index_mask_const];
     }
+    friend class mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>;
 
   private:
     uint16_t m_index_mask_const = static_cast<uint16_t>(Size - 1);
@@ -50,7 +59,13 @@ struct mo_ring_buffer_share_data_s
 };
 using mo_ring_buffer_share_data_t = mo_ring_buffer_share_data_s;
 
-template <typename Event, uint32_t Size, class Sequencer, class EventFactory> struct mo_ring_buffer_s
+// clang-format off
+template <typename Event, uint32_t Size, class Sequencer, class EventFactory>
+class mo_ring_buffer_s : 
+  public mo_sequence_barrier_factory_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, mo_processing_sequence_barrier_t<Sequencer>>,
+  public mo_poller_factory_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory>, mo_event_poller_t<Sequencer, Event>>
+// clang-format on
+
 // : public mo_cursored_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>>,
 //   public mo_event_sequencer_t<mo_ring_buffer_s<Event, Size, Sequencer, SequenceBarrier, EventFactory>,
 //                               Event>,
@@ -78,6 +93,42 @@ template <typename Event, uint32_t Size, class Sequencer, class EventFactory> st
         std::unique_ptr<single_producer> sequencer = std::make_unique<single_producer>(Size);
         std::unique_ptr<mo_ring_buffer_t> ring_buffer = std::make_unique<mo_ring_buffer_t>(std::move(sequencer));
         return ring_buffer;
+    }
+
+    template <typename... Sequences>
+    [[MO_NODISCARD]] inline std::unique_ptr<mo_processing_sequence_barrier_t<Sequencer>> create_barrier(
+        const Sequences &...sequences_to_track) noexcept
+    {
+        mo_gating_sequence_t gating_sequence{};
+        auto len = sizeof...(Sequences);
+        if (len == 0)
+        {
+            gating_sequence.set_minimum(this->m_data.m_sequencer->cursor());
+        }
+        else
+        {
+            gating_sequence.set_sequences(sequences_to_track...);
+        }
+        return std::make_unique<mo_processing_sequence_barrier_t<Sequencer>>(this->m_data.m_sequencer.get(),
+                                                                             gating_sequence);
+    }
+
+    template <typename... Sequences>
+    [[MO_NODISCARD]] inline std::unique_ptr<mo_event_poller_t<Sequencer, Event>> create_poller(
+        const Sequences &...gating_sequences)
+    {
+        mo_gating_sequence_t gating_sequence{};
+        auto len = sizeof...(Sequences);
+        if (len == 0)
+        {
+            gating_sequence.set_minimum(this->m_data.m_sequencer->cursor());
+        }
+        else
+        {
+            gating_sequence.set_sequences(gating_sequences...);
+        }
+        return std::make_unique<mo_event_poller_t<Sequencer, Event>>(
+            this->m_data.m_sequencer.get(), std::make_unique<mo_sequence_t>(), gating_sequence);
     }
 
   private:

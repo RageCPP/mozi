@@ -76,35 +76,6 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
     {
     };
 
-    // template <typename U, typename = void, typename... Args>
-    // struct mo_sequence_barrier_t_new_barrier_sequences_to_track : std::false_type
-    // {
-    // };
-    // template <typename U, typename... Args>
-    // struct mo_sequence_barrier_t_new_barrier_sequences_to_track<
-    //     U,
-    //     std::enable_if_t<std::is_same_v<decltype(std::declval<U>().new_barrier(std::declval<Args>()...)),
-    //                                     mo_sequence_barrier_t<SequenceBarrier>> &&
-    //                      (... && std::is_same_v<Args, std::shared_ptr<mo_sequence_t>>)>,
-    //     Args...> : std::true_type
-    // {
-    // };
-
-    // template <typename U, typename = void, typename... Args>
-    // struct mo_event_poller_t_new_poller_provider_gatingsequences : std::false_type
-    // {
-    // };
-    // template <typename U, typename... Args>
-    // struct mo_event_poller_t_new_poller_provider_gatingsequences<
-    //     U,
-    //     std::enable_if_t<std::is_same_v<decltype(std::declval<U>().new_poller(
-    //                                         std::declval<mo_data_provider_t<SI, Event>>(), std::declval<Args>()...)),
-    //                                     mo_event_poller_c<SI, Event> *> &&
-    //                      (... && std::is_same_v<Args, std::shared_ptr<mo_sequence_t>>)>,
-    //     Args...> : std::true_type
-    // {
-    // };
-
   public:
     size_t INITIAL_CURSOR_VALUE = -1;
     mo_sequencer_c()
@@ -132,56 +103,10 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
 
         static_assert(bool_remove_gating_sequence_sequence<SI>::value,
                       "SI should have `bool remove_gating_sequence(const mo_sequence_t &)` method");
-        // static_assert(
-        //     std::disjunction<
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<SI, std::shared_ptr<mo_sequence_t>>,
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<SI, std::shared_ptr<mo_sequence_t>,
-        //                                                              std::shared_ptr<mo_sequence_t>>,
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>>,
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>>,
-        //         mo_sequence_barrier_t_new_barrier_sequences_to_track<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>>::value,
-        //     "SI should have `mo_sequence_barrier_t new_barrier(std::shared_ptr<mo_sequence_t>...)` method");
+
         static_assert(size_t_minimum_sequence<SI>::value, "SI should have `size_t minimum_sequence()` method");
         static_assert(size_t_highest_published_sequence_next_sequence_available_sequence<SI>::value,
                       "SI should have `size_t highest_published_sequence(size_t, size_t)` method");
-        // static_assert(
-        //     std::disjunction<
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<SI, std::shared_ptr<mo_sequence_t>>,
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<SI, std::shared_ptr<mo_sequence_t>,
-        //                                                               std::shared_ptr<mo_sequence_t>>,
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>>,
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>,
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>>,
-        //         mo_event_poller_t_new_poller_provider_gatingsequences<
-        //             SI, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>,
-        //             std::shared_ptr<mo_sequence_t>, std::shared_ptr<mo_sequence_t>>>::value,
-        //     "SI should have `mo_event_poller_t* new_poller(mo_data_provider_t<DataProvider>, "
-        //     "std::shared_ptr<mo_sequence_t>...)` method");
     }
 };
 template <class SI, typename Event> using mo_sequencer_t = mo_sequencer_c<SI, Event>;

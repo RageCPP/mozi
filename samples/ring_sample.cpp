@@ -7,6 +7,7 @@
 #include "mozi/core/ring/yield_wait_strategy.hpp"
 #include <chrono>
 #include <cstdint>
+#include <cstdio>
 #include <random>
 #include <tuple>
 #include <vector>
@@ -173,9 +174,9 @@ int main()
     using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 1024, producer, mail_factory>;
     [[maybe_unused]] auto info = mail_factory::create_instance();
     producer single_producer{1024};
-    [[maybe_unused]] auto barrier =
-        mozi::ring::mo_processing_sequence_barrier_t<producer>{&single_producer, mozi::ring::mo_gating_sequence_t{}};
     [[maybe_unused]] auto ring = ring_buffer::create_single_producer();
+    [[maybe_unused]] auto barrier = ring->create_barrier();
+    return 0;
 }
 // template <typename T, typename U> auto add(T t, U u)
 // {

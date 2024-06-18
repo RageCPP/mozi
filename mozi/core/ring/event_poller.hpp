@@ -10,12 +10,19 @@
 
 namespace mozi::ring
 {
-template <class SI, typename Event>
-class mo_event_poller_c : public mo_data_provider_t<SI, Event>,
-                          public mo_cursored_t<SI>,
-                          public mo_sequencer_t<SI, Event>
+template <class SI, typename Event> class mo_event_poller_c : public mo_cursored_t<SI>, public mo_sequencer_t<SI, Event>
+//    public mo_data_provider_t<SI, Event>,
 {
   public:
+    // clang-format off
+    explicit mo_event_poller_c(SI *sequencer,
+                               std::unique_ptr<mo_sequence_t> sequence,
+                               mo_gating_sequence_t gating_sequence)
+        : m_sequencer(sequencer),
+          m_sequence(std::move(sequence)),
+          m_gating_sequence(gating_sequence) {}
+    // clang-format on
+
     enum class mo_poll_flags
     {
         /**
@@ -68,7 +75,7 @@ class mo_event_poller_c : public mo_data_provider_t<SI, Event>,
     {
         size_t current_sequence = m_sequence->value();
         size_t next_sequence = current_sequence + 1;
-        size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_gating_sequence->value());
+        size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_gating_sequence.value());
 
         if (next_sequence <= available_sequence)
         {
@@ -94,52 +101,15 @@ class mo_event_poller_c : public mo_data_provider_t<SI, Event>,
         }
     }
 
-    // clang-format off
-    template < typename... Args>
-    static std::unique_ptr<mo_event_poller_c<SI,  Event>> new_poller(
-        SI* sequencer,
-        mo_sequence_t&& sequence, 
-        mo_sequence_t& cursor_sequence, 
-        Args... gating_sequences)
-    {
-        mo_gating_sequence_t gating_sequence{};
-        // 在编译时检查每个Args都是mo_sequence_t
-        static_assert((std::is_same_v<Args, mo_sequence_t> && ...), "All Args must be of type mo_sequence_t");
-        auto len = sizeof...(Args);
-        if (len == 0)
-        {
-            gating_sequence.set_minimum(cursor_sequence.value());
-        }
-        else if (len == 1)
-        {
-            gating_sequence.set_minimum(std::get<0>(std::make_tuple(gating_sequences...)).value());
-        }
-        else
-        {
-            gating_sequence.set_sequences(gating_sequences...);
-        }
-        return std::make_unique<mo_event_poller_c<SI,  Event>>(sequencer, sequence, gating_sequence);
-    }
-    // clang-format on
-
     mo_sequence_t *sequence()
     {
-        return m_sequence;
+        return m_sequence.get();
     }
 
   private:
-    // clang-format off
-    explicit mo_event_poller_c(SI *sequencer,
-                               mo_sequence_t* sequence,
-                               mo_gating_sequence_t* gating_sequence)
-        : m_sequencer(sequencer),
-          m_sequence(sequence),
-          m_gating_sequence(gating_sequence) {}
-    // clang-format on
-
     SI *m_sequencer;
-    mo_sequence_t *m_sequence;
-    mo_gating_sequence_t *m_gating_sequence;
+    std::unique_ptr<mo_sequence_t> m_sequence;
+    mo_gating_sequence_t m_gating_sequence;
 };
 template <class SI, typename Event> using mo_event_poller_t = mo_event_poller_c<SI, Event>;
 } // namespace mozi::ring

@@ -42,22 +42,6 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
         // TODO: 优化这里是否不使用强一致顺序
         return mozi::ring::utils::minimum_sequence(*m_gating_sequences.load(), m_cursor.value());
     }
-    // template <typename... Args> inline auto new_barrier(Args... sequences_to_track) noexcept
-    // {
-    //     static_assert((std::is_same_v<Args, mo_sequence_t> && ...), "All Args must be of type mo_sequence_t");
-    //     mo_gating_sequence_t gating_sequence{};
-    //     auto len = sizeof...(Args);
-    //     if (len == 0)
-    //     {
-    //         gating_sequence.set_minimum(m_cursor.value());
-    //     }
-    //     else
-    //     {
-    //         gating_sequence.set_sequences(sequences_to_track...);
-    //     }
-    //     return mo_processing_sequence_barrier_t<SI, WaitStrategy>(this, gating_sequence, &m_wait_strategy,
-    //     &m_cursor);
-    // }
 
     // clang-format off
     // template <typename... Args>

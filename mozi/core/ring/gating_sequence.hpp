@@ -19,9 +19,9 @@ struct mo_gating_sequence_c
         mo_value = mo_value * static_cast<size_t>(!mini_n) + new_value * static_cast<size_t>(mini_n);
         return mini_n;
     }
-    template <typename... Args> void set_sequences(Args... sequences) noexcept
+    template <typename... Sequences> void set_sequences(const Sequences &...sequences) noexcept
     {
-        static_assert((std::is_same_v<Args, mo_sequence_t> && ...), "All Args must be of type mo_sequence_t");
+        static_assert((std::is_same_v<Sequences, mo_sequence_t> && ...), "All Args must be of type mo_sequence_t");
         auto list = std::make_tuple(sequences...);
         std::apply([this](auto &&...args) { ((this->set_minimum(args.value())), ...); }, list);
     }
