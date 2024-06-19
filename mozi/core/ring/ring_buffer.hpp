@@ -115,18 +115,31 @@ class mo_ring_buffer_s :
     {
         this->m_data.m_sequencer->publish(lo, hi);
     }
-    void publish_event([[maybe_unused]] const Translator &translator) noexcept
+    void publish_event(const Translator &translator) noexcept
     {
-        // const size_t sequence = this->m_data.m_sequencer->next();
+        const std::optional<size_t> sequence = this->next();
+        if (sequence.has_value()) [[MO_LIKELY]]
+        {
+            this->translate_and_publish(translator, sequence.value());
+        }
     }
-    // void publish_events([[maybe_unused]] const std::vector<Event> &translators) noexcept
-    // {
-    // }
-    // bool try_publish_events([[maybe_unused]] const std::vector<Event> &translators) noexcept
-    // {
-    //     return false;
-    // }
-
+    template <typename... Translators> bool publish_events(const Translators &...translators) noexcept
+    {
+        auto need_size = sizeof...(Translators);
+#ifdef DEBUG
+        if (need_size == 0 || need_size > buffer_size()) [[MO_UNLIKELY]]
+        {
+            return false;
+        };
+#endif
+        const std::optional<size_t> sequence = this->next(need_size);
+        if (!(sequence.has_value())) [[MO_LIKELY]]
+        {
+            return false;
+        }
+        translate_and_publish_events(translators..., sequence.value(), need_size);
+        return true;
+    }
     using single_producer = mo_single_producer_sequencer_t<Event>;
     static std::unique_ptr<mo_ring_buffer_t> create_single_producer()
     {
@@ -175,6 +188,29 @@ class mo_ring_buffer_s :
 
   private:
     mo_ring_buffer_data_t<Event, Size, Sequencer, EventFactory, Translator> m_data;
+
+    void translate_and_publish(const Translator &translator, size_t sequence) noexcept
+    {
+        translator((*this)[sequence], sequence);
+        this->publish(sequence);
+    }
+
+    // clang-format off
+    template <typename... Translators>
+    void translate_and_publish_events(const Translators &...translators, size_t final_sequence, uint16_t batch_size) noexcept
+    {
+        auto translators_tuple = std::make_tuple(translators...);
+        auto intial_sequence = final_sequence - (batch_size - 1);
+        const auto batch_start = 0;
+        const auto batch_end = batch_size - 1;
+        for (auto i = batch_start; i <= batch_end; i += 1)
+        {
+            auto &translator = std::get<i>(translators_tuple);
+            translator((*this)[intial_sequence + i], intial_sequence + i);
+        }
+        this->publish(intial_sequence, final_sequence);
+    }
+    // clang-format on
 };
 template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>
 using mo_ring_buffer_t = mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>;

@@ -62,12 +62,25 @@ using mo_mail_factory_t = mo_mail_factory_c;
 class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_translator_c, mo_mail_t>
 {
   public:
-    void operator()(mo_mail_t &event, [[maybe_unused]] size_t sequence, uint8_t *bytes, void *data,
-                    void (*f)(uint8_t *buffer, void *data)) noexcept
+    void operator()(mo_mail_t &event, [[maybe_unused]] size_t sequence) noexcept
     {
         event.update_mail(bytes, data);
         event.set_behavior(f);
     }
+    mo_mail_translator_c(uint8_t *bytes, void *data, void (*f)(uint8_t *buffer, void *data)) noexcept
+        : bytes(bytes), data(data), f(f)
+    {
+    }
+    mo_mail_translator_c &operator=(const mo_mail_translator_c &) = delete;
+    mo_mail_translator_c &operator=(mo_mail_translator_c &&) = delete;
+    mo_mail_translator_c(const mo_mail_translator_c &) = delete;
+    mo_mail_translator_c(mo_mail_translator_c &&) = delete;
+    ~mo_mail_translator_c() = default;
+
+  private:
+    uint8_t *bytes;
+    void *data;
+    void (*f)(uint8_t *buffer, void *data);
 };
 using mo_mail_translator_t = mo_mail_translator_c;
 } // namespace mozi::mail
