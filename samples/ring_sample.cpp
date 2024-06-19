@@ -1,6 +1,5 @@
 #include "fmt/core.h"
 #include "mozi/core/mail.hpp"
-#include "mozi/core/mail_cache.hpp"
 #include "mozi/core/ring/processing_sequence_barrier.hpp"
 #include "mozi/core/ring/ring_buffer.hpp"
 #include "mozi/core/ring/single_producer_sequencer.hpp"
@@ -170,13 +169,15 @@ int main()
 {
     using mail = mozi::mail::mo_mail_t;
     using mail_factory = mozi::mail::mo_mail_factory_t;
+    using mo_mail_translator = mozi::mail::mo_mail_translator_t;
     using producer = mozi::ring::mo_single_producer_sequencer_t<mail>;
-    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 1024, producer, mail_factory>;
+    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 1024, producer, mail_factory, mo_mail_translator>;
     [[maybe_unused]] auto info = mail_factory::create_instance();
     producer single_producer{1024};
-    [[maybe_unused]] auto ring = ring_buffer::create_single_producer();
+    auto ring = ring_buffer::create_single_producer();
     [[maybe_unused]] auto barrier = ring->create_barrier();
     [[maybe_unused]] auto poller = ring->create_poller();
+    // ring->publish_event(info);
     return 0;
 }
 // template <typename T, typename U> auto add(T t, U u)
