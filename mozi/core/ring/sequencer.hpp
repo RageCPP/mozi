@@ -3,7 +3,9 @@
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequenced.hpp"
 #include <cstddef>
+#include <memory>
 #include <type_traits>
+// clang-format off
 namespace mozi::ring
 {
 template <class DataProvider, class Sequencer, typename Event> class mo_event_poller_c;
@@ -30,17 +32,17 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
     {
     };
 
-    template <typename U, typename = void, typename... Args>
+    template <typename U, typename = void, typename... Sequences>
     struct void_add_gating_sequences_gating_sequences : std::false_type
     {
     };
-    template <typename U, typename... Args>
+    template <typename U, typename... Sequences>
     struct void_add_gating_sequences_gating_sequences<
         U,
         std::enable_if_t<
-            std::is_same_v<decltype(std::declval<U>().add_gating_sequences(std::declval<const Args &>()...)), void> &&
-            (... && std::is_same_v<Args, mo_sequence_t>)>,
-        Args...> : std::true_type
+            std::is_same_v<decltype(std::declval<U>().add_gating_sequences(std::declval<Sequences &>()...)), void> &&
+            (... && std::is_same_v<Sequences, std::shared_ptr<mo_sequence_t>>)>,
+        Sequences...> : std::true_type
     {
     };
 
@@ -49,9 +51,9 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
     };
     template <typename U>
     struct bool_remove_gating_sequence_sequence<
-        U, std::enable_if_t<std::is_same_v<
-               decltype(std::declval<U>().remove_gating_sequence(std::declval<const mo_sequence_t &>())), bool>>>
-        : std::true_type
+        U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>().remove_gating_sequence(
+                                               std::declval<std::shared_ptr<mo_sequence_t> &>())),
+                                           bool>>> : std::true_type
     {
     };
 
@@ -82,7 +84,7 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
     {
         static_assert(void_claim_sequence<SI>::value, "SI should have `void claim(size_t)` method");
         static_assert(bool_is_available_sequence<SI>::value, "SI should have `bool is_available(size_t)` method");
-        using sequence_ref = const mo_sequence_t &;
+        using sequence_ref = std::shared_ptr<mo_sequence_t>&;
         // TODO 改为宏替换 类似
         // #define SEQUENCE_REF_1 sequence_ref
         // #define SEQUENCE_REF_2 SEQUENCE_REF_1, SEQUENCE_REF_1
@@ -93,8 +95,7 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
                 void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref>,
                 void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref, sequence_ref>,
                 void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref, sequence_ref, sequence_ref>,
-                void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref, sequence_ref, sequence_ref,
-                                                           sequence_ref>,
+                void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref, sequence_ref, sequence_ref, sequence_ref>,
                 void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref, sequence_ref, sequence_ref,
                                                            sequence_ref, sequence_ref>,
                 void_add_gating_sequences_gating_sequences<SI, sequence_ref, sequence_ref, sequence_ref, sequence_ref,
@@ -102,7 +103,7 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
             "SI should have `void add_gating_sequences(sequence_ref...)` method");
 
         static_assert(bool_remove_gating_sequence_sequence<SI>::value,
-                      "SI should have `bool remove_gating_sequence(const mo_sequence_t &)` method");
+                      "SI should have `bool remove_gating_sequence(std::shared_ptr<mo_sequence_t> &)` method");
 
         static_assert(size_t_minimum_sequence<SI>::value, "SI should have `size_t minimum_sequence()` method");
         static_assert(size_t_highest_published_sequence_next_sequence_available_sequence<SI>::value,
@@ -111,3 +112,4 @@ template <class SI, typename Event> class mo_sequencer_c : public mo_cursored_t<
 };
 template <class SI, typename Event> using mo_sequencer_t = mo_sequencer_c<SI, Event>;
 } // namespace mozi::ring
+// clang-format on

@@ -21,11 +21,11 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     }
     template <typename... Sequences> inline void add_gating_sequences(Sequences... sequences) noexcept
     {
-        static_assert((std::is_same_v<Sequences, std::shared_ptr<mo_sequence_t>> && ...),
+        static_assert((std::is_same_v<Sequences, std::shared_ptr<mo_sequence_t> &> && ...),
                       "All Args must be of type  std::atomic<std::shared_ptr<mo_sequence_t>>");
         mozi::ring::sequence_group::add_sequences(this, std::move(sequences)...);
     }
-    inline bool remove_gating_sequence(const mo_sequence_t &sequence) noexcept
+    inline bool remove_gating_sequence(std::shared_ptr<mo_sequence_t> &sequence) noexcept
     {
         return mozi::ring::sequence_group::remove_sequences(*this, sequence);
     }
