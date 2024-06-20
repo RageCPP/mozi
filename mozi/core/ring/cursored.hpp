@@ -1,6 +1,7 @@
 #pragma once
 #include <cstddef>
 #include <type_traits>
+// clang-format off
 namespace mozi::ring
 {
 template <class SI> class mo_cursored_c
@@ -9,8 +10,9 @@ template <class SI> class mo_cursored_c
     {
     };
     template <typename U>
-    struct size_t_cursor<U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>().cursor()), size_t>>>
-        : std::true_type
+    struct size_t_cursor<U, std::enable_if_t<
+        std::is_same_v<decltype(std::declval<U>().cursor()), size_t>>
+    > : std::true_type
     {
     };
 
@@ -22,3 +24,4 @@ template <class SI> class mo_cursored_c
 };
 template <class SI> using mo_cursored_t = mo_cursored_c<SI>;
 } // namespace mozi::ring
+// clang-format on

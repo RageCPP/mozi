@@ -4,6 +4,7 @@
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 
 namespace mozi::ring
@@ -42,4 +43,5 @@ class mo_sequence_c
     std::atomic<size_t> mo_value;
 };
 using mo_sequence_t = mo_sequence_c;
+using mo_arc_sequence_t = std::shared_ptr<mo_sequence_t>;
 } // namespace mozi::ring
