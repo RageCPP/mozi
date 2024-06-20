@@ -19,19 +19,11 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
           m_gating_sequences(std::make_shared<std::vector<std::shared_ptr<mo_sequence_t>>>())
     {
     }
-    inline size_t cursor() const noexcept
+    template <typename... Sequences> inline void add_gating_sequences(Sequences... sequences) noexcept
     {
-        return m_cursor.value();
-    }
-    inline uint32_t buffer_size() const noexcept
-    {
-        return m_buffer_size;
-    }
-    template <typename... Args> inline void add_gating_sequences(Args... sequence) noexcept
-    {
-        static_assert((std::is_same_v<Args, std::shared_ptr<mo_sequence_t>> && ...),
+        static_assert((std::is_same_v<Sequences, std::shared_ptr<mo_sequence_t>> && ...),
                       "All Args must be of type  std::atomic<std::shared_ptr<mo_sequence_t>>");
-        mozi::ring::sequence_group::add_sequences(*this, sequence...);
+        mozi::ring::sequence_group::add_sequences(this, std::move(sequences)...);
     }
     inline bool remove_gating_sequence(const mo_sequence_t &sequence) noexcept
     {
@@ -72,6 +64,11 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     //                             "}";
     // }
     // clang-format on
+    template <class Sequencer, typename... Sequences>
+    friend void mozi::ring::sequence_group::add_sequences(Sequencer *sequencer, Sequences &&...sequences);
+    template <class Sequencer>
+    friend bool mozi::ring::sequence_group::remove_sequences(Sequencer *sequences,
+                                                             std::shared_ptr<mo_sequence_t> &sequence);
 
   private:
     uint32_t m_buffer_size;

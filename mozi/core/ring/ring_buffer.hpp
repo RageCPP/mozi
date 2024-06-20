@@ -140,6 +140,11 @@ class mo_ring_buffer_s :
         translate_and_publish_events(translators..., sequence.value(), need_size);
         return true;
     }
+    template <typename... Sequences> inline void add_gating_sequences([[maybe_unused]] Sequences... sequences) noexcept
+    {
+        // TODO: 功能
+    }
+
     using single_producer = mo_single_producer_sequencer_t<Event>;
     static std::unique_ptr<mo_ring_buffer_t> create_single_producer()
     {

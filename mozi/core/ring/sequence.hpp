@@ -16,7 +16,7 @@ class mo_sequence_c
     }
     [[MO_NODISCARD]] size_t value() const noexcept
     {
-        return mo_value;
+        return mo_value.load();
     }
     [[MO_NODISCARD]] std::string to_string() const noexcept
     {
