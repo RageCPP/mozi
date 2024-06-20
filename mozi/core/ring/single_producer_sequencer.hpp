@@ -29,18 +29,20 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     bool has_available_capacity(uint16_t required_capacity, bool do_store) noexcept
     {
         size_t next_value = m_next_value;
-        size_t wrap_point = (m_next_value + required_capacity) - this->m_buffer_size;
-        size_t cached_gating_sequence = m_cache_value;
-        // cached_gating_sequence > next_value 应该只有 size_t 溢出的情况下可能出现
-        if (wrap_point > cached_gating_sequence || cached_gating_sequence > next_value)
+        // wrap_point: new ring buffer safe start point
+        size_t wrap_point = next_value + required_capacity - this->buffer_size();
+        size_t cached_gating_sequence = m_cached_value;
+        // wrap_point > cached_gating_sequence: new minimum safe start point is greater than the not consumed sequence
+        // cached_gating_sequence > next_value: size_t sequence overflow, loopback
+        if (wrap_point > cached_gating_sequence || cached_gating_sequence > next_value) [[MO_UNLIKELY]]
         {
-            if (do_store)
-            {
-                this->m_cursor.set(next_value);
-            }
-            size_t min_sequence = mozi::ring::utils::minimum_sequence(this->m_gating_sequences, next_value);
-            m_cache_value = min_sequence;
-            if (wrap_point > min_sequence)
+            this->set_cursor(static_cast<uint16_t>(do_store) * next_value +
+                             static_cast<uint16_t>(!do_store) * this->cursor());
+
+            size_t min_sequence = mozi::ring::utils::minimum_sequence(this->gating_sequences(), next_value);
+            m_cached_value = min_sequence;
+
+            if (wrap_point > min_sequence) [[MO_UNLIKELY]]
             {
                 return false;
             }
@@ -65,22 +67,17 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
             throw std::invalid_argument("n must be greater than 0 and less than buffer_size");
         }
 #endif
-        size_t next_value = m_next_value;
-        size_t next_sequence = next_value + n;
-        size_t wrap_point = next_sequence - this->m_buffer_size;
-        size_t cached_gating_sequence = m_cache_value;
-        if (wrap_point > cached_gating_sequence || cached_gating_sequence > next_value)
+        if (!has_available_capacity(n, true)) [[MO_UNLIKELY]]
         {
-            this->m_cursor.set(next_value);
             return std::nullopt;
         }
-        m_next_value = next_sequence;
+        auto next_sequence = this->m_next_value += n;
         return next_sequence;
     }
     size_t remaining_capacity() noexcept
     {
         size_t next_value = m_next_value;
-        size_t consumed = mozi::ring::utils::minimum_sequence(this->m_gating_sequences, next_value);
+        size_t consumed = mozi::ring::utils::minimum_sequence(*this->gating_sequences(), next_value);
         size_t produced = next_value;
         return this->m_buffer_size - (produced - consumed);
     }
@@ -88,10 +85,11 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     {
         m_next_value = sequence;
     }
-    void publish([[maybe_unused]] const size_t sequence) noexcept
+    void publish(const size_t sequence) noexcept
     {
-        //     this->m_cursor.set(sequence);
-        //     this->m_wait_strategy.signal_all_when_blocking();
+        this->set_cursor(sequence);
+        // not use signal_all_when_blocking, beacuse use yield strategy, not block
+        // this->m_wait_strategy.signal_all_when_blocking();
     }
     void publish([[MO_UNUSED]] const size_t lo, const size_t hi) noexcept
     {
@@ -99,13 +97,14 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     }
     bool is_available(const size_t sequence) noexcept
     {
-        size_t current_sequence = this->m_cursor.value();
-        return (sequence <= current_sequence) && (sequence > current_sequence - this->m_buffer_size);
+        size_t last_publish_sequence = this->cursor();
+        return (sequence <= last_publish_sequence) && (sequence > (last_publish_sequence - this->m_buffer_size));
     }
     size_t highest_published_sequence([[MO_UNUSED]] const size_t lower_bound, const size_t available_sequence)
     {
         return available_sequence;
     }
+
     // clang-format off
     // std::string to_string() noexcept
     // {
@@ -133,7 +132,7 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     }
     size_t m_next_value = mo_sequence_t::INITIAL_VALUE;
     // 用户已经处理的最小序列
-    size_t m_cache_value = mo_sequence_t::INITIAL_VALUE;
+    size_t m_cached_value = mo_sequence_t::INITIAL_VALUE;
 
 #ifdef DEBUG
     class mo__producer_thread_assertion

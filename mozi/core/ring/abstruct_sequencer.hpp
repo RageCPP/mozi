@@ -40,7 +40,23 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     inline size_t minimum_sequence() const noexcept
     {
         // TODO: 优化这里是否不使用强一致顺序
-        return mozi::ring::utils::minimum_sequence(*m_gating_sequences.load(), m_cursor.value());
+        return mozi::ring::utils::minimum_sequence(m_gating_sequences.load().get(), m_cursor.value());
+    }
+    inline void set_cursor(size_t cursor) noexcept
+    {
+        m_cursor.set(cursor);
+    }
+    inline size_t cursor() noexcept
+    {
+        return m_cursor.value();
+    }
+    inline uint32_t buffer_size() noexcept
+    {
+        return m_buffer_size;
+    }
+    inline std::vector<std::shared_ptr<mo_sequence_t>> *gating_sequences() noexcept
+    {
+        return m_gating_sequences.load().get();
     }
     // inline std::string to_string() noexcept
     // {
@@ -57,8 +73,9 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     // }
     // clang-format on
 
-  protected:
+  private:
     uint32_t m_buffer_size;
+    // last sequence that was published.
     mo_sequence_t m_cursor{mo_sequencer_t<SI, Event>::INITIAL_CURSOR_VALUE};
     std::atomic<std::shared_ptr<std::vector<std::shared_ptr<mo_sequence_t>>>> m_gating_sequences;
     // mo_wait_strategy_t<WaitStrategy, mo_processing_sequence_barrier_t<SI, WaitStrategy>> m_wait_strategy;

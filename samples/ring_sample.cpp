@@ -177,6 +177,7 @@ int main()
     auto ring = ring_buffer::create_single_producer();
     [[maybe_unused]] auto barrier = ring->create_barrier();
     [[maybe_unused]] auto poller = ring->create_poller();
+    ring->has_available_capacity(10);
     // ring->publish_event(info);
     return 0;
 }
