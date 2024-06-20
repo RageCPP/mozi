@@ -63,7 +63,7 @@ set(MOZI_CORE_RING_HEADERS
   core/ring/event_sequencer.hpp
   core/ring/event_sink.hpp
   core/ring/event_translator.hpp
-  core/ring/gating_sequence.hpp
+  core/ring/gating_sequences.hpp
   core/ring/processing_sequence_barrier.hpp
   core/ring/ring_buffer.hpp
   core/ring/sequence_barrier.hpp

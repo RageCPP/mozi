@@ -153,30 +153,30 @@ class mo_ring_buffer_s :
         return ring_buffer;
     }
 
+    // TODO: 完善
     template <typename... Sequences>
     [[MO_NODISCARD]] inline std::unique_ptr<mo_processing_sequence_barrier_t<Sequencer>> create_barrier(
-        const Sequences &...sequences_to_track) noexcept
+        [[maybe_unused]] const Sequences &...sequences_to_track) noexcept
     {
-        mo_gating_sequence_t gating_sequence{};
-        auto len = sizeof...(Sequences);
-        if (len == 0)
-        {
-            gating_sequence.set_minimum(this->m_data.m_sequencer->cursor());
-        }
-        else
-        {
-            gating_sequence.set_sequences(sequences_to_track...);
-        }
+        mo_gating_sequences_t gating_sequence{};
+        [[maybe_unused]] auto len = sizeof...(Sequences);
+        // if (len == 0)
+        // {
+        //     gating_sequence.set_minimum(this->m_data.m_sequencer->cursor());
+        // }
+        // else
+        // {
+        //     gating_sequence.set_sequences(sequences_to_track...);
+        // }
         return std::make_unique<mo_processing_sequence_barrier_t<Sequencer>>(this->m_data.m_sequencer.get(),
                                                                              gating_sequence);
     }
 
     template <typename... Sequences>
-    [[MO_NODISCARD]] inline std::unique_ptr<
-        mo_event_poller_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>, Sequencer, Event>>
-    create_poller(const Sequences &...gating_sequences)
+    [[MO_NODISCARD]] inline std::unique_ptr<mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>> create_poller(
+        const Sequences &...gating_sequences)
     {
-        mo_gating_sequence_t gating_sequence{};
+        mo_gating_sequences_t gating_sequence{};
         auto len = sizeof...(Sequences);
         if (len == 0)
         {
@@ -186,9 +186,8 @@ class mo_ring_buffer_s :
         {
             gating_sequence.set_sequences(gating_sequences...);
         }
-        return std::make_unique<
-            mo_event_poller_t<mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>, Sequencer, Event>>(
-            this, this->m_data.m_sequencer.get(), std::make_unique<mo_sequence_t>(), gating_sequence);
+        return std::make_unique<mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>>(
+            this, this->m_data.m_sequencer.get(), std::make_shared<mo_sequence_t>(), gating_sequence);
     }
 
   private:

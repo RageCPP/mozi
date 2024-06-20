@@ -2,28 +2,29 @@
 
 #include "mozi/core/ring/cursored.hpp"
 #include "mozi/core/ring/data_provider.hpp"
-#include "mozi/core/ring/gating_sequence.hpp"
+#include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequencer.hpp"
 #include <cstddef>
 #include <memory>
 
+// clang-format off
 namespace mozi::ring
 {
-template <class DataProvider, class SI, typename Event>
-class mo_event_poller_c : public mo_sequencer_t<SI, Event>, public mo_data_provider_t<DataProvider, Event>
+template <class DataProvider, class Sequencer, typename Event>
+class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_data_provider_t<DataProvider, Event>
 {
   public:
-    // clang-format off
-    explicit mo_event_poller_c(DataProvider *data_provider,
-                               SI *sequencer,
-                               std::unique_ptr<mo_sequence_t> sequence,
-                               mo_gating_sequence_t gating_sequence)
+    explicit mo_event_poller_c(
+        DataProvider *data_provider,
+        Sequencer *sequencer,
+        mo_arc_sequence_t sequence,
+        // max sequence to get from the ring buffer for consumer
+        mo_gating_sequences_t gating_sequence)
         : m_data_provider(data_provider),
           m_sequencer(sequencer),
-          m_sequence(std::move(sequence)),
-          m_gating_sequence(gating_sequence) {}
-    // clang-format on
+          m_sequence(sequence),
+          m_gating_sequences(gating_sequence) {}
 
     enum class mo_poll_flags
     {
@@ -77,7 +78,7 @@ class mo_event_poller_c : public mo_sequencer_t<SI, Event>, public mo_data_provi
     {
         size_t current_sequence = m_sequence->value();
         size_t next_sequence = current_sequence + 1;
-        size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_gating_sequence.value());
+        size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_gating_sequences.value());
 
         if (next_sequence <= available_sequence)
         {
@@ -110,10 +111,11 @@ class mo_event_poller_c : public mo_sequencer_t<SI, Event>, public mo_data_provi
 
   private:
     DataProvider *m_data_provider;
-    SI *m_sequencer;
-    std::unique_ptr<mo_sequence_t> m_sequence;
-    mo_gating_sequence_t m_gating_sequence;
+    Sequencer *m_sequencer;
+    mo_arc_sequence_t m_sequence;
+    mo_gating_sequences_t m_gating_sequences;
 };
-template <class DataProvider, class SI, typename Event>
-using mo_event_poller_t = mo_event_poller_c<DataProvider, SI, Event>;
+template <class DataProvider, class Sequencer, typename Event>
+using mo_event_poller_t = mo_event_poller_c<DataProvider, Sequencer, Event>;
 } // namespace mozi::ring
+// clang-format on

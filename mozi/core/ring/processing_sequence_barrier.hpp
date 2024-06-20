@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mozi/core/ring/gating_sequence.hpp"
+#include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence_barrier.hpp"
 #include <atomic>
 namespace mozi::ring
@@ -9,6 +9,7 @@ struct mo_alerted_true
 {
 };
 // TODO: alerted 读取与写入是否可以使用内存顺序优化 避免不必要的内存同步
+// TODO: 未仔细思考
 template <class SI>
 class mo_processing_sequence_barrier_c : public mo_sequence_barrier_t<mo_processing_sequence_barrier_c<SI>>
 {
@@ -16,7 +17,7 @@ class mo_processing_sequence_barrier_c : public mo_sequence_barrier_t<mo_process
     // clang-format off
     mo_processing_sequence_barrier_c(
       SI *sequencer,
-      mo_gating_sequence_t dependent_sequence) noexcept
+      mo_gating_sequences_t dependent_sequence) noexcept
         : m_sequencer(sequencer),
           m_dependent_sequence(dependent_sequence) {}
     // clang-format on
@@ -48,7 +49,7 @@ class mo_processing_sequence_barrier_c : public mo_sequence_barrier_t<mo_process
 
   private:
     SI *m_sequencer;
-    mo_gating_sequence_t m_dependent_sequence;
+    mo_gating_sequences_t m_dependent_sequence;
     std::atomic<bool> alerted = false;
 };
 template <class SI> using mo_processing_sequence_barrier_t = mo_processing_sequence_barrier_c<SI>;

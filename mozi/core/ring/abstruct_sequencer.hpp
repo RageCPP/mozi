@@ -73,7 +73,7 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
   private:
     uint32_t m_buffer_size;
     // last sequence that was published.
-    mo_sequence_t m_cursor{mo_sequencer_t<SI, Event>::INITIAL_CURSOR_VALUE};
+    mo_arc_sequence_t m_cursor{mo_sequencer_t<SI, Event>::INITIAL_CURSOR_VALUE};
     std::atomic<std::shared_ptr<std::vector<std::shared_ptr<mo_sequence_t>>>> m_gating_sequences;
     // mo_wait_strategy_t<WaitStrategy, mo_processing_sequence_barrier_t<SI, WaitStrategy>> m_wait_strategy;
 };
