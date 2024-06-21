@@ -5,6 +5,7 @@
 #include "mozi/core/ring/event_poller.hpp"
 #include "mozi/core/ring/event_sequencer.hpp"
 #include "mozi/core/ring/event_sink.hpp"
+#include "mozi/core/ring/multi_producer_sequencer.hpp"
 #include "mozi/core/ring/poller_factory.hpp"
 #include "mozi/core/ring/processing_sequence_barrier.hpp"
 #include "mozi/core/ring/sequence.hpp"
@@ -96,7 +97,7 @@ class mo_ring_buffer_s :
     {
         return this->m_data.m_sequencer->next(n);
     }
-    size_t remaining_capacity() noexcept
+    uint32_t remaining_capacity() noexcept
     {
         return this->m_data.m_sequencer->remaining_capacity();
     }
@@ -150,6 +151,14 @@ class mo_ring_buffer_s :
     static std::unique_ptr<mo_ring_buffer_t> create_single_producer()
     {
         std::unique_ptr<single_producer> sequencer = std::make_unique<single_producer>(Size);
+        std::unique_ptr<mo_ring_buffer_t> ring_buffer = std::make_unique<mo_ring_buffer_t>(std::move(sequencer));
+        return ring_buffer;
+    }
+
+    using multi_producer = mo_multi_producer_sequencer_t<Event, Size>;
+    static std::unique_ptr<mo_ring_buffer_t> create_multi_producer()
+    {
+        std::unique_ptr<multi_producer> sequencer = std::make_unique<multi_producer>(Size);
         std::unique_ptr<mo_ring_buffer_t> ring_buffer = std::make_unique<mo_ring_buffer_t>(std::move(sequencer));
         return ring_buffer;
     }

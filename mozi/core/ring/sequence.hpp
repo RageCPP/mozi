@@ -9,7 +9,7 @@
 
 namespace mozi::ring
 {
-// TODO: 添加一个移除方法
+// TODO: 添加一个移除方法 移除后需要将其从gating_sequences中移除
 class mo_sequence_c
 {
   public:
@@ -33,6 +33,10 @@ class mo_sequence_c
         bool o = !static_cast<bool>(mo_value ^ expected_value);
         mo_value = mo_value * static_cast<size_t>(!o) + new_value * static_cast<size_t>(o);
         return o;
+    }
+    size_t add_and_get(size_t increment) noexcept
+    {
+        return mo_value += increment;
     }
     [[MO_NODISCARD]] size_t increment() noexcept
     {

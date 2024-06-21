@@ -1,6 +1,5 @@
 #pragma once
 #include "mozi/core/ring/abstruct_sequencer.hpp"
-#include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/utils.hpp"
 #include <cstddef>
@@ -73,7 +72,7 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
         auto next_sequence = this->m_next_value += n;
         return next_sequence;
     }
-    size_t remaining_capacity() noexcept
+    uint32_t remaining_capacity() noexcept
     {
         size_t next_value = m_next_value;
         size_t consumed = mozi::ring::utils::minimum_sequence(*this->gating_sequences(), next_value);

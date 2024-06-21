@@ -72,6 +72,7 @@ set(MOZI_CORE_RING_HEADERS
   core/ring/sequenced.hpp
   core/ring/sequencer.hpp
   core/ring/single_producer_sequencer.hpp
+  core/ring/multi_producer_sequencer.hpp
   core/ring/utils.hpp
   core/ring/yield_wait_strategy.hpp
   core/ring/wait_strategy.hpp)
