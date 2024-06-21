@@ -14,8 +14,8 @@ class mo_event_sink_c : public mo_event_translator_t<Translator, Event>
     };
     template <typename U>
     struct void_publish_event_translator<
-        U, std::enable_if_t<
-               std::is_same_v<decltype(std::declval<U>().publish_event(std::declval<const Translator &>())), void>>>
+        U,
+        std::enable_if_t<std::is_same_v<decltype(std::declval<U>().publish_event(std::declval<Translator &>())), void>>>
         : std::true_type
     {
     };
@@ -29,7 +29,7 @@ class mo_event_sink_c : public mo_event_translator_t<Translator, Event>
     struct bool_publish_events_translators<
         U,
         std::enable_if_t<
-            std::is_same_v<decltype(std::declval<U>().publish_events(std::declval<const Translators &>()...)), bool>>,
+            std::is_same_v<decltype(std::declval<U>().publish_events(std::declval<Translators &>()...)), bool>>,
         Translators...> : std::true_type
     {
     };
@@ -37,9 +37,9 @@ class mo_event_sink_c : public mo_event_translator_t<Translator, Event>
   public:
     mo_event_sink_c()
     {
-        using translator_ref = const Translator &;
+        using translator_ref = Translator &;
         static_assert(void_publish_event_translator<I>::value,
-                      "I must have `void publish_event(const mo_event_translator_t<I, Event> &)` method");
+                      "I must have `void publish_event(mo_event_translator_t<I, Event> &)` method");
 
         // clang-format off
         static_assert(

@@ -78,7 +78,6 @@ set(MOZI_CORE_RING_HEADERS
 
 set(MOZI_HEADERS
   core/common.hpp
-  core/mail_cache.hpp
   core/mail.hpp
   core/mo.hpp)
 

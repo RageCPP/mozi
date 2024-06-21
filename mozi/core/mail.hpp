@@ -83,4 +83,16 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
     void (*f)(uint8_t *buffer, void *data);
 };
 using mo_mail_translator_t = mo_mail_translator_c;
+
+class mo_mail_read_c
+{
+  public:
+    bool on_event(mo_mail_t &event, [[maybe_unused]] size_t sequence, [[maybe_unused]] bool end_of_batch) noexcept
+    {
+        spdlog::info("mo_mail_read_c::on_event");
+        event();
+        return true;
+    }
+};
+using mo_mail_read_t = mo_mail_read_c;
 } // namespace mozi::mail

@@ -40,7 +40,7 @@ struct mo_ring_buffer_data_s : public mo_event_factory_t<EventFactory, Event>, p
         static_assert((Size & (Size - 1)) == 0, "buffer size must be power of 2");
         m_entries.fill(EventFactory::create_instance());
     }
-    const Event &operator[](size_t seq) const
+    Event &operator[](size_t seq)
     {
         return m_entries[seq & m_index_mask_const];
     }
@@ -84,7 +84,7 @@ class mo_ring_buffer_s :
     //     [[maybe_unused]] mo_sequencer_t<Sequencer, Event> sequencer)
     // {
     // }
-    const Event &operator[](size_t seq) const
+    Event &operator[](size_t seq)
     {
         return this->m_data[seq];
     }
@@ -116,7 +116,7 @@ class mo_ring_buffer_s :
     {
         this->m_data.m_sequencer->publish(lo, hi);
     }
-    void publish_event(const Translator &translator) noexcept
+    void publish_event(Translator &translator) noexcept
     {
         const std::optional<size_t> sequence = this->next();
         if (sequence.has_value()) [[MO_LIKELY]]
@@ -124,7 +124,7 @@ class mo_ring_buffer_s :
             this->translate_and_publish(translator, sequence.value());
         }
     }
-    template <typename... Translators> bool publish_events(const Translators &...translators) noexcept
+    template <typename... Translators> bool publish_events(Translators &...translators) noexcept
     {
         auto need_size = sizeof...(Translators);
 #ifdef DEBUG
@@ -197,7 +197,7 @@ class mo_ring_buffer_s :
   private:
     mo_ring_buffer_data_t<Event, Size, Sequencer, EventFactory, Translator> m_data;
 
-    void translate_and_publish(const Translator &translator, size_t sequence) noexcept
+    void translate_and_publish(Translator &translator, size_t sequence) noexcept
     {
         translator((*this)[sequence], sequence);
         this->publish(sequence);
@@ -205,7 +205,7 @@ class mo_ring_buffer_s :
 
     // clang-format off
     template <typename... Translators>
-    void translate_and_publish_events(const Translators &...translators, size_t final_sequence, uint16_t batch_size) noexcept
+    void translate_and_publish_events(Translators &...translators, size_t final_sequence, uint16_t batch_size) noexcept
     {
         auto translators_tuple = std::make_tuple(translators...);
         auto intial_sequence = final_sequence - (batch_size - 1);

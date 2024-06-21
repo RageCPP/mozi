@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <random>
+#include <string>
 #include <tuple>
 #include <vector>
 // int random_1_to_5()
@@ -164,20 +165,35 @@
 // [[maybe_unused]] mozi::ring::mo_single_producer_sequencer_t sequencer{};
 // sequencer.publish(1, 1);
 // }
-
-int main()
+struct people
+{
+    std::string name;
+};
+void say_name([[maybe_unused]] uint8_t *bytes, void *data)
+{
+    auto p = static_cast<people *>(data);
+    fmt::print("hello, my name is {}\n", p->name);
+}
+void single_use_poller()
 {
     using mail = mozi::mail::mo_mail_t;
     using mail_factory = mozi::mail::mo_mail_factory_t;
     using mo_mail_translator = mozi::mail::mo_mail_translator_t;
     using producer = mozi::ring::mo_single_producer_sequencer_t<mail>;
-    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 1024, producer, mail_factory, mo_mail_translator>;
-    [[maybe_unused]] auto info = mail_factory::create_instance();
-    producer single_producer{1024};
-    auto ring = ring_buffer::create_single_producer();
-    [[maybe_unused]] auto poller = ring->create_poller();
-    ring->has_available_capacity(10);
-    // ring->publish_event(info);
+    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 8, producer, mail_factory, mo_mail_translator>;
+    auto single_producer = ring_buffer::create_single_producer();
+    [[maybe_unused]] auto poller = single_producer->create_poller();
+    uint8_t *bytes = new uint8_t[1];
+    people *h = new people{"hello"};
+    mo_mail_translator pub_mail{bytes, h, say_name};
+    single_producer->publish_event(pub_mail);
+    spdlog::info("publish_event");
+    poller->poll(mozi::mail::mo_mail_read_t{});
+}
+
+int main()
+{
+    single_use_poller();
     return 0;
 }
 // template <typename T, typename U> auto add(T t, U u)
