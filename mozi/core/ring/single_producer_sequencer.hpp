@@ -1,6 +1,6 @@
 #pragma once
-
 #include "mozi/core/ring/abstruct_sequencer.hpp"
+#include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/utils.hpp"
 #include <cstddef>

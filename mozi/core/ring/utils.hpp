@@ -3,14 +3,13 @@
 #include "mozi/core/ring/sequence.hpp"
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <vector>
 
 namespace mozi::ring
 {
 namespace utils
 {
-inline size_t minimum_sequence(std::vector<std::shared_ptr<mo_sequence_t>> *sequences, size_t minimum)
+inline size_t minimum_sequence(std::vector<mo_arc_sequence_t> *sequences, size_t minimum)
 {
     auto _sequences = *sequences;
     size_t minimum_sequence = minimum;
@@ -20,7 +19,7 @@ inline size_t minimum_sequence(std::vector<std::shared_ptr<mo_sequence_t>> *sequ
     };
     return minimum_sequence;
 }
-inline size_t minimum_sequence(std::vector<std::shared_ptr<mo_sequence_t>> *sequences)
+inline size_t minimum_sequence(std::vector<mo_arc_sequence_t> *sequences)
 {
     size_t max = SIZE_MAX;
     return minimum_sequence(sequences, max);

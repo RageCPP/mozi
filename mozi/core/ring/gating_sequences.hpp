@@ -7,6 +7,11 @@ namespace mozi::ring
 {
 struct mo_gating_sequences_c
 {
+    /**
+     * Get the minimum sequence value for the group.
+     *
+     * @return the minimum sequence value for the group.
+     */
     [[MO_NODISCARD]] size_t value() const noexcept
     {
         size_t mini = mo_sequences[0]->value();
@@ -30,6 +35,10 @@ struct mo_gating_sequences_c
         auto list = std::make_tuple(sequences...);
         mo_sequences.reserve(sizeof...(Sequences));
         std::apply([this](auto &&...args) { ((this->mo_sequences.push_back(args)), ...); }, list);
+    }
+    void set_sequences(mo_arc_sequence_t &&sequence) noexcept
+    {
+        mo_sequences.push_back(sequence);
     }
 
   private:

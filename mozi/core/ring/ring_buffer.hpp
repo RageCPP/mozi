@@ -16,6 +16,7 @@
 #include <cstdint>
 #include <memory>
 #include <sys/types.h>
+#include <utility>
 
 namespace mozi::ring
 {
@@ -172,22 +173,25 @@ class mo_ring_buffer_s :
                                                                              gating_sequence);
     }
 
+    using mo__event_poller_t = mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>;
     template <typename... Sequences>
-    [[MO_NODISCARD]] inline std::unique_ptr<mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>> create_poller(
-        const Sequences &...gating_sequences)
+    [[MO_NODISCARD]] inline std::unique_ptr<mo__event_poller_t> create_poller(Sequences &...gating_sequences)
     {
+        static_assert((std::is_same_v<Sequences, mo_arc_sequence_t> && ...),
+                      "All Args must be of type mo_arc_sequence_t");
         mo_gating_sequences_t gating_sequence{};
         auto len = sizeof...(Sequences);
         if (len == 0)
         {
-            gating_sequence.set_minimum(this->m_data.m_sequencer->cursor());
+            // TODO: 增加 cursor 共享指针计数测试
+            gating_sequence.set_sequences(this->m_data.m_sequencer->cursor_instance());
         }
         else
         {
             gating_sequence.set_sequences(gating_sequences...);
         }
-        return std::make_unique<mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>>(
-            this, this->m_data.m_sequencer.get(), std::make_shared<mo_sequence_t>(), gating_sequence);
+        return std::make_unique<mo__event_poller_t>(this, this->m_data.m_sequencer.get(),
+                                                    std::make_shared<mo_sequence_t>(), gating_sequence);
     }
 
   private:

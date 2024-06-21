@@ -1,12 +1,10 @@
 #pragma once
 
-#include "mozi/core/ring/cursored.hpp"
 #include "mozi/core/ring/data_provider.hpp"
 #include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequencer.hpp"
 #include <cstddef>
-#include <memory>
 
 // clang-format off
 namespace mozi::ring

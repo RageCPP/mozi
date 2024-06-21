@@ -9,6 +9,7 @@
 
 namespace mozi::ring
 {
+// TODO: 添加一个移除方法
 class mo_sequence_c
 {
   public:

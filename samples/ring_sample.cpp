@@ -175,7 +175,6 @@ int main()
     [[maybe_unused]] auto info = mail_factory::create_instance();
     producer single_producer{1024};
     auto ring = ring_buffer::create_single_producer();
-    [[maybe_unused]] auto barrier = ring->create_barrier();
     [[maybe_unused]] auto poller = ring->create_poller();
     ring->has_available_capacity(10);
     // ring->publish_event(info);
