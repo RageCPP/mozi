@@ -1,5 +1,5 @@
 #pragma once
-#include <concepts>
+#include "mozi/compile/attributes_cpp.hpp"
 #include <cstddef>
 #include <functional>
 #include <type_traits>
@@ -88,6 +88,25 @@ template <> struct conditional_<true>
 //  As one effect, the result can be used in deducible contexts, allowing
 //  deduction of conditional_t<V, T, F> to work when T or F is a template param.
 template <bool V, typename T, typename F> using conditional_t = typename detail::conditional_<V>::template apply<T, F>;
+
+template <typename Ins> struct mo_immovable_t
+{
+    mo_immovable_t() = default;
+
+    mo_immovable_t(const mo_immovable_t &) = delete;
+    mo_immovable_t(mo_immovable_t &&) = delete;
+
+    auto operator=(const mo_immovable_t &) -> mo_immovable_t & = delete;
+    auto operator=(mo_immovable_t &&) -> mo_immovable_t & = delete;
+
+    ~mo_immovable_t() = default;
+};
+static_assert(std::is_empty_v<mo_immovable_t<void>>);
+
+template <typename R> struct mo_awaitable_t : mo_immovable_t<mo_awaitable_t<R>>
+{
+    [[MO_NO_UNIQUE_ADDRESS]] R ret;
+};
 
 template <typename ReturnType, typename... Args> using mo_function_t = std::function<ReturnType(Args...)>;
 

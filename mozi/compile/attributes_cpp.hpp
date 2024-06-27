@@ -33,3 +33,9 @@
 #else
 #define MO_UNLIKELY
 #endif
+
+#if MO_HAS_CPP_ATTRIBUTE(no_unique_address)
+#define MO_NO_UNIQUE_ADDRESS no_unique_address
+#else
+#define MO_NO_UNIQUE_ADDRESS
+#endif

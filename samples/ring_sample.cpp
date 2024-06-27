@@ -191,12 +191,129 @@ void single_use_poller()
     poller->poll(mozi::mail::mo_mail_read_t{});
 }
 
-int main()
-{
-    single_use_poller();
-    return 0;
-}
+// int main()
+// {
+// single_use_poller();
+// return 0;
+// }
 // template <typename T, typename U> auto add(T t, U u)
 // {
 //     return t + u;
 // }
+
+#include <coroutine>
+#include <iostream>
+#include <queue>
+#include <vector>
+
+template <typename T> struct Generator
+{
+    struct promise_type;
+    using handle_type = std::coroutine_handle<promise_type>;
+
+    struct promise_type
+    {
+        T value;
+        std::suspend_always yield_value(T val)
+        {
+            value = val;
+            return {};
+        }
+        std::suspend_always initial_suspend()
+        {
+            return {};
+        }
+        std::suspend_never final_suspend() noexcept
+        {
+            return {};
+        }
+        void return_void()
+        {
+        }
+        void unhandled_exception()
+        {
+            std::terminate();
+        }
+        Generator get_return_object()
+        {
+            return Generator(handle_type::from_promise(*this));
+        }
+    };
+
+    handle_type coro;
+
+    Generator(handle_type h) : coro(h)
+    {
+    }
+    ~Generator()
+    {
+        if (coro)
+            coro.destroy();
+    }
+
+    Generator(const Generator &) = delete;
+    Generator &operator=(const Generator &) = delete;
+
+    Generator(Generator &&o) noexcept : coro(std::exchange(o.coro, {}))
+    {
+    }
+    Generator &operator=(Generator &&o) noexcept
+    {
+        if (this != &o)
+        {
+            if (coro)
+                coro.destroy();
+            coro = std::exchange(o.coro, {});
+        }
+        return *this;
+    }
+
+    T next()
+    {
+        if (!coro.done())
+        {
+            coro.resume();
+            return coro.promise().value;
+        }
+        throw std::runtime_error("Generator is done!");
+    }
+};
+
+Generator<int> cycle_pop_elements(std::vector<int> &arr)
+{
+    while (true)
+    {
+        if (!arr.empty())
+        {
+            int value = arr.front();
+            arr.erase(arr.begin());
+            co_yield value;
+        }
+        else
+        {
+            // Simulate wait for the array to be refilled
+            co_await std::suspend_always{};
+        }
+    }
+}
+
+int main()
+{
+    std::vector<int> arr = {1, 2, 3, 4, 5};
+    auto gen = cycle_pop_elements(arr);
+
+    for (int i = 0; i < 5; ++i)
+    {
+        std::cout << gen.next() << std::endl;
+    }
+
+    // Simulate refilling the array
+    arr = {6, 7, 8, 9, 10};
+
+    for (int i = 0; i < 5; ++i)
+    {
+        std::cout << gen.next() << std::endl;
+    }
+
+    return 0;
+}

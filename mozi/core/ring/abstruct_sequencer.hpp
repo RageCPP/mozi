@@ -58,20 +58,7 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     {
         return m_cursor;
     }
-    // inline std::string to_string() noexcept
-    // {
-    //     std::string gating_sequences{};
-    //     for (auto &sequence : *m_gating_sequences.load())
-    //     {
-    //         gating_sequences += sequence->to_string() + ", ";
-    //     }
-    //     return std::string{"mo_abstruct_sequencer_c{"} +
-    //                             ", wait_strategy=" + m_wait_strategy.to_string() +
-    //                             ", cursor=" + std::to_string(m_cursor.value()) +
-    //                             ", gating_sequences=" + gating_sequences +
-    //                             "}";
-    // }
-    // clang-format on
+
     template <class Sequencer, typename... Sequences>
     friend void mozi::ring::sequence_group::add_sequences(Sequencer *sequencer, Sequences &&...sequences);
     template <class Sequencer>

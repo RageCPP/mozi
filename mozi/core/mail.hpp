@@ -31,10 +31,7 @@ struct mo_mail_s
         {
             delete[] m_bytes;
         }
-        if (m_data != nullptr) [[MO_LIKELY]]
-        {
-            free(m_data);
-        }
+        free(m_data);
         m_bytes = bytes;
         m_data = data;
     }
