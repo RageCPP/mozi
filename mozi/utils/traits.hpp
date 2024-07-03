@@ -1,5 +1,6 @@
 #pragma once
 #include "mozi/compile/attributes_cpp.hpp"
+#include <atomic>
 #include <cstddef>
 #include <functional>
 #include <type_traits>
@@ -89,6 +90,7 @@ template <> struct conditional_<true>
 //  deduction of conditional_t<V, T, F> to work when T or F is a template param.
 template <bool V, typename T, typename F> using conditional_t = typename detail::conditional_<V>::template apply<T, F>;
 
+// TODO 这段代码没什么用 将其改为宏替换
 template <typename Ins> struct mo_immovable_t
 {
     mo_immovable_t() = default;
@@ -102,11 +104,25 @@ template <typename Ins> struct mo_immovable_t
     ~mo_immovable_t() = default;
 };
 static_assert(std::is_empty_v<mo_immovable_t<void>>);
+// TODO END
 
 template <typename R> struct mo_awaitable_t : mo_immovable_t<mo_awaitable_t<R>>
 {
     [[MO_NO_UNIQUE_ADDRESS]] R ret;
 };
+
+template <typename T>
+concept mo_atomicable_t = std::is_trivially_copyable_v<T> && //
+                          std::is_copy_constructible_v<T> && //
+                          std::is_move_constructible_v<T> && //
+                          std::is_copy_assignable_v<T> &&    //
+                          std::is_move_assignable_v<T>;      //
+
+template <typename T>
+concept mo_lockfreeable_t = mo_atomicable_t<T> && std::atomic<T>::is_always_lock_free;
+
+template <typename T>
+concept mo_dequeable_t = mo_lockfreeable_t<T> && std::default_initializable<T>;
 
 template <typename ReturnType, typename... Args> using mo_function_t = std::function<ReturnType(Args...)>;
 

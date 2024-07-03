@@ -1,61 +1,60 @@
 #pragma once
 
+#include "mozi/utils/expected.hpp"
+#include "mozi/utils/traits.hpp"
+#include <array>
 #include <atomic>
-#include <cassert>
+#include <cstdint>
+#include <memory>
 #include <optional>
-#include <vector>
-
-/**
-@class: WorkStealingQueue
-
-@tparam T data type
-
-@brief Lock-free unbounded single-producer multiple-consumer queue.
-
-This class implements the work stealing queue described in the paper,
-"Correct and Efficient Work-Stealing for Weak Memory Models,"
-available at https://www.di.ens.fr/~zappa/readings/ppopp13.pdf.
-
-Only the queue owner can perform pop and push operations,
-while others can steal data from the queue.
-*/
-template <typename T> class WorkStealingQueue
+namespace mozi
 {
 
-    struct Array
+// BOTTOM 推入新任务 BOTTOM 取出任务
+// TOP窃取任务
+template <typename T> class mo_deque_c
+{
+    static constexpr std::memory_order relaxed = std::memory_order_relaxed;
+    static constexpr std::memory_order acquire = std::memory_order_acquire;
+    static constexpr std::memory_order release = std::memory_order_release;
+    static constexpr std::memory_order seq_cst = std::memory_order_seq_cst;
+    static constexpr std::memory_order consume = std::memory_order_consume;
+
+    // clang-format off
+    struct mo_array
     {
-
-        int64_t C;
-        int64_t M;
-        std::atomic<T> *S;
-
-        explicit Array(int64_t c) : C{c}, M{c - 1}, S{new std::atomic<T>[static_cast<size_t>(C)]}
+        int64_t m_capacity;
+        int64_t m_mask;
+        std::atomic<T> *m_data;
+        explicit mo_array(int64_t c) : m_capacity{c}, m_mask{c - 1}, m_data{new std::atomic<T>[static_cast<size_t>(m_capacity)]}
         {
+            // TODO 检查 capacity 是否是 2 的幂
         }
-
-        ~Array()
+        mo_array(const mo_array &) = delete;
+        mo_array &operator=(mo_array &&) = delete;
+        mo_array &operator=(const mo_array &) = delete;
+        mo_array(mo_array &&) = delete;
+        ~mo_array()
         {
-            delete[] S;
+            delete[] m_data;
         }
-
         int64_t capacity() const noexcept
         {
-            return C;
+            return m_capacity;
         }
-
         template <typename O> void push(int64_t i, O &&o) noexcept
         {
-            S[i & M].store(std::forward<O>(o), std::memory_order_relaxed);
+            m_data[i & m_mask].store(std::forward<O>(o), relaxed);
         }
 
         T pop(int64_t i) noexcept
         {
-            return S[i & M].load(std::memory_order_relaxed);
+            return m_data[i & m_mask].load(relaxed);
         }
 
-        Array *resize(int64_t b, int64_t t)
+        mo_array *resize(int64_t b, int64_t t)
         {
-            Array *ptr = new Array{2 * C};
+            mo_array *ptr = new mo_array{2 * m_capacity};
             for (int64_t i = t; i != b; ++i)
             {
                 ptr->push(i, pop(i));
@@ -63,11 +62,12 @@ template <typename T> class WorkStealingQueue
             return ptr;
         }
     };
+    // clang-format on
 
-    std::atomic<int64_t> _top;
-    std::atomic<int64_t> _bottom;
-    std::atomic<Array *> _array;
-    std::vector<Array *> _garbage;
+    std::atomic<int64_t> m_top;
+    std::atomic<int64_t> m_bottom;
+    std::atomic<mo_array *> m_array;
+    std::vector<mo_array *> m_garbage;
 
   public:
     /**
@@ -75,12 +75,12 @@ template <typename T> class WorkStealingQueue
 
     @param capacity the capacity of the queue (must be power of 2)
     */
-    explicit WorkStealingQueue(int64_t capacity = 1024);
+    explicit mo_deque_c(int64_t capacity = 1024);
 
     /**
     @brief destructs the queue
     */
-    ~WorkStealingQueue();
+    ~mo_deque_c();
 
     /**
     @brief queries if the queue is empty at the time of this call
@@ -128,70 +128,70 @@ template <typename T> class WorkStealingQueue
 };
 
 // Constructor
-template <typename T> WorkStealingQueue<T>::WorkStealingQueue(int64_t c)
+template <typename T> mo_deque_c<T>::mo_deque_c(int64_t c)
 {
     assert(c && (!(c & (c - 1))));
-    _top.store(0, std::memory_order_relaxed);
-    _bottom.store(0, std::memory_order_relaxed);
-    _array.store(new Array{c}, std::memory_order_relaxed);
-    _garbage.reserve(32);
+    m_top.store(0, relaxed);
+    m_bottom.store(0, relaxed);
+    m_array.store(new mo_array{c}, relaxed);
+    m_garbage.reserve(32);
 }
 
 // Destructor
-template <typename T> WorkStealingQueue<T>::~WorkStealingQueue()
+template <typename T> mo_deque_c<T>::~mo_deque_c()
 {
-    for (auto a : _garbage)
+    for (auto a : m_garbage)
     {
         delete a;
     }
-    delete _array.load();
+    delete m_array.load();
 }
 
 // Function: empty
-template <typename T> bool WorkStealingQueue<T>::empty() const noexcept
+template <typename T> bool mo_deque_c<T>::empty() const noexcept
 {
-    int64_t b = _bottom.load(std::memory_order_relaxed);
-    int64_t t = _top.load(std::memory_order_relaxed);
+    int64_t b = m_bottom.load(relaxed);
+    int64_t t = m_top.load(relaxed);
     return b <= t;
 }
 
 // Function: size
-template <typename T> size_t WorkStealingQueue<T>::size() const noexcept
+template <typename T> size_t mo_deque_c<T>::size() const noexcept
 {
-    int64_t b = _bottom.load(std::memory_order_relaxed);
-    int64_t t = _top.load(std::memory_order_relaxed);
+    int64_t b = m_bottom.load(relaxed);
+    int64_t t = m_top.load(relaxed);
     return static_cast<size_t>(b >= t ? b - t : 0);
 }
 
 // Function: push
-template <typename T> template <typename O> void WorkStealingQueue<T>::push(O &&o)
+template <typename T> template <typename O> void mo_deque_c<T>::push(O &&o)
 {
-    int64_t b = _bottom.load(std::memory_order_relaxed);
-    int64_t t = _top.load(std::memory_order_acquire);
-    Array *a = _array.load(std::memory_order_relaxed);
+    int64_t b = m_bottom.load(relaxed);
+    int64_t t = m_top.load(acquire);
+    mo_array *a = m_array.load(relaxed);
 
     // queue is full
     if (a->capacity() - 1 < (b - t))
     {
-        Array *tmp = a->resize(b, t);
-        _garbage.push_back(a);
+        mo_array *tmp = a->resize(b, t);
+        m_garbage.push_back(a);
         std::swap(a, tmp);
-        _array.store(a, std::memory_order_relaxed);
+        m_array.store(a, relaxed);
     }
 
     a->push(b, std::forward<O>(o));
-    std::atomic_thread_fence(std::memory_order_release);
-    _bottom.store(b + 1, std::memory_order_relaxed);
+    std::atomic_thread_fence(release);
+    m_bottom.store(b + 1, relaxed);
 }
 
 // Function: pop
-template <typename T> std::optional<T> WorkStealingQueue<T>::pop()
+template <typename T> std::optional<T> mo_deque_c<T>::pop()
 {
-    int64_t b = _bottom.load(std::memory_order_relaxed) - 1;
-    Array *a = _array.load(std::memory_order_relaxed);
-    _bottom.store(b, std::memory_order_relaxed);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    int64_t t = _top.load(std::memory_order_relaxed);
+    int64_t b = m_bottom.load(relaxed) - 1;
+    mo_array *a = m_array.load(relaxed);
+    m_bottom.store(b, relaxed);
+    std::atomic_thread_fence(seq_cst);
+    int64_t t = m_top.load(relaxed);
 
     std::optional<T> item;
 
@@ -201,35 +201,35 @@ template <typename T> std::optional<T> WorkStealingQueue<T>::pop()
         if (t == b)
         {
             // the last item just got stolen
-            if (!_top.compare_exchange_strong(t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed))
+            if (!m_top.compare_exchange_strong(t, t + 1, seq_cst, relaxed))
             {
                 item = std::nullopt;
             }
-            _bottom.store(b + 1, std::memory_order_relaxed);
+            m_bottom.store(b + 1, relaxed);
         }
     }
     else
     {
-        _bottom.store(b + 1, std::memory_order_relaxed);
+        m_bottom.store(b + 1, relaxed);
     }
 
     return item;
 }
 
 // Function: steal
-template <typename T> std::optional<T> WorkStealingQueue<T>::steal()
+template <typename T> std::optional<T> mo_deque_c<T>::steal()
 {
-    int64_t t = _top.load(std::memory_order_acquire);
-    std::atomic_thread_fence(std::memory_order_seq_cst);
-    int64_t b = _bottom.load(std::memory_order_acquire);
+    int64_t t = m_top.load(acquire);
+    std::atomic_thread_fence(seq_cst);
+    int64_t b = m_bottom.load(acquire);
 
     std::optional<T> item;
 
     if (t < b)
     {
-        Array *a = _array.load(std::memory_order_consume);
+        mo_array *a = m_array.load(consume);
         item = a->pop(t);
-        if (!_top.compare_exchange_strong(t, t + 1, std::memory_order_seq_cst, std::memory_order_relaxed))
+        if (!m_top.compare_exchange_strong(t, t + 1, seq_cst, relaxed))
         {
             return std::nullopt;
         }
@@ -239,7 +239,8 @@ template <typename T> std::optional<T> WorkStealingQueue<T>::steal()
 }
 
 // Function: capacity
-template <typename T> int64_t WorkStealingQueue<T>::capacity() const noexcept
+template <typename T> int64_t mo_deque_c<T>::capacity() const noexcept
 {
-    return _array.load(std::memory_order_relaxed)->capacity();
+    return m_array.load(relaxed)->capacity();
 }
+} // namespace mozi

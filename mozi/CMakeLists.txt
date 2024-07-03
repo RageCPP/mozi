@@ -80,7 +80,7 @@ set(MOZI_CORE_RING_HEADERS
 set(MOZI_HEADERS
   core/common.hpp
   core/mail.hpp
-  core/mozi.hpp
+  core/deque.hpp
   core/run.hpp)
 
 add_library(${PROJECT_NAME} STATIC

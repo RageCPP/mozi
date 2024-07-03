@@ -57,7 +57,7 @@
       "configurePreset": "debug",
       "jobs": 32,
       "targets": [
-        "ring"
+        "deque_sample"
       ]
     }
   ],
