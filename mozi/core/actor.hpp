@@ -1,4 +1,5 @@
 #pragma once
+#include "mozi/core/actor_flags.hpp"
 #include "mozi/core/deque.hpp"
 #include "mozi/core/mail.hpp"
 #include "mozi/core/ring/ring_buffer.hpp"
@@ -17,18 +18,12 @@ template <typename Event, uint32_t Size, class Sequencer, class EventFactory, cl
     using suspend_never = std::suspend_never;
     using suspend_always = std::suspend_always;
     using poller = mozi::ring::mo_ring_buffer_t<Event, Size, Sequencer, EventFactory, Translator>;
-    enum class mo_actor_state_flags
-    {
-        MO_ACTOR_STATE_INIT = 0x00,
-        MO_ACTOR_STATE_IDLE = 0x01,
-        MO_ACTOR_STATE_CHECK = 0x02,
-        MO_ACTOR_STATE_BUSY = 0x03,
-    };
     struct mo_actor_info_s
     {
         mo_actor_state_flags m_state;
         poller::mo_event_poller_t *m_mailbox_poller;
-        mozi::mo_deque_c<coro_handle *> *m_workflows;
+        mozi::mo_deque_c<coro_handle> *m_workflows;
+        mo_actor_c *m_self;
     };
     struct mo__coro_s
     {
@@ -66,6 +61,9 @@ template <typename Event, uint32_t Size, class Sequencer, class EventFactory, cl
                 // }
                 // TODO: 时间片轮转
                 // TODO: 循环处理信箱信件
+
+                // handle.promise().get_return_object().m_mailbox;
+
                 if (m_workflows->empty())
                 {
                     return std::noop_coroutine();
@@ -79,14 +77,15 @@ template <typename Event, uint32_t Size, class Sequencer, class EventFactory, cl
 
           private:
             friend struct mo__coro_s;
-            explicit mo__actor_awaiter(mo_actor_state_flags flag, poller::mo_event_poller_t *poller,
-                                       mozi::mo_deque_c<coro_handle *> *m_workflows) noexcept
+            explicit mo__actor_awaiter(mo_actor_state_flags flag,         //
+                                       poller::mo_event_poller_t *poller, //
+                                       mozi::mo_deque_c<coro_handle> *m_workflows) noexcept
                 : m_state(flag), m_mailbox_poller(poller), m_workflows(m_workflows)
             {
             }
             mo_actor_state_flags m_state;
             poller::mo_event_poller_t *m_mailbox_poller;
-            mozi::mo_deque_c<coro_handle *> *m_workflows;
+            mozi::mo_deque_c<coro_handle> *m_workflows;
         };
         auto yield_value([[maybe_unused]] mo_actor_state_flags flag) noexcept -> decltype(auto)
         {
@@ -104,7 +103,8 @@ template <typename Event, uint32_t Size, class Sequencer, class EventFactory, cl
 
         std::atomic<mo_actor_state_flags> m_state = mo_actor_state_flags::MO_ACTOR_STATE_INIT;
         poller::mo_event_poller_t *m_mailbox_poller;
-        mozi::mo_deque_c<coro_handle *> *m_workflows;
+        mozi::mo_deque_c<coro_handle> *m_workflows;
+        mo_actor_c *m_self;
     };
     static mo_actor_c create() noexcept
     {
@@ -136,5 +136,4 @@ using mo_actor_t = mo_actor_c<mozi::mail::mo_mail_t,                            
                               mozi::ring::mo_single_producer_sequencer_t<mozi::mail::mo_mail_t>, //
                               mozi::mail::mo_mail_factory_t,                                     //
                               mozi::mail::mo_mail_translator_t>;                                 //
-
 } // namespace mozi::actor

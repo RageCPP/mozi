@@ -5,12 +5,13 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <unordered_map>
 
 namespace mozi::ring
 {
 /// 单生产者序列器
-// next_value: 下一个要写入的序列
-// cache_value: 用户已经处理的最小序列
+// m_next_value: 下一个要写入的序列
+// m_cached_value: 用户已经处理的最小序列
 // cursor: 生产者最后写入的序列
 template <typename Event>
 class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_producer_sequencer_c<Event>, Event>
@@ -54,7 +55,7 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     }
     std::optional<size_t> next(uint16_t n) noexcept
     {
-#ifdef DEBUG
+#ifndef NDEBUG
         // TODO: 这里替换使用 exception
         if (!same_thread())
         {
@@ -103,27 +104,10 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
         return available_sequence;
     }
 
-    // clang-format off
-    // std::string to_string() noexcept
-    // {
-    //     std::string gating_sequences{};
-    //     for (auto &sequence : *this->m_gating_sequences.load())
-    //     {
-    //         gating_sequences += sequence->to_string() + ", ";
-    //     }
-    //     return std::string{"mo_single_producer_sequencer_c{"} + 
-    //            "buffer_size=" + std::to_string(this->m_buffer_size) +
-    //            ", wait_strategy=" + this->m_wait_strategy.to_string() +
-    //            ", cursor=" + this->m_cursor.to_string() +
-    //            ", gating_sequences=" + gating_sequences + 
-    //            "}";
-    // }
-    // clang-format on
-
   private:
     bool same_thread()
     {
-#ifdef DEBUG
+#ifndef NDEBUG
         return mo__producer_thread_assertion::is_same_thread_producing_to(this);
 #endif
         return true;
@@ -132,11 +116,11 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     // 用户已经处理的最小序列
     size_t m_cached_value = mo_sequence_t::INITIAL_VALUE;
 
-#ifdef DEBUG
+#ifndef NDEBUG
     class mo__producer_thread_assertion
     {
       public:
-        static bool is_same_thread_producing_to(SingleProducerSequencer *sequencer)
+        static bool is_same_thread_producing_to(mo_single_producer_sequencer_c *sequencer)
         {
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = producers_.find(sequencer);
@@ -149,9 +133,9 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
         }
 
       private:
-        static std::unordered_map<SingleProducerSequencer *, std::thread::id> producers_{};
+        static std::unordered_map<mo_single_producer_sequencer_c *, std::thread::id> producers_{};
         static std::mutex mutex_;
-    }
+    };
 #endif
 };
 template <typename Event> using mo_single_producer_sequencer_t = mo_single_producer_sequencer_c<Event>;

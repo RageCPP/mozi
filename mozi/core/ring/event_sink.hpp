@@ -9,13 +9,13 @@ namespace mozi::ring
 template <class I, typename Event, typename Translator>
 class mo_event_sink_c : public mo_event_translator_t<Translator, Event>
 {
-    template <typename U, typename = void> struct void_publish_event_translator : std::false_type
+    template <typename U, typename = void> struct bool_publish_event_translator : std::false_type
     {
     };
     template <typename U>
-    struct void_publish_event_translator<
+    struct bool_publish_event_translator<
         U,
-        std::enable_if_t<std::is_same_v<decltype(std::declval<U>().publish_event(std::declval<Translator &>())), void>>>
+        std::enable_if_t<std::is_same_v<decltype(std::declval<U>().publish_event(std::declval<Translator &>())), bool>>>
         : std::true_type
     {
     };
@@ -38,8 +38,8 @@ class mo_event_sink_c : public mo_event_translator_t<Translator, Event>
     mo_event_sink_c()
     {
         using translator_ref = Translator &;
-        static_assert(void_publish_event_translator<I>::value,
-                      "I must have `void publish_event(mo_event_translator_t<I, Event> &)` method");
+        static_assert(bool_publish_event_translator<I>::value,
+                      "I must have `bool publish_event(mo_event_translator_t<I, Event> &)` method");
 
         // clang-format off
         static_assert(

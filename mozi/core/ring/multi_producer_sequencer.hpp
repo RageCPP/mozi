@@ -1,7 +1,9 @@
 #pragma once
+#include "fmt/core.h"
 #include "mozi/core/ring/abstruct_sequencer.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequencer.hpp"
+#include "spdlog/spdlog.h"
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -9,59 +11,116 @@
 #include <optional>
 namespace mozi::ring
 {
-// clang-format off
+// 多生产者序列器
+// next_value: 下一个要写入的序列
+// cursor: 生产者最后写入的序列
+// m_available_buffer: 可用序列(未消费序列) 这段代码使用循环轮数来标记可用序列
+// m_gating_sequence_cache: 未消费序列的最小序列 在 gating_sequences 为 0 时候 这个值为 cursor 值
 template <typename Event, uint32_t Size>
 class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_producer_sequencer_c<Event, Size>, Event>
 {
   public:
+    mo_multi_producer_sequencer_c(uint32_t buffer_size)
+        : mo_abstruct_sequencer_c<mo_multi_producer_sequencer_c, Event>(buffer_size)
+    {
+    }
+
     void claim(const size_t sequence) noexcept
     {
         this->set_cursor(sequence);
     }
+
     std::optional<size_t> next() noexcept
     {
+#ifndef NDEBUG
+        fmt::println("");
+        spdlog::debug("next()");
+#endif
         return next(1);
     }
+
     std::optional<size_t> next(uint16_t n) noexcept
     {
-        if (!has_available_capacity(n))
+        uint64_t current = 0;
+        uint64_t next = 0;
+
+        do
         {
-            return std::nullopt;
-        }
-        auto next_value = this->cursor_instance()->add_and_get(n);
-        return next_value;
+            current = this->cursor();
+            next = current + n;
+#ifndef NDEBUG
+            spdlog::debug("prev cursor: {}, after cursor: {}", current, next);
+#endif
+            if (!has_available_capacity(this->gating_sequences(), n, current))
+            {
+                return std::nullopt;
+            }
+        } while (!this->cursor_instance()->compare_and_set(current, next));
+
+        return next;
     }
+
     bool has_available_capacity(uint16_t required_capacity) noexcept
     {
         return has_available_capacity(this->gating_sequences(), required_capacity, this->cursor());
     }
-    bool has_available_capacity(std::vector<mo_arc_sequence_t> *gating_sequences, uint16_t required_capacity, size_t cursor) noexcept
-    {
-        size_t wrap_point = cursor + required_capacity - this->buffer_size();
-        size_t cached_gating_sequence = this->m_gating_sequence_cache.value();
 
-        if (wrap_point > cached_gating_sequence || cached_gating_sequence > cursor) [[MO_UNLIKELY]]
+    bool has_available_capacity(std::vector<mo_arc_sequence_t> *gating_sequences, //
+                                uint16_t required_capacity,                       //
+                                size_t cursor) noexcept
+    {
+        uint32_t buffer_size = this->buffer_size();
+#ifndef NDEBUG
+        if (required_capacity > buffer_size)
+        {
+            spdlog::error("required_capacity: {} buffer_size: {}", required_capacity, buffer_size);
+            return false;
+        }
+#endif
+        size_t max_offset = buffer_size - required_capacity;
+
+        size_t cached_gating = this->m_gating_sequence_cache.value();
+        size_t real_offset = (cached_gating > cursor)                  //
+                                 ? (SIZE_MAX - cached_gating + cursor) //
+                                 : (cursor - cached_gating);           //
+#ifndef NDEBUG
+        if (!(real_offset >= max_offset))
+        {
+            spdlog::info("cached_gating: {} max_offset: {} real_offset: {}", cached_gating, max_offset, real_offset);
+        }
+#endif
+
+        if (real_offset >= max_offset) [[MO_UNLIKELY]]
         {
             size_t min_sequence = mozi::ring::utils::minimum_sequence(gating_sequences, cursor);
             this->m_gating_sequence_cache.set(min_sequence);
+            cached_gating = this->m_gating_sequence_cache.value();
+            real_offset = (cached_gating > cursor) ? (SIZE_MAX - cached_gating + cursor) : (cursor - cached_gating);
 
-            if (wrap_point > min_sequence) [[MO_UNLIKELY]]
+#ifndef NDEBUG
+            spdlog::info("cached_gating: {} max_offset: {} real_offset: {}", cached_gating, max_offset, real_offset);
+#endif
+
+            if (real_offset >= max_offset)
             {
                 return false;
             }
         }
         return true;
     }
+
     uint32_t remaining_capacity() noexcept
     {
         auto consumed = mozi::ring::utils::minimum_sequence(this->gating_sequences(), this->cursor());
         auto produced = this->cursor();
         return this->buffer_size() - (produced - consumed);
     }
+
     void publish(const size_t sequence) noexcept
     {
         set_available(sequence);
     }
+
     void publish(const size_t lo, const size_t hi) noexcept
     {
         for (size_t sequence = lo; sequence <= hi; sequence++)
@@ -69,12 +128,14 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
             set_available(sequence);
         }
     }
+
     bool is_available(const size_t sequence) noexcept
     {
         auto index = calculate_index(sequence);
         auto flag = calculate_availability_flag(sequence);
         return m_available_buffer[index].load() == flag;
     }
+
     size_t highest_published_sequence(size_t lower_bound, size_t available_sequence) noexcept
     {
         for (size_t sequence = lower_bound; sequence <= available_sequence; sequence++)
@@ -93,9 +154,14 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
         auto index = calculate_index(sequence);
         auto flag = calculate_availability_flag(sequence);
         set_available_buffer_value(index, flag);
+
+#ifndef NDEBUG
+        spdlog::debug("available: index: {}, flag: {}", index, flag);
+#endif
     }
     void set_available_buffer_value(uint16_t index, size_t flag)
     {
+        // TODO: 内存顺序优化
         m_available_buffer[index].store(flag);
     }
     size_t calculate_availability_flag(size_t sequence)
@@ -107,12 +173,11 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
         return sequence & m_index_mask;
     }
 
-    mo_sequence_t m_gating_sequence_cache {mo_sequencer_t<mo_multi_producer_sequencer_c<Event, Size>, Event>::INITIAL_CURSOR_VALUE};
-    std::array<std::atomic<size_t>, Size> m_available_buffer {-1};
+    mo_sequence_t m_gating_sequence_cache{mo_sequencer_t<mo_multi_producer_sequencer_c, Event>::INITIAL_CURSOR_VALUE};
+    std::array<std::atomic<size_t>, Size> m_available_buffer{-1};
     uint16_t m_index_mask = static_cast<uint16_t>(Size - 1);
     uint16_t m_index_shift = std::log2(Size);
 };
 template <typename Event, uint32_t Size>
 using mo_multi_producer_sequencer_t = mo_multi_producer_sequencer_c<Event, Size>;
-// clang-format on
 } // namespace mozi::ring

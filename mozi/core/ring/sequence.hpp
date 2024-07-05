@@ -30,16 +30,20 @@ class mo_sequence_c
     }
     bool compare_and_set(size_t expected_value, size_t new_value) noexcept
     {
-        bool o = !static_cast<bool>(mo_value ^ expected_value);
-        mo_value = mo_value * static_cast<size_t>(!o) + new_value * static_cast<size_t>(o);
+        // TODO: 内存顺序优化
+        size_t value = mo_value.load();
+        bool o = !static_cast<bool>(value ^ expected_value);
+        mo_value.store(value * static_cast<size_t>(!o) + new_value * static_cast<size_t>(o));
         return o;
     }
     size_t add_and_get(size_t increment) noexcept
     {
+        // TODO: 内存顺序优化
         return mo_value += increment;
     }
     [[MO_NODISCARD]] size_t increment() noexcept
     {
+        // TODO: 内存顺序优化
         return mo_value += 1;
     }
     static const int64_t INITIAL_VALUE = -1;

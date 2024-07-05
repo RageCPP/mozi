@@ -13,6 +13,12 @@ inline size_t minimum_sequence(std::vector<mo_arc_sequence_t> *sequences, size_t
 {
     auto _sequences = *sequences;
     size_t minimum_sequence = minimum;
+    if (_sequences.size() == 0)
+    {
+        return minimum_sequence;
+    }
+
+    minimum_sequence = _sequences[0]->value();
     for (size_t i = 0; i < _sequences.size(); i++)
     {
         minimum_sequence = std::min(minimum_sequence, _sequences[i]->value());

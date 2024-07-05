@@ -12,6 +12,7 @@
 #include "mozi/core/ring/sequence_barrier_factory.hpp"
 #include "mozi/core/ring/sequencer.hpp"
 #include "mozi/core/ring/single_producer_sequencer.hpp"
+#include "spdlog/spdlog.h"
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -89,13 +90,13 @@ class mo_ring_buffer_s :
     {
         return this->m_data[seq];
     }
-    std::optional<size_t> next() noexcept
+    /**
+     * @brief claim unsafe method, just used for sequence overflow test
+     */
+    size_t claim(const size_t sequence) noexcept
     {
-        return this->m_data.m_sequencer->next();
-    }
-    std::optional<size_t> next(uint16_t n) noexcept
-    {
-        return this->m_data.m_sequencer->next(n);
+        this->m_data.m_sequencer->claim(sequence);
+        return this->m_data.m_sequencer->cursor();
     }
     uint32_t remaining_capacity() noexcept
     {
@@ -111,20 +112,26 @@ class mo_ring_buffer_s :
     }
     void publish(size_t sequence) noexcept
     {
+#ifndef NDEBUG
+        spdlog::debug("publish");
+#endif
         this->m_data.m_sequencer->publish(sequence);
     }
     void publish(size_t lo, size_t hi) noexcept
     {
         this->m_data.m_sequencer->publish(lo, hi);
     }
-    void publish_event(Translator &translator) noexcept
+    bool publish_event(Translator &translator) noexcept
     {
         const std::optional<size_t> sequence = this->next();
         if (sequence.has_value()) [[MO_LIKELY]]
         {
             this->translate_and_publish(translator, sequence.value());
+            return true;
         }
+        return false;
     }
+
     template <typename... Translators> bool publish_events(Translators &...translators) noexcept
     {
         auto need_size = sizeof...(Translators);
@@ -202,16 +209,21 @@ class mo_ring_buffer_s :
         return std::make_unique<mo__event_poller_t>(this, this->m_data.m_sequencer.get(),
                                                     std::make_shared<mo_sequence_t>(), gating_sequence);
     }
+    std::optional<size_t> next() noexcept
+    {
+        return this->m_data.m_sequencer->next();
+    }
+    std::optional<size_t> next(uint16_t n) noexcept
+    {
+        return this->m_data.m_sequencer->next(n);
+    }
 
   private:
-    mo_ring_buffer_data_t<Event, Size, Sequencer, EventFactory, Translator> m_data;
-
     void translate_and_publish(Translator &translator, size_t sequence) noexcept
     {
         translator((*this)[sequence], sequence);
         this->publish(sequence);
     }
-
     // clang-format off
     template <typename... Translators>
     void translate_and_publish_events(Translators &...translators, size_t final_sequence, uint16_t batch_size) noexcept
@@ -227,6 +239,7 @@ class mo_ring_buffer_s :
         }
         this->publish(intial_sequence, final_sequence);
     }
+    mo_ring_buffer_data_t<Event, Size, Sequencer, EventFactory, Translator> m_data;
     // clang-format on
 };
 template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>

@@ -61,13 +61,19 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
   public:
     void operator()(mo_mail_t &event, [[maybe_unused]] size_t sequence) noexcept
     {
+#ifndef NDEBUG
+        spdlog::debug("mo_mail_translator_c::operator()");
+#endif
         event.update_mail(bytes, data);
         event.set_behavior(f);
     }
-    mo_mail_translator_c(uint8_t *bytes, void *data, void (*f)(uint8_t *buffer, void *data)) noexcept
-        : bytes(bytes), data(data), f(f)
+    explicit mo_mail_translator_c(uint8_t *bytes, void *data, void (*f)(uint8_t *buffer, void *data)) noexcept
+        : bytes(bytes), //
+          data(data),   //
+          f(f)          //
     {
     }
+
     mo_mail_translator_c &operator=(const mo_mail_translator_c &) = delete;
     mo_mail_translator_c &operator=(mo_mail_translator_c &&) = delete;
     mo_mail_translator_c(const mo_mail_translator_c &) = delete;
