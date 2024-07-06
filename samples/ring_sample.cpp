@@ -284,68 +284,81 @@ void muilt_use_poller()
     using mail = mozi::mail::mo_mail_t;
     using mail_factory = mozi::mail::mo_mail_factory_t;
     using mo_mail_translator = mozi::mail::mo_mail_translator_t;
-    using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 8>;
-    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 8, producer, mail_factory, mo_mail_translator>;
+    using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 4>;
+    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 4, producer, mail_factory, mo_mail_translator>;
     auto multi_producer = ring_buffer::create_multi_producer();
     auto poller = multi_producer->create_poller();
 
-    mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
-    multi_producer->add_gating_sequences(gating_sequence);
+    // mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
+    // multi_producer->add_gating_sequences(gating_sequence);
     spdlog::debug("mini sequence:{}", multi_producer->minimum_sequence());
-    // auto num = 0;
-    // while (5 > num)
-    // {
-    //     uint8_t *bytes = new uint8_t[1];
-    //     people *h = new people{"rage"};
-    //     mo_mail_translator pub_mail{bytes, h, say_name};
-    //     auto is_sucess = multi_producer->publish_event(pub_mail);
-    //     spdlog::debug("publish_event:{}", is_sucess);
-    //     fmt::println("");
-    //     num += 1;
-    // }
+    auto num = 0;
+    while (5 > num)
+    {
+        uint8_t *bytes = new uint8_t[1];
+        people *h = new people{"rage"};
+        mo_mail_translator pub_mail{bytes, h, say_name};
+        auto is_sucess = multi_producer->publish_event(pub_mail);
+        spdlog::debug("publish_event:{}", is_sucess);
+        fmt::println("");
+        num += 1;
+    }
+
+    poller->poll(mozi::mail::mo_mail_read_t{});
+    num = 0;
+    while (5 > num)
+    {
+        uint8_t *bytes = new uint8_t[1];
+        people *h = new people{"rage"};
+        mo_mail_translator pub_mail{bytes, h, say_name};
+        auto is_sucess = multi_producer->publish_event(pub_mail);
+        spdlog::debug("publish_event:{}", is_sucess);
+        fmt::println("");
+        num += 1;
+    }
 
     // not overflow producer
-    auto jthread_0 = std::jthread([&multi_producer]() {
-        auto num = 0;
-        while (4 > num)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{"rage"};
-            mo_mail_translator pub_mail{bytes, h, say_name};
-            auto is_sucess = multi_producer->publish_event(pub_mail);
-            spdlog::debug("publish_event:{}", is_sucess);
-            fmt::println("");
-            num += 1;
-        }
-    });
+    // auto jthread_0 = std::jthread([&multi_producer]() {
+    //     auto num = 0;
+    //     while (4 > num)
+    //     {
+    //         uint8_t *bytes = new uint8_t[1];
+    //         people *h = new people{"rage"};
+    //         mo_mail_translator pub_mail{bytes, h, say_name};
+    //         auto is_sucess = multi_producer->publish_event(pub_mail);
+    //         spdlog::debug("publish_event:{}", is_sucess);
+    //         fmt::println("");
+    //         num += 1;
+    //     }
+    // });
 
-    auto jthread_1 = std::jthread([&multi_producer]() {
-        auto num = 0;
-        while (4 > num)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{"rage"};
-            mo_mail_translator pub_mail{bytes, h, say_name};
-            auto is_sucess = multi_producer->publish_event(pub_mail);
-            spdlog::debug("publish_event:{}", is_sucess);
-            fmt::println("");
-            num += 1;
-        }
-    });
+    // auto jthread_1 = std::jthread([&multi_producer]() {
+    //     auto num = 0;
+    //     while (4 > num)
+    //     {
+    //         uint8_t *bytes = new uint8_t[1];
+    //         people *h = new people{"rage"};
+    //         mo_mail_translator pub_mail{bytes, h, say_name};
+    //         auto is_sucess = multi_producer->publish_event(pub_mail);
+    //         spdlog::debug("publish_event:{}", is_sucess);
+    //         fmt::println("");
+    //         num += 1;
+    //     }
+    // });
 
-    auto jthread_3 = std::jthread([&multi_producer]() {
-        auto num = 0;
-        while (4 > num)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{"rage"};
-            mo_mail_translator pub_mail{bytes, h, say_name};
-            auto is_sucess = multi_producer->publish_event(pub_mail);
-            spdlog::debug("publish_event:{}", is_sucess);
-            fmt::println("");
-            num += 1;
-        }
-    });
+    // auto jthread_3 = std::jthread([&multi_producer]() {
+    //     auto num = 0;
+    //     while (4 > num)
+    //     {
+    //         uint8_t *bytes = new uint8_t[1];
+    //         people *h = new people{"rage"};
+    //         mo_mail_translator pub_mail{bytes, h, say_name};
+    //         auto is_sucess = multi_producer->publish_event(pub_mail);
+    //         spdlog::debug("publish_event:{}", is_sucess);
+    //         fmt::println("");
+    //         num += 1;
+    //     }
+    // });
     // not overflow producer
 
     // gating sequences

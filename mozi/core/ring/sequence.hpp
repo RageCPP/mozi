@@ -46,7 +46,7 @@ class mo_sequence_c
         // TODO: 内存顺序优化
         return mo_value += 1;
     }
-    static const int64_t INITIAL_VALUE = -1;
+    static const size_t INITIAL_VALUE = SIZE_MAX;
 
   private:
     std::atomic<size_t> mo_value;

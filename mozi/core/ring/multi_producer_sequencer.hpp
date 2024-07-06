@@ -78,30 +78,34 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
         }
 #endif
         size_t max_offset = buffer_size - required_capacity;
+        size_t will_write = cursor + required_capacity;
 
-        size_t cached_gating = this->m_gating_sequence_cache.value();
-        size_t real_offset = (cached_gating > cursor)                  //
-                                 ? (SIZE_MAX - cached_gating + cursor) //
-                                 : (cursor - cached_gating);           //
+        size_t can_write = this->m_gating_sequence_cache.value() + 1;
+        size_t real_offset = (will_write >= can_write)                  //
+                                 ? (will_write - can_write)             //
+                                 : (SIZE_MAX - can_write + cursor + 1); //
 #ifndef NDEBUG
-        if (!(real_offset >= max_offset))
+        if (!(real_offset > max_offset))
         {
-            spdlog::info("cached_gating: {} max_offset: {} real_offset: {}", cached_gating, max_offset, real_offset);
+            spdlog::info("can_write: {} max_offset: {} real_offset: {}", can_write, max_offset, real_offset);
         }
 #endif
 
-        if (real_offset >= max_offset) [[MO_UNLIKELY]]
+        if (real_offset > max_offset) [[MO_UNLIKELY]]
         {
             size_t min_sequence = mozi::ring::utils::minimum_sequence(gating_sequences, cursor);
             this->m_gating_sequence_cache.set(min_sequence);
-            cached_gating = this->m_gating_sequence_cache.value();
-            real_offset = (cached_gating > cursor) ? (SIZE_MAX - cached_gating + cursor) : (cursor - cached_gating);
+
+            can_write = this->m_gating_sequence_cache.value() + 1;
+            size_t real_offset = (will_write >= can_write)                  //
+                                     ? (will_write - can_write)             //
+                                     : (SIZE_MAX - can_write + cursor + 1); //
 
 #ifndef NDEBUG
-            spdlog::info("cached_gating: {} max_offset: {} real_offset: {}", cached_gating, max_offset, real_offset);
+            spdlog::info("can_write: {} max_offset: {} real_offset: {}", can_write, max_offset, real_offset);
 #endif
 
-            if (real_offset >= max_offset)
+            if (real_offset > max_offset)
             {
                 return false;
             }

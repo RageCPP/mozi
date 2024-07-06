@@ -4,6 +4,7 @@
 #include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequencer.hpp"
+#include "spdlog/spdlog.h"
 #include <cstddef>
 #include <type_traits>
 
@@ -76,11 +77,13 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         {
             bool process_next_event;
             size_t processed_sequence = current_sequence;
+            DataProvider &data = *m_data_provider;
             while (true)
             {
-                Event &event = m_data_provider[next_sequence];
+                Event &event = data[next_sequence];
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
+                spdlog::debug("processed_sequence: {}", processed_sequence);
                 next_sequence += 1;
 
                 if (!(next_sequence <= available_sequence && process_next_event))
