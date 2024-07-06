@@ -149,6 +149,7 @@ class mo_ring_buffer_s :
         return false;
     }
 
+    // TODO: 未测试
     template <typename... Translators> inline bool publish_events(Translators &...translators) noexcept
     {
         auto need_size = sizeof...(Translators);
@@ -166,6 +167,7 @@ class mo_ring_buffer_s :
         translate_and_publish_events(translators..., sequence.value(), need_size);
         return true;
     }
+    // TODO: 未测试
 
     inline std::optional<size_t> next() noexcept
     {
@@ -193,13 +195,35 @@ class mo_ring_buffer_s :
     }
 
     // 未稳定
+    using mo__event_poller_t = mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>;
+    template <typename... Sequences>
+    [[MO_NODISCARD]] inline std::unique_ptr<mo__event_poller_t> create_poller(Sequences &&...gating_sequences)
+    {
+        mo_wait_sequences_t gating_sequence{};
+        auto len = sizeof...(Sequences);
+        if (len == 0)
+        {
+            // TODO: 增加 cursor 共享指针计数测试
+            gating_sequence.set_sequences(this->m_data.m_sequencer->cursor_instance());
+        }
+        else
+        {
+            gating_sequence.set_sequences(gating_sequences...);
+        }
+        mo_arc_sequence_t poller_sequence = std::make_shared<mo_sequence_t>();
+        this->m_data.m_sequencer->add_gating_sequences(poller_sequence);
+        return std::make_unique<mo__event_poller_t>(this,                           //
+                                                    this->m_data.m_sequencer.get(), //
+                                                    poller_sequence,                //
+                                                    gating_sequence);               //
+    }
 
-    // TODO: 完善
+    // TODO: 暂时使用不到 后面可能使用这个创建 每个 actor 可以占用的时间切片
     template <typename... Sequences>
     [[MO_NODISCARD]] inline std::unique_ptr<mo_processing_sequence_barrier_t<Sequencer>> create_barrier(
         [[maybe_unused]] const Sequences &...sequences_to_track) noexcept
     {
-        mo_gating_sequences_t gating_sequence{};
+        mo_wait_sequences_t gating_sequence{};
         [[maybe_unused]] auto len = sizeof...(Sequences);
         // if (len == 0)
         // {
@@ -213,27 +237,6 @@ class mo_ring_buffer_s :
                                                                              gating_sequence);
     }
 
-    using mo__event_poller_t = mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>;
-    template <typename... Sequences>
-    [[MO_NODISCARD]] inline std::unique_ptr<mo__event_poller_t> create_poller(Sequences &...gating_sequences)
-    {
-        static_assert((std::is_same_v<Sequences, mo_arc_sequence_t> && ...),
-                      "All Args must be of type mo_arc_sequence_t");
-        mo_gating_sequences_t gating_sequence{};
-        auto len = sizeof...(Sequences);
-        if (len == 0)
-        {
-            // TODO: 增加 cursor 共享指针计数测试
-            gating_sequence.set_sequences(this->m_data.m_sequencer->cursor_instance());
-        }
-        else
-        {
-            gating_sequence.set_sequences(gating_sequences...);
-        }
-        return std::make_unique<mo__event_poller_t>(this, this->m_data.m_sequencer.get(),
-                                                    std::make_shared<mo_sequence_t>(), gating_sequence);
-    }
-
   private:
     void translate_and_publish(Translator &translator, size_t sequence) noexcept
     {
@@ -241,6 +244,7 @@ class mo_ring_buffer_s :
         this->publish(sequence);
     }
 
+    // TODO: 未测试
     template <typename... Translators>
     void translate_and_publish_events(Translators &...translators, size_t final_sequence, uint16_t batch_size) noexcept
     {
@@ -258,6 +262,7 @@ class mo_ring_buffer_s :
 
         this->publish(intial_sequence, final_sequence);
     }
+    // TODO: 未测试
 
     mo_ring_buffer_data_t<Event, Size, Sequencer, EventFactory, Translator> m_data;
 };

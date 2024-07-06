@@ -12,9 +12,6 @@
 
 // TODO: 将所有成员变量的共享指针都改为普通指针 将 single_producer_sequencer |
 // multi_producer_sequencer 改为shared_this
-// 但是注意这里的m_gating_sequences内部如果存的都是普通指针，那么在以释放的指针时并不知道是否已经释放，但是智能指针其实也不知道
-// 需要在想想
-// 需要将被添加的sequence指针资源释放时候自动将其从gating_sequences中移除
 
 namespace mozi::ring
 {

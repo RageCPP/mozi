@@ -5,7 +5,7 @@
 #include <vector>
 namespace mozi::ring
 {
-struct mo_gating_sequences_c
+struct mo_wait_sequences_c
 {
     /**
      * Get the minimum sequence value for the group.
@@ -44,5 +44,5 @@ struct mo_gating_sequences_c
   private:
     std::vector<mo_arc_sequence_t> mo_sequences{};
 };
-using mo_gating_sequences_t = mo_gating_sequences_c;
+using mo_wait_sequences_t = mo_wait_sequences_c;
 } // namespace mozi::ring

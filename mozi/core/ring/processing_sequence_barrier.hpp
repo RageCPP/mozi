@@ -17,7 +17,7 @@ class mo_processing_sequence_barrier_c : public mo_sequence_barrier_t<mo_process
     // clang-format off
     mo_processing_sequence_barrier_c(
       SI *sequencer,
-      mo_gating_sequences_t dependent_sequence) noexcept
+      mo_wait_sequences_t dependent_sequence) noexcept
         : m_sequencer(sequencer),
           m_dependent_sequence(dependent_sequence) {}
     // clang-format on
@@ -49,7 +49,7 @@ class mo_processing_sequence_barrier_c : public mo_sequence_barrier_t<mo_process
 
   private:
     SI *m_sequencer;
-    mo_gating_sequences_t m_dependent_sequence;
+    mo_wait_sequences_t m_dependent_sequence;
     std::atomic<bool> alerted = false;
 };
 template <class SI> using mo_processing_sequence_barrier_t = mo_processing_sequence_barrier_c<SI>;

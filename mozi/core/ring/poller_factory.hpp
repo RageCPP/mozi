@@ -17,7 +17,7 @@ template <typename I, typename Poller> class mo_poller_factory_c
     template <typename U, typename... Sequences>
     struct mo_event_poller_t_create_poller_gatting_sequences<
         U, std::enable_if_t<
-            std::is_same_v<decltype(std::declval<U>().create_poller(std::declval<const Sequences &>()...)), std::unique_ptr<Poller>>
+            std::is_same_v<decltype(std::declval<U>().create_poller(std::declval<Sequences>()...)), std::unique_ptr<Poller>>
             && (... && std::is_same_v<Sequences, mo_arc_sequence_t>)>,
         Sequences...
     > : std::true_type
