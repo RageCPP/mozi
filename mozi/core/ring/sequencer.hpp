@@ -51,7 +51,7 @@ template <class Sequencer, typename Event> class mo_sequencer_c : public mo_curs
     template <typename U>
     struct bool_remove_gating_sequence_sequence<
         U, std::enable_if_t<
-            std::is_same_v<decltype(std::declval<U>().remove_gating_sequence(std::declval<mo_arc_sequence_t &>())), bool>>
+            std::is_same_v<decltype(std::declval<U>().remove_gating_sequence(mo_arc_sequence_t())), bool>>
     > : std::true_type
     {
     };

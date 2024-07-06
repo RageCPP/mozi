@@ -2,11 +2,15 @@
 #include "mozi/core/mail.hpp"
 #include "mozi/core/ring/processing_sequence_barrier.hpp"
 #include "mozi/core/ring/ring_buffer.hpp"
+#include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/single_producer_sequencer.hpp"
 #include "mozi/core/ring/yield_wait_strategy.hpp"
+#include "spdlog/spdlog.h"
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
+#include <memory>
 #include <random>
 #include <string>
 #include <tuple>
@@ -191,73 +195,153 @@ void single_use_poller()
     poller->poll(mozi::mail::mo_mail_read_t{});
 }
 
+void del_int(int *p)
+{
+    spdlog::info("delete int");
+    delete p;
+}
+
+void atomic_use()
+{
+    struct dog
+    {
+        dog()
+        {
+        }
+        ~dog()
+        {
+            spdlog::info("delete dog");
+        }
+        std::unique_ptr<int, decltype(&del_int)> p{new int{1}, del_int};
+    };
+    struct animel : dog
+    {
+        animel(std::string name) : name{name}
+        {
+        }
+        ~animel()
+        {
+            spdlog::info("delete {}", name);
+        }
+
+        std::string name;
+    };
+    auto a1 = std::make_shared<animel>("rage");
+    auto a2 = std::make_shared<animel>("cpp");
+
+    auto *p1 = new std::vector<std::shared_ptr<animel>>{};
+    p1->push_back(a1);
+
+    auto *p2 = new std::vector<std::shared_ptr<animel>>{};
+    p2->push_back(a2);
+
+    auto *p3 = new std::vector<std::shared_ptr<animel>>{};
+    p3->push_back(a2);
+
+    std::atomic<std::vector<std::shared_ptr<animel>> *> atomic_ptr;
+    atomic_ptr.store(p1);
+    spdlog::info("name {}", atomic_ptr.load()->at(0)->name);
+
+    auto orign = atomic_ptr.load();
+    atomic_ptr.compare_exchange_weak(orign, p2);
+    spdlog::info("name {}", atomic_ptr.load()->at(0)->name);
+    delete orign;
+
+    orign = atomic_ptr.load();
+    atomic_ptr.compare_exchange_weak(orign, p3);
+    delete orign;
+    delete atomic_ptr.load();
+}
+
+void shared_vec()
+{
+    class Test
+    {
+      public:
+        ~Test()
+        {
+            spdlog::info("Test object destroyed\n");
+        }
+    };
+    std::vector<std::shared_ptr<Test>> vec;
+
+    vec.reserve(2);
+    vec.reserve(1);
+
+    vec.push_back(std::make_shared<Test>());
+    vec.push_back(std::make_shared<Test>());
+
+    spdlog::info("Before clear, vector size: {}", vec.size());
+
+    vec.clear(); // 清理向量，减少shared_ptr的引用计数
+
+    spdlog::info("After clear, vector size: {}", vec.size());
+}
+
 void muilt_use_poller()
 {
-    spdlog::set_level(spdlog::level::debug);
-    using mail = mozi::mail::mo_mail_t;
-    using mail_factory = mozi::mail::mo_mail_factory_t;
-    using mo_mail_translator = mozi::mail::mo_mail_translator_t;
-    using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 4>;
-    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 4, producer, mail_factory, mo_mail_translator>;
-    auto multi_producer = ring_buffer::create_multi_producer();
-    auto poller = multi_producer->create_poller();
+    // spdlog::set_level(spdlog::level::debug);
+    // using mail = mozi::mail::mo_mail_t;
+    // using mail_factory = mozi::mail::mo_mail_factory_t;
+    // using mo_mail_translator = mozi::mail::mo_mail_translator_t;
+    // using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 4>;
+    // using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 4, producer, mail_factory, mo_mail_translator>;
+    // auto multi_producer = ring_buffer::create_multi_producer();
+    // auto poller = multi_producer->create_poller();
 
     // not overflow producer
-    auto jthread_0 = std::jthread([&multi_producer]() {
-        auto num = 0;
-        while (100 > num)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{"rage"};
-            mo_mail_translator pub_mail{bytes, h, say_name};
-            auto is_sucess = multi_producer->publish_event(pub_mail);
-            spdlog::debug("publish_event:{}", is_sucess);
-            fmt::println("");
-            num += 1;
-        }
-    });
+    // auto jthread_0 = std::jthread([&multi_producer]() {
+    //     auto num = 0;
+    //     while (100 > num)
+    //     {
+    //         uint8_t *bytes = new uint8_t[1];
+    //         people *h = new people{"rage"};
+    //         mo_mail_translator pub_mail{bytes, h, say_name};
+    //         auto is_sucess = multi_producer->publish_event(pub_mail);
+    //         spdlog::debug("publish_event:{}", is_sucess);
+    //         fmt::println("");
+    //         num += 1;
+    //     }
+    // });
 
-    auto jthread_1 = std::jthread([&multi_producer]() {
-        auto num = 0;
-        while (100 > num)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{"rage"};
-            mo_mail_translator pub_mail{bytes, h, say_name};
-            auto is_sucess = multi_producer->publish_event(pub_mail);
-            spdlog::debug("publish_event:{}", is_sucess);
-            fmt::println("");
-            num += 1;
-        }
-    });
+    // auto jthread_1 = std::jthread([&multi_producer]() {
+    //     auto num = 0;
+    //     while (100 > num)
+    //     {
+    //         uint8_t *bytes = new uint8_t[1];
+    //         people *h = new people{"rage"};
+    //         mo_mail_translator pub_mail{bytes, h, say_name};
+    //         auto is_sucess = multi_producer->publish_event(pub_mail);
+    //         spdlog::debug("publish_event:{}", is_sucess);
+    //         fmt::println("");
+    //         num += 1;
+    //     }
+    // });
 
-    auto jthread_3 = std::jthread([&multi_producer]() {
-        auto num = 0;
-        while (100 > num)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{"rage"};
-            mo_mail_translator pub_mail{bytes, h, say_name};
-            auto is_sucess = multi_producer->publish_event(pub_mail);
-            spdlog::debug("publish_event:{}", is_sucess);
-            fmt::println("");
-            num += 1;
-        }
-    });
+    // auto jthread_3 = std::jthread([&multi_producer]() {
+    //     auto num = 0;
+    //     while (100 > num)
+    //     {
+    //         uint8_t *bytes = new uint8_t[1];
+    //         people *h = new people{"rage"};
+    //         mo_mail_translator pub_mail{bytes, h, say_name};
+    //         auto is_sucess = multi_producer->publish_event(pub_mail);
+    //         spdlog::debug("publish_event:{}", is_sucess);
+    //         fmt::println("");
+    //         num += 1;
+    //     }
+    // });
     // not overflow producer
 
-    // uint8_t *bytes_7 = new uint8_t[1];
-    // people *h_7 = new people{"rage"};
-    // mo_mail_translator pub_mail_7{bytes_7, h_7, say_name};
-    // is_sucess = multi_producer->publish_event(pub_mail_7);
-    // spdlog::debug("publish_event:{}", is_sucess);
-    // fmt::println("");
-
-    spdlog::debug("buffer_size:{}", multi_producer->buffer_size());
-    spdlog::debug("remaining_capacity:{}", multi_producer->remaining_capacity());
+    // gating sequences
+    // mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
+    // multi_producer->add_gating_sequences(gating_sequence);
+    // gating sequences
 
     // poller->poll(mozi::mail::mo_mail_read_t{});
     // poller->poll(mozi::mail::mo_mail_read_t{});
+    atomic_use();
+    shared_vec();
 }
 
 int main()

@@ -57,14 +57,14 @@ class mo_single_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_single_
     {
 #ifndef NDEBUG
         // TODO: 这里替换使用 exception
-        if (!same_thread())
-        {
-            throw std::runtime_error("SingleProducerSequencer.next() called from multiple threads");
-        }
-        if (n < 1 || n > this->m_buffer_size)
-        {
-            throw std::invalid_argument("n must be greater than 0 and less than buffer_size");
-        }
+        // if (!same_thread())
+        // {
+        //     throw std::runtime_error("SingleProducerSequencer.next() called from multiple threads");
+        // }
+        // if (n < 1 || n > this->m_buffer_size)
+        // {
+        //     throw std::invalid_argument("n must be greater than 0 and less than buffer_size");
+        // }
 #endif
         if (!has_available_capacity(n, true)) [[MO_UNLIKELY]]
         {
