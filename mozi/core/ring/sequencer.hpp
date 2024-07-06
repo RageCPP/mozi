@@ -45,13 +45,13 @@ template <class Sequencer, typename Event> class mo_sequencer_c : public mo_curs
     {
     };
 
-    template <typename U, typename = void> struct bool_remove_gating_sequence_sequence : std::false_type
+    template <typename U, typename = void> struct bool_remove_gating_sequences_sequence : std::false_type
     {
     };
     template <typename U>
-    struct bool_remove_gating_sequence_sequence<
+    struct bool_remove_gating_sequences_sequence<
         U, std::enable_if_t<
-            std::is_same_v<decltype(std::declval<U>().remove_gating_sequence(mo_arc_sequence_t())), bool>>
+            std::is_same_v<decltype(std::declval<U>().remove_gating_sequences(std::declval<mo_arc_sequence_t &>())), bool>>
     > : std::true_type
     {
     };
@@ -97,7 +97,7 @@ template <class Sequencer, typename Event> class mo_sequencer_c : public mo_curs
                 void_add_gating_sequences_gating_sequences<Sequencer, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&>,
                 void_add_gating_sequences_gating_sequences<Sequencer, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&, mo_arc_sequence_t&>
             >::value, "Sequencer should have `void add_gating_sequences(mo_arc_sequence_t& ...)` method");
-        static_assert(bool_remove_gating_sequence_sequence<Sequencer>::value,  "Sequencer should have `bool remove_gating_sequence(mo_arc_sequence_t&)` method");
+        static_assert(bool_remove_gating_sequences_sequence<Sequencer>::value,  "Sequencer should have `bool remove_gating_sequence(mo_arc_sequence_t&)` method");
         static_assert(size_t_minimum_sequence<Sequencer>::value, "Sequencer should have `size_t minimum_sequence()` method");
         static_assert(size_t_highest_published_sequence_next_sequence_available_sequence<Sequencer>::value, "Sequencer should have `size_t highest_published_sequence(size_t, size_t)` method");
     }

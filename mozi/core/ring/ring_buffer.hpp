@@ -167,20 +167,32 @@ class mo_ring_buffer_s :
         return true;
     }
 
-    std::optional<size_t> next() noexcept
+    inline std::optional<size_t> next() noexcept
     {
         return this->m_data.m_sequencer->next();
     }
-    std::optional<size_t> next(uint16_t n) noexcept
+
+    inline std::optional<size_t> next(uint16_t n) noexcept
     {
         return this->m_data.m_sequencer->next(n);
     }
 
-    // 未稳定
-    template <typename... Sequences> inline void add_gating_sequences([[maybe_unused]] Sequences... sequences) noexcept
+    template <typename... Sequences> inline void add_gating_sequences(Sequences... sequences) noexcept
     {
         this->m_data.m_sequencer->add_gating_sequences(sequences...);
     }
+
+    inline bool remove_gating_sequence(mo_arc_sequence_t &sequence) noexcept
+    {
+        return this->m_data.m_sequencer->remove_gating_sequences(sequence);
+    }
+
+    inline size_t minimum_sequence() const noexcept
+    {
+        return this->m_data.m_sequencer->minimum_sequence();
+    }
+
+    // 未稳定
 
     // TODO: 完善
     template <typename... Sequences>

@@ -32,7 +32,7 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     {
         mozi::ring::sequence_group::add_sequences(this, std::move(sequences)...);
     }
-    inline bool remove_gating_sequence(mo_arc_sequence_t sequence) noexcept
+    inline bool remove_gating_sequences(mo_arc_sequence_t sequence) noexcept
     {
         return mozi::ring::sequence_group::remove_sequences(this, sequence);
     }
