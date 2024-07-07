@@ -22,7 +22,7 @@ size_t inline count_match(std::vector<mozi::ring::mo_arc_sequence_t> *sequences,
 } // namespace
 namespace mozi::ring::sequence_group
 {
-template <class Sequencer, typename... Sequences> void add_sequences(Sequencer *sequencer, Sequences &&...sequences)
+template <class Sequencer, typename... Sequences> void add_sequences(Sequencer *sequencer, Sequences &...sequences)
 {
     static_assert((std::is_same_v<Sequences, mo_arc_sequence_t> && ...),
                   "All Args must be of type  std::atomic<std::shared_ptr<mo_sequence_t>>");

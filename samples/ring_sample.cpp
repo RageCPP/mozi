@@ -278,7 +278,7 @@ void shared_vec()
     spdlog::info("After clear, vector size: {}", vec.size());
 }
 
-void muilt_use_poller()
+void muilt_use_poller_test_1()
 {
     spdlog::set_level(spdlog::level::debug);
     using mail = mozi::mail::mo_mail_t;
@@ -287,11 +287,16 @@ void muilt_use_poller()
     using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 4>;
     using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 4, producer, mail_factory, mo_mail_translator>;
     auto multi_producer = ring_buffer::create_multi_producer();
-    auto poller = multi_producer->create_poller();
+    // auto poller = multi_producer->create_poller();
 
-    // mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
-    // multi_producer->add_gating_sequences(gating_sequence);
+    mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
+    gating_sequence->set(SIZE_MAX - 2);
+    multi_producer->claim(SIZE_MAX - 2);
+    spdlog::debug("gating_sequence:{}", gating_sequence->value());
+
+    multi_producer->add_gating_sequences(gating_sequence);
     spdlog::debug("mini sequence:{}", multi_producer->minimum_sequence());
+
     auto num = 0;
     while (5 > num)
     {
@@ -303,8 +308,40 @@ void muilt_use_poller()
         fmt::println("");
         num += 1;
     }
+}
 
+void muilt_use_poller_test_2()
+{
+    spdlog::set_level(spdlog::level::debug);
+    using mail = mozi::mail::mo_mail_t;
+    using mail_factory = mozi::mail::mo_mail_factory_t;
+    using mo_mail_translator = mozi::mail::mo_mail_translator_t;
+    using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 4>;
+    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 4, producer, mail_factory, mo_mail_translator>;
+    auto multi_producer = ring_buffer::create_multi_producer();
+    auto poller = multi_producer->create_poller();
+    auto num = 0;
+    while (1 > num)
+    {
+        uint8_t *bytes = new uint8_t[1];
+        people *h = new people{"rage"};
+        mo_mail_translator pub_mail{bytes, h, say_name};
+        auto is_sucess = multi_producer->publish_event(pub_mail);
+        spdlog::debug("publish_event:{}", is_sucess);
+        fmt::println("");
+        num += 1;
+    }
     poller->poll(mozi::mail::mo_mail_read_t{});
+
+    mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
+    gating_sequence->set(SIZE_MAX - 2);
+    multi_producer->claim(SIZE_MAX - 2);
+    spdlog::debug("gating_sequence:{}", gating_sequence->value());
+    multi_producer->add_gating_sequences(gating_sequence);
+    spdlog::debug("mini sequence:{}", multi_producer->minimum_sequence());
+
+    multi_producer->claim(0);
+
     num = 0;
     while (5 > num)
     {
@@ -316,6 +353,77 @@ void muilt_use_poller()
         fmt::println("");
         num += 1;
     }
+}
+
+void muilt_use_poller()
+{
+    spdlog::set_level(spdlog::level::debug);
+    using mail = mozi::mail::mo_mail_t;
+    using mail_factory = mozi::mail::mo_mail_factory_t;
+    using mo_mail_translator = mozi::mail::mo_mail_translator_t;
+    using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, 4>;
+    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 4, producer, mail_factory, mo_mail_translator>;
+    auto multi_producer = ring_buffer::create_multi_producer();
+    auto poller = multi_producer->create_poller();
+    auto num = 0;
+    while (1 > num)
+    {
+        uint8_t *bytes = new uint8_t[1];
+        people *h = new people{"rage"};
+        mo_mail_translator pub_mail{bytes, h, say_name};
+        auto is_sucess = multi_producer->publish_event(pub_mail);
+        spdlog::debug("publish_event:{}", is_sucess);
+        fmt::println("");
+        num += 1;
+    }
+    poller->poll(mozi::mail::mo_mail_read_t{});
+
+    mozi::ring::mo_arc_sequence_t gating_sequence = std::make_shared<mozi::ring::mo_sequence_t>();
+    gating_sequence->set(SIZE_MAX - 2);
+    multi_producer->claim(SIZE_MAX - 2);
+    spdlog::debug("gating_sequence:{}", gating_sequence->value());
+    multi_producer->add_gating_sequences(gating_sequence);
+    spdlog::debug("mini sequence:{}", multi_producer->minimum_sequence());
+
+    multi_producer->claim(0);
+
+    num = 0;
+    while (5 > num)
+    {
+        uint8_t *bytes = new uint8_t[1];
+        people *h = new people{"rage"};
+        mo_mail_translator pub_mail{bytes, h, say_name};
+        auto is_sucess = multi_producer->publish_event(pub_mail);
+        spdlog::debug("publish_event:{}", is_sucess);
+        fmt::println("");
+        num += 1;
+    }
+
+    // spdlog::debug("mini sequence:{}", multi_producer->minimum_sequence());
+    // auto num = 0;
+    // while (5 > num)
+    // {
+    //     uint8_t *bytes = new uint8_t[1];
+    //     people *h = new people{"rage"};
+    //     mo_mail_translator pub_mail{bytes, h, say_name};
+    //     auto is_sucess = multi_producer->publish_event(pub_mail);
+    //     spdlog::debug("publish_event:{}", is_sucess);
+    //     fmt::println("");
+    //     num += 1;
+    // }
+
+    // poller->poll(mozi::mail::mo_mail_read_t{});
+    // num = 0;
+    // while (5 > num)
+    // {
+    //     uint8_t *bytes = new uint8_t[1];
+    //     people *h = new people{"rage"};
+    //     mo_mail_translator pub_mail{bytes, h, say_name};
+    //     auto is_sucess = multi_producer->publish_event(pub_mail);
+    //     spdlog::debug("publish_event:{}", is_sucess);
+    //     fmt::println("");
+    //     num += 1;
+    // }
 
     // not overflow producer
     // auto jthread_0 = std::jthread([&multi_producer]() {
