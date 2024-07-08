@@ -8,3 +8,4 @@ share/
 pkg/
 compile_commands.json
 .cache/
+Testing/

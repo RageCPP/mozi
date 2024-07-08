@@ -181,12 +181,17 @@ class mo_ring_buffer_s :
 
     template <typename... Sequences> inline void add_gating_sequences(Sequences... sequences) noexcept
     {
-        this->m_data.m_sequencer->add_gating_sequences(sequences...);
+        this->m_data.m_sequencer->add_gating_sequences(std::forward<Sequences>(sequences)...);
     }
 
-    inline bool remove_gating_sequence(mo_arc_sequence_t &sequence) noexcept
+    inline bool remove_gating_sequence(mo_arc_sequence_t sequence) noexcept
     {
         return this->m_data.m_sequencer->remove_gating_sequences(sequence);
+    }
+
+    inline size_t gating_sequences_size() noexcept
+    {
+        return this->m_data.m_sequencer->gating_sequences_size();
     }
 
     inline size_t minimum_sequence() const noexcept
@@ -194,7 +199,6 @@ class mo_ring_buffer_s :
         return this->m_data.m_sequencer->minimum_sequence();
     }
 
-    // 未稳定
     using mo__event_poller_t = mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>;
     template <typename... Sequences>
     [[MO_NODISCARD]] inline std::unique_ptr<mo__event_poller_t> create_poller(Sequences &&...gating_sequences)
@@ -203,7 +207,6 @@ class mo_ring_buffer_s :
         auto len = sizeof...(Sequences);
         if (len == 0)
         {
-            // TODO: 增加 cursor 共享指针计数测试
             gating_sequence.set_sequences(this->m_data.m_sequencer->cursor_instance());
         }
         else
@@ -217,6 +220,8 @@ class mo_ring_buffer_s :
                                                     poller_sequence,                //
                                                     gating_sequence);               //
     }
+
+    // 未稳定
 
     // TODO: 暂时使用不到 后面可能使用这个创建 每个 actor 可以占用的时间切片
     template <typename... Sequences>

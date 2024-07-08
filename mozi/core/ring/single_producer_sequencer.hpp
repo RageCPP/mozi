@@ -9,6 +9,7 @@
 
 namespace mozi::ring
 {
+// TODO: 此单生产者未检查 暂时未使用 后面将其作为 窃取队列 使用
 /// 单生产者序列器
 // m_next_value: 下一个要写入的序列
 // m_cached_value: 用户已经处理的最小序列

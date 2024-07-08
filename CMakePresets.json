@@ -13,7 +13,8 @@
         "BUILD_SHARED_LIBS": "NO",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}",
         "CMAKE_C_COMPILER": "/usr/bin/gcc-13",
-        "CMAKE_CXX_COMPILER": "/usr/bin/g++-13"
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++-13",
+        "SKIP_BUILD_TEST": "ON"
       }
     },
     {
@@ -28,7 +29,8 @@
         "BUILD_SHARED_LIBS": "NO",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}",
         "CMAKE_C_COMPILER": "/usr/bin/gcc-13",
-        "CMAKE_CXX_COMPILER": "/usr/bin/g++-13"
+        "CMAKE_CXX_COMPILER": "/usr/bin/g++-13",
+        "SKIP_BUILD_TEST": "ON"
       }
     }
   ],
@@ -60,15 +62,6 @@
         "deque_sample",
         "ring_sample"
       ]
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "test",
-      "configurePreset": "debug",
-      "environment": {
-        "CTEST_ARGS": "-R Mozi"
-      }
     }
   ]
 }

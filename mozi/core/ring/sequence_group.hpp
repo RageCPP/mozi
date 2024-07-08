@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mozi/core/ring/sequence.hpp"
+#include "spdlog/spdlog.h"
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -22,7 +23,7 @@ size_t inline count_match(std::vector<mozi::ring::mo_arc_sequence_t> *sequences,
 } // namespace
 namespace mozi::ring::sequence_group
 {
-template <class Sequencer, typename... Sequences> void add_sequences(Sequencer *sequencer, Sequences &...sequences)
+template <class Sequencer, typename... Sequences> void add_sequences(Sequencer *sequencer, Sequences... sequences)
 {
     static_assert((std::is_same_v<Sequences, mo_arc_sequence_t> && ...),
                   "All Args must be of type  std::atomic<std::shared_ptr<mo_sequence_t>>");
@@ -64,7 +65,7 @@ template <class Sequencer, typename... Sequences> void add_sequences(Sequencer *
     std::apply([&](auto &&...sequence) { (..., [&] { sequence->set(cursor_sequence); }()); }, sequence_add);
 };
 
-template <class Sequencer> bool remove_sequences(Sequencer *sequences, mo_arc_sequence_t &sequence)
+template <class Sequencer> bool remove_sequences(Sequencer *sequences, mo_arc_sequence_t sequence)
 {
     size_t num_to_remove;
     std::vector<mo_arc_sequence_t> *old_sequences;

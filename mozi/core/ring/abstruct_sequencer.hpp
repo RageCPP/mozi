@@ -27,11 +27,15 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     }
     template <typename... Sequences> inline void add_gating_sequences(Sequences... sequences) noexcept
     {
-        mozi::ring::sequence_group::add_sequences(this, sequences...);
+        mozi::ring::sequence_group::add_sequences(this, std::forward<Sequences>(sequences)...);
     }
     inline bool remove_gating_sequences(mo_arc_sequence_t sequence) noexcept
     {
         return mozi::ring::sequence_group::remove_sequences(this, sequence);
+    }
+    inline size_t gating_sequences_size() noexcept
+    {
+        return m_gating_sequences.load()->size();
     }
     inline size_t minimum_sequence() const noexcept
     {
@@ -60,9 +64,9 @@ template <class SI, typename Event> class mo_abstruct_sequencer_c : public mo_se
     }
 
     template <class Sequencer, typename... Sequences>
-    friend void mozi::ring::sequence_group::add_sequences(Sequencer *sequencer, Sequences &...sequences);
+    friend void mozi::ring::sequence_group::add_sequences(Sequencer *sequencer, Sequences... sequences);
     template <class Sequencer>
-    friend bool mozi::ring::sequence_group::remove_sequences(Sequencer *sequences, mo_arc_sequence_t &sequence);
+    friend bool mozi::ring::sequence_group::remove_sequences(Sequencer *sequences, mo_arc_sequence_t sequence);
 
   private:
     uint32_t m_buffer_size;

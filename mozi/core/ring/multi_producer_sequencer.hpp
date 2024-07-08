@@ -11,11 +11,6 @@
 #include <optional>
 namespace mozi::ring
 {
-// 多生产者序列器
-// next_value: 下一个要写入的序列
-// cursor: 生产者最后写入的序列
-// m_available_buffer: 可用序列(未消费序列) 这段代码使用循环轮数来标记可用序列
-// m_gating_sequence_cache: 未消费序列的最小序列 在 gating_sequences 为 0 时候 这个值为 cursor 值
 template <typename Event, uint32_t Size>
 class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_producer_sequencer_c<Event, Size>, Event>
 {
@@ -43,7 +38,7 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
     {
         uint64_t current = 0;
         uint64_t next = 0;
-
+        // TODO: 这里改为 while(true) + break 支持
         do
         {
             current = this->cursor();
@@ -77,18 +72,23 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
             return false;
         }
 #endif
+        // TODO: 频繁调用点 是否可优化
+
+        // TODO: 这里改为支持constexpr
         size_t max_offset = buffer_size - required_capacity;
         size_t will_write = cursor + required_capacity;
-
         size_t can_write = this->m_gating_sequence_cache.value() + 1;
-        spdlog::debug("can_write: {} will_write: {}", can_write, will_write);
         size_t real_offset = (will_write >= can_write)                      //
                                  ? (will_write - can_write)                 //
-                                 : (SIZE_MAX - can_write + 1 + will_write); //
+                                 : (will_write + SIZE_MAX - can_write + 1); //
 #ifndef NDEBUG
         if (!(real_offset > max_offset))
         {
-            spdlog::info("can_write: {} max_offset: {} real_offset: {}", can_write, max_offset, real_offset);
+            spdlog::info("can_write: {} will_write: {} max_offset: {} real_offset: {}",
+                         can_write,    //
+                         will_write,   //
+                         max_offset,   //
+                         real_offset); //
         }
 #endif
 
@@ -96,14 +96,13 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
         {
             size_t min_sequence = mozi::ring::utils::minimum_sequence(gating_sequences, cursor);
             this->m_gating_sequence_cache.set(min_sequence);
-            spdlog::debug("min_sequence: {}", min_sequence);
-
             can_write = this->m_gating_sequence_cache.value() + 1;
-            size_t real_offset = (will_write >= can_write)                      //
-                                     ? (will_write - can_write)                 //
-                                     : (SIZE_MAX - can_write + 1 + will_write); //
+            real_offset = (will_write >= can_write)                      //
+                              ? (will_write - can_write)                 //
+                              : (will_write + SIZE_MAX - can_write + 1); //
 
 #ifndef NDEBUG
+            spdlog::debug("min_sequence: {}", min_sequence);
             spdlog::info("can_write: {} max_offset: {} real_offset: {}", can_write, max_offset, real_offset);
 #endif
 

@@ -49,8 +49,7 @@ FetchContent_MakeAvailable(
   concurrentqueue
   spdlog
   llhttp
-
-  # googletest
+  googletest
 )
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/libuv")
@@ -95,5 +94,4 @@ set(MOZI_INSTALL_LIB_DIR ${CMAKE_INSTALL_LIBDIR})
 
 add_subdirectory(mozi)
 add_subdirectory(samples)
-
-# add_subdirectory(tests)
+add_subdirectory(tests)

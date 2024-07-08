@@ -1,7 +1,7 @@
 // #include "mozi/core/ring/gating_sequence.hpp"
 // #include "mozi/core/ring/sequence.hpp"
-// #include "spdlog/spdlog.h"
 #include <gtest/gtest.h>
+#include <spdlog/spdlog.h>
 
 // Demonstrate some basic assertions.
 TEST(MoziGatingSequenceTest, mo_gating_sequence_t)

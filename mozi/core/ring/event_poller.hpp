@@ -83,7 +83,6 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
                 Event &event = data[next_sequence];
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
-                spdlog::debug("processed_sequence: {}", processed_sequence);
                 next_sequence += 1;
 
                 if (!(next_sequence <= available_sequence && process_next_event))
@@ -96,6 +95,7 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         }
         else if (m_sequencer->cursor() >= next_sequence)
         {
+            // 只有在非使用 sequencer cursor 作为 wait sequence 的情况下才可能会进入这个分支
             return mo_poll_flags::MO_POLL_GATING;
         }
         else
