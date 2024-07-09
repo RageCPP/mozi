@@ -5,6 +5,7 @@
 #include "spdlog/spdlog.h"
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 namespace mozi::mail
 {
 // TODO 这里MMU 寻址优化
@@ -49,9 +50,10 @@ class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_
 {
   public:
     mo_mail_factory_c() = default;
-    [[MO_NODISCARD]] static mo_mail_t create_instance() noexcept
+    [[MO_NODISCARD]] static std::unique_ptr<mo_mail_t> create_instance() noexcept
     {
-        return mozi::mail::mo_mail_s{};
+        spdlog::info("mo_mail_factory_c::create_instance");
+        return std::make_unique<mozi::mail::mo_mail_s>();
     }
 };
 using mo_mail_factory_t = mo_mail_factory_c;
@@ -59,13 +61,13 @@ using mo_mail_factory_t = mo_mail_factory_c;
 class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_translator_c, mo_mail_t>
 {
   public:
-    void operator()(mo_mail_t &event, [[maybe_unused]] size_t sequence) noexcept
+    void operator()(mo_mail_t *event, [[maybe_unused]] size_t sequence) noexcept
     {
 #ifndef NDEBUG
         spdlog::debug("mo_mail_translator_c::operator()");
 #endif
-        event.update_mail(bytes, data);
-        event.set_behavior(f);
+        event->update_mail(bytes, data);
+        event->set_behavior(f);
     }
     explicit mo_mail_translator_c(uint8_t *bytes, void *data, void (*f)(uint8_t *buffer, void *data)) noexcept
         : bytes(bytes), //
@@ -90,10 +92,11 @@ using mo_mail_translator_t = mo_mail_translator_c;
 class mo_mail_read_c
 {
   public:
-    bool on_event(mo_mail_t &event, [[maybe_unused]] size_t sequence, [[maybe_unused]] bool end_of_batch) noexcept
+    bool on_event([[maybe_unused]] mo_mail_t *event, [[maybe_unused]] size_t sequence,
+                  [[maybe_unused]] bool end_of_batch) noexcept
     {
         spdlog::info("mo_mail_read_c::on_event");
-        event();
+        (*event)();
         return true;
     }
 };

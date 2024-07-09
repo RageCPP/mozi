@@ -6,6 +6,7 @@
 #include "mozi/core/ring/sequencer.hpp"
 #include "spdlog/spdlog.h"
 #include <cstddef>
+#include <iostream>
 #include <type_traits>
 
 namespace mozi::ring
@@ -54,8 +55,8 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         };
         template <typename U>
         struct bool_on_event_event_sequence_end_of_batch<
-            U, std::enable_if_t<std::is_same_v<
-                   decltype(std::declval<U>().on_event(std::declval<Event &>(), size_t(), bool())), bool>>>
+            U,
+            std::enable_if_t<std::is_same_v<decltype(std::declval<U>().on_event(new Event(), size_t(), bool())), bool>>>
             : std::true_type
         {
         };
@@ -64,23 +65,33 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         mo_handler_c()
         {
             static_assert(bool_on_event_event_sequence_end_of_batch<I>::value,
-                          "I should have `bool on_event(Event &, size_t, bool)` method");
+                          "I should have `bool on_event(Event *, size_t, bool)` method");
         };
     };
 
-    template <typename Handler> mo_poll_flags poll(Handler event_handler)
+    template <typename Handler> mo_poll_flags poll([[maybe_unused]] Handler event_handler)
     {
+
         size_t current_sequence = m_sequence->value();
         size_t next_sequence = current_sequence + 1;
         size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_wait_sequences.value());
         if (next_sequence <= available_sequence)
         {
-            bool process_next_event;
+            [[maybe_unused]] bool process_next_event = false;
             size_t processed_sequence = current_sequence;
             DataProvider &data = *m_data_provider;
             while (true)
             {
-                Event &event = data[next_sequence];
+                Event *event = data[next_sequence];
+                // if (event != nullptr)
+                // { // 确保event不是空指针
+                //     std::cout << typeid(*event).name() << std::endl;
+                //     std::cout << "event is not nullptr" << std::endl;
+                // }
+                // else
+                // {
+                //     std::cout << "event is nullptr" << std::endl;
+                // }
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
                 next_sequence += 1;

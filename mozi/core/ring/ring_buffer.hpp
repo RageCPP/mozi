@@ -40,17 +40,22 @@ struct mo_ring_buffer_data_s : public mo_event_factory_t<EventFactory, Event>, p
 #define MAX_ERROR "buffer size must <= " TO_STRING(BUFFER_SIZE_MAX)
         static_assert(Size < UINT16_MAX + 1, MAX_ERROR);
         static_assert((Size & (Size - 1)) == 0, "buffer size must be power of 2");
-        m_entries.fill(EventFactory::create_instance());
+        // error 这种方法会将所有元素填充为同一个元素的引用 只有一个实例
+        // m_entries.fill(EventFactory::create_instance());
+        for (auto &entry : m_entries)
+        {
+            entry = std::move(EventFactory::create_instance());
+        }
     }
-    Event &operator[](size_t seq)
+    Event *operator[](size_t seq)
     {
-        return m_entries[seq & m_index_mask_const];
+        return m_entries[seq & m_index_mask_const].get();
     }
     friend class mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>;
 
   private:
     uint16_t m_index_mask_const = static_cast<uint16_t>(Size - 1);
-    std::array<Event, Size> m_entries;
+    std::array<std::unique_ptr<Event>, Size> m_entries;
     uint32_t m_buffer_size = Size;
     std::unique_ptr<Sequencer> m_sequencer;
 };
@@ -80,7 +85,7 @@ class mo_ring_buffer_s :
     {
     }
 
-    Event &operator[](size_t seq)
+    Event *operator[](size_t seq)
     {
         return this->m_data[seq];
     }

@@ -9,7 +9,7 @@ template <class I, typename Event> class mo_data_provider_c
     {
     };
     template <class U>
-    struct event_get_sequence<U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>()[size_t()]), Event &>>>
+    struct event_get_sequence<U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>()[size_t()]), Event *>>>
         : std::true_type
     {
     };
@@ -17,7 +17,7 @@ template <class I, typename Event> class mo_data_provider_c
   public:
     mo_data_provider_c()
     {
-        static_assert(event_get_sequence<I>::value, "I should have `Event& operator[](size_t)` method");
+        static_assert(event_get_sequence<I>::value, "I should have `Event* operator[](size_t)` method");
     }
 };
 template <class I, typename Event> using mo_data_provider_t = mo_data_provider_c<I, Event>;

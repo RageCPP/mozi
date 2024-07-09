@@ -17,7 +17,7 @@ template <typename I, typename Event> class mo_event_translator_c
     // clang-format off
     template <typename U>
     struct void_translate_to_event_sequence<
-        U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>()(std::declval<Event &>(), size_t())), void>>> : std::true_type
+        U, std::enable_if_t<std::is_same_v<decltype(std::declval<U>()(new Event(), size_t())), void>>> : std::true_type
     {
     };
     // clang-format on
@@ -26,7 +26,7 @@ template <typename I, typename Event> class mo_event_translator_c
     mo_event_translator_c()
     {
         // clang-format off
-        static_assert(void_translate_to_event_sequence<I>::value, "I must have `void oprator(Event& source_event, size_t source_event_sequence)` method");
+        static_assert(void_translate_to_event_sequence<I>::value, "I must have `void oprator(Event* source_event, size_t source_event_sequence)` method");
         // clang-format on
     }
 };
