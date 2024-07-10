@@ -26,6 +26,7 @@ using mo_loop_data_t = mo_loop_data_s;
 namespace actor
 {
 template <uint32_t Size> class mo_uv_actor_c;
+template <uint32_t Size> class mo_actor_c;
 }; // namespace actor
 
 namespace mail
@@ -49,6 +50,8 @@ class mo_event_poller_c;                                                        
 }; // namespace ring
 
 using mo_uv_actor_t = actor::mo_uv_actor_c<BITS_13>;
+
+using mo_actor_t = actor::mo_actor_c<BITS_8>;
 
 using mo_mail_t = mail::mo_mail_s;
 

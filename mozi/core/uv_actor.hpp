@@ -3,9 +3,6 @@
 #include "mozi/core/actor_flags.hpp"
 #include "mozi/core/alias.hpp"
 #include "mozi/core/deque.hpp"
-#include "mozi/core/mail.hpp"
-#include "mozi/core/ring/multi_producer_sequencer.hpp"
-#include "mozi/core/ring/ring_buffer.hpp"
 #include <coroutine>
 #include <cstdint>
 #include <memory>
@@ -34,7 +31,6 @@ template <uint32_t Size> class mo_uv_actor_c
         mo__coro_s()
             : m_workflow{std::make_unique<mozi::mo_deque_c<coro_handle>>()},
               m_state(mo_actor_state_flags::MO_ACTOR_STATE_INIT)
-
         {
             std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
             std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();

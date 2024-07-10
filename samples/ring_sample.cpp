@@ -1,20 +1,15 @@
 #include "fmt/core.h"
-#include "mozi/core/mail.hpp"
-#include "mozi/core/ring/processing_sequence_barrier.hpp"
+#include "mozi/core/actor.hpp"
+#include "mozi/core/alias.hpp"
 #include "mozi/core/ring/ring_buffer.hpp"
-#include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/single_producer_sequencer.hpp"
-#include "mozi/core/ring/yield_wait_strategy.hpp"
 #include "mozi/core/uv_actor.hpp"
 #include "spdlog/spdlog.h"
 #include <atomic>
-#include <chrono>
 #include <cstdint>
 #include <cstdio>
 #include <memory>
-#include <random>
 #include <string>
-#include <tuple>
 #include <vector>
 // int random_1_to_5()
 // {
@@ -294,19 +289,22 @@ void muilt_use_poller()
     {
         auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) { spdlog::info("hello"); };
 
-        while (true)
-        {
-            uint8_t *bytes = new uint8_t[1];
-            people *h = new people{};
-            mozi::mo_mail_translator_t pub_mail{bytes, h, f};
-            uvdata->uv.publish_event(pub_mail);
-            uvdata->uv.resume();
-        }
+        // while (true)
+        // {
+        uint8_t *bytes = new uint8_t[1];
+        people *h = new people{};
+        mozi::mo_mail_translator_t pub_mail{bytes, h, f};
+        uvdata->uv.publish_event(pub_mail);
+        uvdata->uv.resume();
+        // }
 
         // uvdata->uv.resume();
         // uvdata->uv.stop();
         // uvdata->uv.resume();
     }
+
+    auto normal_actor = mozi::mo_actor_t::create();
+    normal_actor.start();
     spdlog::info("end");
     delete uvdata;
 }
