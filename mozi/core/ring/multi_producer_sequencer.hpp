@@ -183,6 +183,4 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
     uint16_t m_index_mask = static_cast<uint16_t>(Size - 1);
     uint16_t m_index_shift = std::log2(Size);
 };
-template <typename Event, uint32_t Size>
-using mo_multi_producer_sequencer_t = mo_multi_producer_sequencer_c<Event, Size>;
 } // namespace mozi::ring

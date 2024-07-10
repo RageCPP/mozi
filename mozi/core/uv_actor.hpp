@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mozi/core/actor_flags.hpp"
+#include "mozi/core/alias.hpp"
 #include "mozi/core/deque.hpp"
 #include "mozi/core/mail.hpp"
 #include "mozi/core/ring/multi_producer_sequencer.hpp"
@@ -14,13 +15,9 @@ namespace mozi::actor
 {
 template <uint32_t Size> class mo_uv_actor_c
 {
-    using mo__mail = mozi::mail::mo_mail_t;
-    using mo__mail_factory = mozi::mail::mo_mail_factory_t;
-    using mo__mail_translator = mozi::mail::mo_mail_translator_t;
-    using mo__mailbox_producer = mozi::ring::mo_multi_producer_sequencer_t<mo__mail, Size>;
-    using mo__mailbox =
-        mozi::ring::mo_ring_buffer_t<mo__mail, Size, mo__mailbox_producer, mo__mail_factory, mo__mail_translator>;
-    using mo__mailbox_poller = mozi::ring::mo_event_poller_t<mo__mailbox, mo__mailbox_producer, mo__mail>;
+    using mo__mailbox = mo_mailbox_t<Size>;
+    using mo__sender = mo_mailbox_sender_t<Size>;
+    using mo__reveiver = mo_mailbox_receiver_t<Size>;
 
   public:
     struct mo__coro_s;
@@ -40,7 +37,7 @@ template <uint32_t Size> class mo_uv_actor_c
 
         {
             std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
-            std::unique_ptr<mo__mailbox_poller> mailbox_poller = mailbox->create_poller();
+            std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
             m_mailbox_poller = std::move(mailbox_poller);
             m_mailbox = std::move(mailbox);
             spdlog::info("mo__coro_s::mo__coro_s()");
@@ -49,7 +46,7 @@ template <uint32_t Size> class mo_uv_actor_c
         {
             m_state = state;
         }
-        mo_actor_state_flags state() const noexcept
+        inline mo_actor_state_flags state() const noexcept
         {
             return m_state;
         }
@@ -80,7 +77,7 @@ template <uint32_t Size> class mo_uv_actor_c
             {
                 if (m_state == mo_actor_state_flags::MO_ACTOR_STATE_IDLE)
                 {
-                    handle.promise().m_mailbox_poller->poll(mozi::mail::mo_mail_read_t{});
+                    handle.promise().m_mailbox_poller->poll(mo_mail_read_t{});
                 }
                 std::optional<coro_handle> h = handle.promise().m_workflow->pop();
                 if (h.has_value())
@@ -118,7 +115,7 @@ template <uint32_t Size> class mo_uv_actor_c
         friend class mo_uv_actor_c;
         // Fixed order
         std::unique_ptr<mo__mailbox> m_mailbox;
-        std::unique_ptr<mo__mailbox_poller> m_mailbox_poller;
+        std::unique_ptr<mo__reveiver> m_mailbox_poller;
         // Fixed order
 
         std::unique_ptr<mozi::mo_deque_c<coro_handle>> m_workflow;
@@ -141,13 +138,12 @@ template <uint32_t Size> class mo_uv_actor_c
     {
         return m_coro_handle.promise().update_state(mo_actor_state_flags::MO_ACTOR_STATE_STOP);
     }
-    inline bool publish_event(mo__mail_translator &translate) noexcept
+    inline bool publish_event(mo_mail_translator_t &translate) noexcept
     {
         return m_coro_handle.promise().m_mailbox->publish_event(translate);
     }
     static mo_uv_actor_c create()
     {
-        // [[MO_UNUSED]] mozi::mo_deque_c<coro_handle> *workflow
         typename mo__coro_s::mo__out_state out_state{mo_actor_state_flags::MO_ACTOR_STATE_CHECK};
         co_yield {out_state};
 
@@ -184,5 +180,4 @@ template <uint32_t Size> class mo_uv_actor_c
 
     coro_handle m_coro_handle;
 };
-template <uint32_t Size> using mo_uv_actor_t = mo_uv_actor_c<Size>;
 } // namespace mozi::actor

@@ -181,11 +181,11 @@ void say_name([[maybe_unused]] uint8_t *bytes, void *data)
 }
 void single_use_poller()
 {
-    using mail = mozi::mail::mo_mail_t;
-    using mail_factory = mozi::mail::mo_mail_factory_t;
-    using mo_mail_translator = mozi::mail::mo_mail_translator_t;
+    using mail = mozi::mo_mail_t;
+    using mail_factory = mozi::mo_mail_factory_t;
+    using mo_mail_translator = mozi::mo_mail_translator_t;
     using producer = mozi::ring::mo_single_producer_sequencer_t<mail>;
-    using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, 8, producer, mail_factory, mo_mail_translator>;
+    using ring_buffer = mozi::mo_ring_buffer_t<mail, 8, producer, mail_factory, mo_mail_translator>;
     auto single_producer = ring_buffer::create_single_producer();
     auto poller = single_producer->create_poller();
     uint8_t *bytes = new uint8_t[1];
@@ -193,7 +193,7 @@ void single_use_poller()
     mo_mail_translator pub_mail{bytes, h, say_name};
     single_producer->publish_event(pub_mail);
     spdlog::debug("publish_event");
-    poller->poll(mozi::mail::mo_mail_read_t{});
+    poller->poll(mozi::mo_mail_read_t{});
 }
 
 void del_int(int *p)
@@ -284,12 +284,12 @@ void muilt_use_poller()
     spdlog::set_level(spdlog::level::debug);
     struct uv_data
     {
-        mozi::actor::mo_uv_actor_t<8> uv;
+        mozi::mo_uv_actor_t uv;
     };
     struct people
     {
     };
-    auto uvdata = new uv_data{mozi::actor::mo_uv_actor_t<8>::create()};
+    auto uvdata = new uv_data{mozi::mo_uv_actor_t::create()};
     uvdata->uv.start();
     {
         auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) { spdlog::info("hello"); };
@@ -298,7 +298,7 @@ void muilt_use_poller()
         {
             uint8_t *bytes = new uint8_t[1];
             people *h = new people{};
-            mozi::mail::mo_mail_translator_t pub_mail{bytes, h, f};
+            mozi::mo_mail_translator_t pub_mail{bytes, h, f};
             uvdata->uv.publish_event(pub_mail);
             uvdata->uv.resume();
         }
@@ -307,7 +307,6 @@ void muilt_use_poller()
         // uvdata->uv.stop();
         // uvdata->uv.resume();
     }
-
     spdlog::info("end");
     delete uvdata;
 }

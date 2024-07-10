@@ -44,24 +44,22 @@ struct mo_mail_s
     uint8_t *m_bytes = nullptr;
     void *m_data = nullptr;
 };
-using mo_mail_t = mo_mail_s;
 
-class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_c, mo_mail_t>
+class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_c, mo_mail_s>
 {
   public:
     mo_mail_factory_c() = default;
-    [[MO_NODISCARD]] static std::unique_ptr<mo_mail_t> create_instance() noexcept
+    [[MO_NODISCARD]] static std::unique_ptr<mo_mail_s> create_instance() noexcept
     {
         spdlog::info("mo_mail_factory_c::create_instance");
         return std::make_unique<mozi::mail::mo_mail_s>();
     }
 };
-using mo_mail_factory_t = mo_mail_factory_c;
 
-class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_translator_c, mo_mail_t>
+class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_translator_c, mo_mail_s>
 {
   public:
-    void operator()(mo_mail_t *event, [[maybe_unused]] size_t sequence) noexcept
+    void operator()(mo_mail_s *event, [[maybe_unused]] size_t sequence) noexcept
     {
 #ifndef NDEBUG
         spdlog::debug("mo_mail_translator_c::operator()");
@@ -87,18 +85,16 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
     void *data;
     void (*f)(uint8_t *buffer, void *data);
 };
-using mo_mail_translator_t = mo_mail_translator_c;
 
 class mo_mail_read_c
 {
   public:
-    bool on_event([[maybe_unused]] mo_mail_t *event, [[maybe_unused]] size_t sequence,
+    bool on_event([[maybe_unused]] mo_mail_s *event, [[maybe_unused]] size_t sequence,
                   [[maybe_unused]] bool end_of_batch) noexcept
     {
-        spdlog::info("mo_mail_read_c::on_event");
+        // TODO: 完善 增加日志 增加执行结果处理 增加异常处理
         (*event)();
         return true;
     }
 };
-using mo_mail_read_t = mo_mail_read_c;
 } // namespace mozi::mail

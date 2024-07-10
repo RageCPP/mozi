@@ -4,9 +4,7 @@
 #include "mozi/core/ring/gating_sequences.hpp"
 #include "mozi/core/ring/sequence.hpp"
 #include "mozi/core/ring/sequencer.hpp"
-#include "spdlog/spdlog.h"
 #include <cstddef>
-#include <iostream>
 #include <type_traits>
 
 namespace mozi::ring
@@ -126,6 +124,5 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
     mo_arc_sequence_t m_sequence;
     mo_wait_sequences_t m_wait_sequences;
 };
-template <class DataProvider, class Sequencer, typename Event>
-using mo_event_poller_t = mo_event_poller_c<DataProvider, Sequencer, Event>;
+
 } // namespace mozi::ring

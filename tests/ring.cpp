@@ -1,3 +1,4 @@
+#include "mozi/core/alias.hpp"
 #include "mozi/core/mail.hpp"
 #include "mozi/core/ring/event_poller.hpp"
 #include <cstdint>
@@ -6,12 +7,12 @@
 #include <spdlog/spdlog.h>
 
 constexpr uint32_t mail_size = 512;
-using mail = mozi::mail::mo_mail_t;
-using mail_factory = mozi::mail::mo_mail_factory_t;
-using mo_mail_translator = mozi::mail::mo_mail_translator_t;
-using producer = mozi::ring::mo_multi_producer_sequencer_t<mail, mail_size>;
-using ring_buffer = mozi::ring::mo_ring_buffer_t<mail, mail_size, producer, mail_factory, mo_mail_translator>;
-using poller = mozi::ring::mo_event_poller_t<ring_buffer, producer, mail>;
+using mail = mozi::mo_mail_t;
+using mail_factory = mozi::mo_mail_factory_t;
+using mo_mail_translator = mozi::mo_mail_translator_t;
+using producer = mozi::mo_multi_producer_sequencer_t<mail, mail_size>;
+using ring_buffer = mozi::mo_ring_buffer_t<mail, mail_size, producer, mail_factory, mo_mail_translator>;
+using poller = mozi::mo_event_poller_t<ring_buffer, producer, mail>;
 void publish_with_5thread(auto &producer, uint16_t &success, uint16_t count)
 {
     std::jthread([&producer, &success, count]() {
@@ -190,14 +191,14 @@ TEST(MoziTest, Publish)
             publish_with_5thread(multi_producer, second_success, 500);
             EXPECT_EQ(second_success, 0);
             second_success = 0;
-            auto poll_state = poller->poll(mozi::mail::mo_mail_read_t{});
+            auto poll_state = poller->poll(mozi::mo_mail_read_t{});
             EXPECT_EQ(poll_state, poller::mo_poll_flags::MO_POLL_PROCESSING);
-            poll_state = poller->poll(mozi::mail::mo_mail_read_t{});
+            poll_state = poller->poll(mozi::mo_mail_read_t{});
             EXPECT_EQ(poll_state, poller::mo_poll_flags::MO_POLL_IDLE);
             publish_with_5thread(multi_producer, second_success, 500);
             EXPECT_EQ(second_success, 512);
             second_success = 0;
-            poll_state = poller->poll(mozi::mail::mo_mail_read_t{});
+            poll_state = poller->poll(mozi::mo_mail_read_t{});
             EXPECT_EQ(poll_state, poller::mo_poll_flags::MO_POLL_PROCESSING);
             publish_with_5thread(multi_producer, second_success, 1);
             EXPECT_EQ(second_success, 5);

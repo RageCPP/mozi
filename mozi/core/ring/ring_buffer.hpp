@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mozi/compile/attributes_cpp.hpp"
+#include "mozi/core/alias.hpp"
 #include "mozi/core/ring/event_factory.hpp"
 #include "mozi/core/ring/event_poller.hpp"
 #include "mozi/core/ring/event_sequencer.hpp"
@@ -59,13 +60,6 @@ struct mo_ring_buffer_data_s : public mo_event_factory_t<EventFactory, Event>, p
     uint32_t m_buffer_size = Size;
     std::unique_ptr<Sequencer> m_sequencer;
 };
-template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>
-using mo_ring_buffer_data_t = mo_ring_buffer_data_s<Event, Size, Sequencer, EventFactory, Translator>;
-
-struct mo_ring_buffer_share_data_s
-{
-};
-using mo_ring_buffer_share_data_t = mo_ring_buffer_share_data_s;
 
 // clang-format off
 template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>
@@ -98,7 +92,7 @@ class mo_ring_buffer_s :
         return ring_buffer;
     }
 
-    using multi_producer = mo_multi_producer_sequencer_t<Event, Size>;
+    using multi_producer = mo_multi_producer_sequencer_c<Event, Size>;
     static std::unique_ptr<mo_ring_buffer_t> create_multi_producer()
     {
         std::unique_ptr<multi_producer> sequencer = std::make_unique<multi_producer>(Size);
@@ -204,7 +198,7 @@ class mo_ring_buffer_s :
         return this->m_data.m_sequencer->minimum_sequence();
     }
 
-    using mo__event_poller_t = mo_event_poller_t<mo_ring_buffer_t, Sequencer, Event>;
+    using mo__event_poller_t = mo_event_poller_c<mo_ring_buffer_t, Sequencer, Event>;
     template <typename... Sequences>
     [[MO_NODISCARD]] inline std::unique_ptr<mo__event_poller_t> create_poller(Sequences &&...gating_sequences)
     {
@@ -274,8 +268,7 @@ class mo_ring_buffer_s :
     }
     // TODO: 未测试
 
-    mo_ring_buffer_data_t<Event, Size, Sequencer, EventFactory, Translator> m_data;
+    mo_ring_buffer_data_s<Event, Size, Sequencer, EventFactory, Translator> m_data;
 };
-template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>
-using mo_ring_buffer_t = mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>;
+
 } // namespace mozi::ring

@@ -78,7 +78,7 @@ set(MOZI_CORE_RING_HEADERS
   core/ring/wait_strategy.hpp)
 
 set(MOZI_HEADERS
-  core/common.hpp
+  core/alias.hpp
   core/mail.hpp
   core/deque.hpp
   core/run.hpp)
