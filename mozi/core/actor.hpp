@@ -1,6 +1,7 @@
 #pragma once
 #include "mozi/core/actor_flags.hpp"
 #include "mozi/core/alias.hpp"
+#include "spdlog/spdlog.h"
 #include <coroutine>
 #include <cstdint>
 #include <exception>
@@ -27,6 +28,11 @@ template <uint32_t Size> class mo_actor_c
         }
         mo__coro_s() : m_state(mo_actor_state_flags::MO_ACTOR_STATE_INIT)
         {
+            std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
+            std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
+            m_mailbox_poller = std::move(mailbox_poller);
+            m_mailbox = std::move(mailbox);
+            spdlog::info("mo__coro_s::mo__coro_s()");
         }
         void update_uv_actor(mo_uv_actor_t *actor) noexcept
         {
@@ -130,9 +136,20 @@ template <uint32_t Size> class mo_actor_c
     {
         m_coro_handle.promise().update_state(mo_actor_state_flags::MO_ACTOR_STATE_STOP);
     }
+    inline void update_uv_actor(mo_uv_actor_t &actor) noexcept
+    {
+        m_coro_handle.promise().update_uv_actor(&actor);
+    }
     inline void publish_event(mo_mail_translator_t &translate) noexcept
     {
-        return m_coro_handle.promise().m_mailbox->publish_event(translate);
+        m_coro_handle.promise().m_mailbox->publish_event(translate);
+        auto uv_actor = m_coro_handle.promise().m_uv_actor.load();
+        if (uv_actor != nullptr)
+        {
+            spdlog::info("workflow_push");
+            uv_actor->workflow_push(m_coro_handle);
+        }
+        return;
     }
     static mo_actor_c create() noexcept
     {

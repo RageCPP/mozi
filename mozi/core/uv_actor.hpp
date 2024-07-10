@@ -29,7 +29,7 @@ template <uint32_t Size> class mo_uv_actor_c
             return mo_uv_actor_c{coro_handle::from_promise(*this)};
         }
         mo__coro_s()
-            : m_workflow{std::make_unique<mozi::mo_deque_c<coro_handle>>()},
+            : m_workflow{std::make_unique<mozi::mo_deque_c<std::coroutine_handle<>>>()},
               m_state(mo_actor_state_flags::MO_ACTOR_STATE_INIT)
         {
             std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
@@ -75,7 +75,7 @@ template <uint32_t Size> class mo_uv_actor_c
                 {
                     handle.promise().m_mailbox_poller->poll(mo_mail_read_t{});
                 }
-                std::optional<coro_handle> h = handle.promise().m_workflow->pop();
+                std::optional<std::coroutine_handle<>> h = handle.promise().m_workflow->pop();
                 if (h.has_value())
                 {
                     return h.value();
@@ -114,7 +114,7 @@ template <uint32_t Size> class mo_uv_actor_c
         std::unique_ptr<mo__reveiver> m_mailbox_poller;
         // Fixed order
 
-        std::unique_ptr<mozi::mo_deque_c<coro_handle>> m_workflow;
+        std::unique_ptr<mozi::mo_deque_c<std::coroutine_handle<>>> m_workflow;
         mo_actor_state_flags m_state;
     };
 
@@ -133,6 +133,10 @@ template <uint32_t Size> class mo_uv_actor_c
     inline void stop() noexcept
     {
         return m_coro_handle.promise().update_state(mo_actor_state_flags::MO_ACTOR_STATE_STOP);
+    }
+    inline void workflow_push(std::coroutine_handle<> handle) noexcept
+    {
+        return m_coro_handle.promise().m_workflow->push(handle);
     }
     inline bool publish_event(mo_mail_translator_t &translate) noexcept
     {

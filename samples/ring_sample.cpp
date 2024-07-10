@@ -287,7 +287,7 @@ void muilt_use_poller()
     auto uvdata = new uv_data{mozi::mo_uv_actor_t::create()};
     uvdata->uv.start();
     {
-        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) { spdlog::info("hello"); };
+        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) { spdlog::info("hello uv actor"); };
 
         // while (true)
         // {
@@ -295,7 +295,6 @@ void muilt_use_poller()
         people *h = new people{};
         mozi::mo_mail_translator_t pub_mail{bytes, h, f};
         uvdata->uv.publish_event(pub_mail);
-        uvdata->uv.resume();
         // }
 
         // uvdata->uv.resume();
@@ -305,6 +304,24 @@ void muilt_use_poller()
 
     auto normal_actor = mozi::mo_actor_t::create();
     normal_actor.start();
+    normal_actor.update_uv_actor(uvdata->uv);
+    uint8_t *bytes = new uint8_t[1];
+    people *h = new people{};
+    auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) { spdlog::info("hello actor 1"); };
+    mozi::mo_mail_translator_t pub_mail{bytes, h, f};
+    normal_actor.publish_event(pub_mail);
+
+    auto normal_actor_1 = mozi::mo_actor_t::create();
+    normal_actor_1.start();
+    normal_actor_1.update_uv_actor(uvdata->uv);
+    uint8_t *bytes_1 = new uint8_t[1];
+    people *h_1 = new people{};
+    auto f_1 = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) { spdlog::info("hello actor 2"); };
+    mozi::mo_mail_translator_t pub_mail_1{bytes_1, h_1, f_1};
+    normal_actor_1.publish_event(pub_mail_1);
+
+    uvdata->uv.resume();
+
     spdlog::info("end");
     delete uvdata;
 }

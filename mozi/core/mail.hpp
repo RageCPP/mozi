@@ -19,7 +19,7 @@ struct mo_mail_s
     }
     ~mo_mail_s()
     {
-        spdlog::info("mo_mail_s::~mo_mail_s()");
+        // spdlog::info("mo_mail_s::~mo_mail_s()");
         delete[] m_bytes;
         free(m_data);
     }
@@ -51,7 +51,7 @@ class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_
     mo_mail_factory_c() = default;
     [[MO_NODISCARD]] static std::unique_ptr<mo_mail_s> create_instance() noexcept
     {
-        spdlog::info("mo_mail_factory_c::create_instance");
+        // spdlog::info("mo_mail_factory_c::create_instance");
         return std::make_unique<mozi::mail::mo_mail_s>();
     }
 };
