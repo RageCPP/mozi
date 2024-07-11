@@ -2,10 +2,14 @@
 #include "mozi/compile/attributes_cpp.hpp"
 #include "mozi/core/ring/event_factory.hpp"
 #include "mozi/core/ring/event_translator.hpp"
+#include "mozi/variables/const_dec.hpp"
 #include "spdlog/spdlog.h"
+#include <atomic>
 #include <cstddef>
 #include <cstdint>
+#include <future>
 #include <memory>
+
 namespace mozi::mail
 {
 // TODO 这里MMU 寻址优化
@@ -13,36 +17,108 @@ namespace mozi::mail
 struct mo_mail_s
 {
   public:
+    friend class mo_mail_translator_c;
+    struct mo_mail_out_s
+    {
+      public:
+        void set_destroy(void (*destroy)(void *) noexcept)
+        {
+            m_destroy = destroy;
+        }
+        void set_check(void (*check)(void *, int64_t, uint16_t) noexcept)
+        {
+            m_check = check;
+        }
+        void set_data(void *data, uint16_t wait_senconds)
+        {
+            // TODO: m_start 时间戳
+            m_wait_senconds = wait_senconds;
+            m_start = 0;
+            m_data = data;
+        }
+        void destroy() noexcept
+        {
+            if (m_destroy != nullptr)
+            {
+                m_destroy(m_data);
+            }
+        }
+        void check(void *data, int64_t start, uint16_t wait_senconds) noexcept
+        {
+            // unsafe check
+            // if (m_check != nullptr)
+            // {
+            m_check(data, start, wait_senconds);
+            // }
+        }
+        ~mo_mail_out_s()
+        {
+            if (m_destroy != nullptr)
+            {
+                m_destroy(m_data);
+            }
+        }
+        mo_mail_out_s &operator=(const mo_mail_out_s &) = delete;
+        mo_mail_out_s &operator=(mo_mail_out_s &&) = delete;
+        mo_mail_out_s(const mo_mail_out_s &) = delete;
+        mo_mail_out_s(mo_mail_out_s &&) = delete;
+        mo_mail_out_s() = default;
+
+      private:
+        int64_t m_start;
+        uint16_t m_wait_senconds;
+        void *m_data;
+        void (*m_destroy)(void *) noexcept;
+        void (*m_check)(void *, int64_t, uint16_t) noexcept;
+    };
     void operator()() noexcept
     {
-        m_behavior(m_bytes, m_data);
+        m_behavior(m_serial_in, m_in);
     }
     ~mo_mail_s()
     {
         // spdlog::info("mo_mail_s::~mo_mail_s()");
-        delete[] m_bytes;
-        free(m_data);
+        delete[] m_serial_in;
+        free(m_in);
+        if (m_out != nullptr)
+        {
+            m_out->destroy();
+        }
+        delete m_out;
     }
-    friend class mo_mail_translator_c;
 
   private:
-    void update_mail(uint8_t *bytes, void *data)
+    void store_mail_in(uint8_t *serial_mail_in, void *mail_in)
     {
-        if (m_bytes != nullptr) [[MO_LIKELY]]
+        delete[] m_serial_in;
+        free(m_in);
+        if (m_out != nullptr)
         {
-            delete[] m_bytes;
+            m_out->destroy();
         }
-        free(m_data);
-        m_bytes = bytes;
-        m_data = data;
+        delete m_out;
+
+        m_serial_in = serial_mail_in;
+        m_in = mail_in;
+    }
+    void store_mail_out(mo_mail_out_s *mail_out)
+    {
+        m_out = mail_out;
+    }
+    inline bool is_ready() noexcept
+    {
+        return m_out != nullptr;
     }
     void set_behavior(void (*behavior)(uint8_t *, void *)) noexcept
     {
         m_behavior = behavior;
     }
+
     void (*m_behavior)(uint8_t *, void *) = nullptr; // behavior must be set before calling the operator
-    uint8_t *m_bytes = nullptr;
-    void *m_data = nullptr;
+    // void (*m_store_mail_out)(void *) = nullptr;   // store_mail_out must be set before calling the operator
+    uint8_t *m_serial_in = nullptr;
+    void *m_in = nullptr;
+    mo_mail_out_s *m_out = nullptr;
 };
 
 class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_c, mo_mail_s>
@@ -64,13 +140,13 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
 #ifndef NDEBUG
         spdlog::debug("mo_mail_translator_c::operator()");
 #endif
-        event->update_mail(bytes, data);
+        event->store_mail_in(bytes, data);
         event->set_behavior(f);
     }
-    explicit mo_mail_translator_c(uint8_t *bytes, void *data, void (*f)(uint8_t *buffer, void *data)) noexcept
-        : bytes(bytes), //
-          data(data),   //
-          f(f)          //
+    explicit mo_mail_translator_c(uint8_t *bytes, void *data, void (*f)(uint8_t *buffer, void *data)) noexcept //
+        : bytes(bytes),                                                                                        //
+          data(data),                                                                                          //
+          f(f)                                                                                                 //
     {
     }
 
@@ -98,3 +174,16 @@ class mo_mail_read_c
     }
 };
 } // namespace mozi::mail
+
+void hello()
+{
+    struct b
+    {
+    };
+    struct a
+    {
+        b c;
+    };
+    a *a1 = new a();
+    a1->c = b();
+}
