@@ -16,7 +16,7 @@
 #define ALIGN(n) __attribute__((aligned(n)))
 #endif /* _MSC_VER */
 
-#include "mozi/http/llhttp/llhttp.h"
+#include "mozi/net/llhttp/llhttp.h"
 
 typedef int (*llhttp__internal__span_cb)(llhttp__internal_t *, const char *, const char *);
 

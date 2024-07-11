@@ -44,15 +44,15 @@ set(MOZI_NID_HEADERS
   nid/worker.hpp)
 
 set(MOZI_HTTP_HEADERS
-  http/llhttp/llhttp.h
-  http/ada.h
-  http/http.hpp
-  http/responder.hpp
-  http/router.hpp)
+  net/llhttp/llhttp.h
+  net/ada.h
+  net/http.hpp
+  net/responder.hpp
+  net/router.hpp)
 set(MOZI_HTTP_SOURCES
-  http/llhttp/api.c
-  http/llhttp/http.c
-  http/llhttp/llhttp.c)
+  net/llhttp/api.c
+  net/llhttp/http.c
+  net/llhttp/llhttp.c)
 
 set(MOZI_CORE_RING_HEADERS
   core/ring/abstruct_sequencer.hpp
@@ -147,7 +147,7 @@ install(FILES
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/variables")
 install(FILES
   ${MOZI_HTTP_HEADERS}
-  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/http")
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/net")
 install(FILES
   ${MOZI_UTILS_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/utils")
