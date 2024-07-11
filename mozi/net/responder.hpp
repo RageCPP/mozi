@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mozi/core/common.hpp"
-#include "mozi/http/llhttp/llhttp.h"
+#include "mozi/core/alias.hpp"
+#include "mozi/net/llhttp/llhttp.h"
 #include "mozi/utils/traits.hpp"
 #include "mozi/variables/const_dec.hpp"
 #include "mozi/variables/string_view.hpp"

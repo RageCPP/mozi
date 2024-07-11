@@ -105,6 +105,7 @@ endif()
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 target_link_libraries(${PROJECT_NAME} PUBLIC
   concurrentqueue
+  hiredis::hiredis
   libcuckoo::libcuckoo
   spdlog::spdlog_header_only
   date::date date::date-tz

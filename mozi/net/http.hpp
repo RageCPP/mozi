@@ -1,7 +1,7 @@
 #pragma once
 
-#include "mozi/http/llhttp/llhttp.h"
-#include "mozi/http/responder.hpp"
+#include "mozi/net/llhttp/llhttp.h"
+#include "mozi/net/responder.hpp"
 #include "mozi/utils/traits.hpp"
 #include <cstddef>
 #include <cstdint>
@@ -36,13 +36,25 @@
 namespace mozi::http
 {
 void mo_on_connect(uv_stream_t *server, int status) noexcept;
+
 template <typename ReturnType, typename... Args>
-void mo_route(mo_route_t *tree, std::string_view path, llhttp_method_t method,
-              mozi::mo_function_t<ReturnType, Args...> func);
-void mo_alloc_buffer(uv_handle_t *client, [[MO_UNUSED]] size_t suggested_size, uv_buf_t *buf) noexcept;
-void mo_read_buffer(uv_stream_t *client, ssize_t nread, [[MO_UNUSED]] const uv_buf_t *buf) noexcept;
+void mo_route(mo_route_t *tree,                               //
+              std::string_view path,                          //
+              llhttp_method_t method,                         //
+              mozi::mo_function_t<ReturnType, Args...> func); //
+
+void mo_alloc_buffer(uv_handle_t *client,                 //
+                     [[MO_UNUSED]] size_t suggested_size, //
+                     uv_buf_t *buf) noexcept;             //
+
+void mo_read_buffer(uv_stream_t *client,                         //
+                    ssize_t nread,                               //
+                    [[MO_UNUSED]] const uv_buf_t *buf) noexcept; //
+
 void mo_write_end(uv_write_t *req, int status) noexcept;
+
 void mo_error_code_handler(uv_handle_t *stream, ssize_t code) noexcept;
+
 void mo_free_handle(uv_handle_t *handle) noexcept;
 
 size_t mo_http_listen(uv_loop_t *loop, int32_t port) noexcept
@@ -68,6 +80,7 @@ size_t mo_http_listen(uv_loop_t *loop, int32_t port) noexcept
     }
     return uv_run(loop, UV_RUN_DEFAULT);
 }
+
 void mo_on_connect(uv_stream_t *server, int status) noexcept
 {
     if (status < 0) [[MO_UNLIKELY]]

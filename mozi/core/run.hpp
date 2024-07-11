@@ -1,6 +1,6 @@
 #pragma once
-#include "mozi/core/common.hpp"
-#include "mozi/http/http.hpp"
+#include "mozi/core/alias.hpp"
+#include "mozi/net/http.hpp"
 #include "mozi/nid/worker.hpp"
 #include "spdlog/spdlog.h"
 #include <cstdint>

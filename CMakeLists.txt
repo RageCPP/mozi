@@ -53,6 +53,7 @@ FetchContent_MakeAvailable(
 )
 
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/libuv")
+set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/hiredis")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/cuckoo")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/pcre2")
 set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/r3")
@@ -61,6 +62,8 @@ set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} "${CMAKE_SOURCE_DIR}/pkg/date")
 find_package(date REQUIRED)
 find_package(libuv REQUIRED)
 find_package(libcuckoo REQUIRED)
+find_package(hiredis REQUIRED)
+
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(PCRE2 REQUIRED libpcre2-8)
 pkg_check_modules(R3 REQUIRED r3)
