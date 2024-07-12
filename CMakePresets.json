@@ -56,11 +56,10 @@
     {
       "name": "samples",
       "description": "Build the samples",
-      "configurePreset": "release",
+      "configurePreset": "debug",
       "jobs": 32,
       "targets": [
-        "deque_sample",
-        "ring_sample"
+        "use_redis"
       ]
     }
   ]
