@@ -25,7 +25,7 @@ using mo_loop_data_t = mo_loop_data_s;
 
 namespace actor
 {
-template <uint32_t Size> class mo_uv_actor_c;
+template <uint32_t Size> class mo_poll_actor_c;
 template <uint32_t Size> class mo_actor_c;
 }; // namespace actor
 
@@ -34,7 +34,7 @@ namespace mail
 struct mo_mail_s;
 class mo_mail_factory_c;
 class mo_mail_translator_c;
-class mo_mail_read_c;
+struct mo_mail_read_s;
 }; // namespace mail
 
 namespace ring
@@ -49,7 +49,7 @@ template <class DataProvider, class Sequencer, typename Event>                  
 class mo_event_poller_c;                                                                        //
 }; // namespace ring
 
-using mo_uv_actor_t = actor::mo_uv_actor_c<BITS_13>;
+// using mo_poll_actor_t = actor::mo_poll_actor_c<BITS_13>;
 
 using mo_actor_t = actor::mo_actor_c<BITS_8>;
 
@@ -59,7 +59,7 @@ using mo_mail_factory_t = mail::mo_mail_factory_c;
 
 using mo_mail_translator_t = mail::mo_mail_translator_c;
 
-using mo_mail_read_t = mail::mo_mail_read_c;
+using mo_mail_read_t = mail::mo_mail_read_s;
 
 template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>
 using mo_ring_buffer_t = ring::mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>;

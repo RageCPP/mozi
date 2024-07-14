@@ -67,7 +67,7 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         };
     };
 
-    template <typename Handler> mo_poll_flags poll([[maybe_unused]] Handler event_handler)
+    template <typename Handler> mo_poll_flags poll(Handler event_handler)
     {
 
         size_t current_sequence = m_sequence->value();
@@ -75,21 +75,13 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_wait_sequences.value());
         if (next_sequence <= available_sequence)
         {
-            [[maybe_unused]] bool process_next_event = false;
+            bool process_next_event = false;
             size_t processed_sequence = current_sequence;
             DataProvider &data = *m_data_provider;
             while (true)
             {
                 Event *event = data[next_sequence];
-                // if (event != nullptr)
-                // { // 确保event不是空指针
-                //     std::cout << typeid(*event).name() << std::endl;
-                //     std::cout << "event is not nullptr" << std::endl;
-                // }
-                // else
-                // {
-                //     std::cout << "event is nullptr" << std::endl;
-                // }
+                // TODO 这里需要跟 mail 对上
                 process_next_event = event_handler.on_event(event, next_sequence, next_sequence == available_sequence);
                 processed_sequence = next_sequence;
                 next_sequence += 1;

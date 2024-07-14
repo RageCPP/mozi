@@ -2,12 +2,10 @@
 #include "mozi/compile/attributes_cpp.hpp"
 #include "mozi/core/ring/event_factory.hpp"
 #include "mozi/core/ring/event_translator.hpp"
-#include "mozi/variables/const_dec.hpp"
 #include "spdlog/spdlog.h"
-#include <atomic>
 #include <cstddef>
 #include <cstdint>
-#include <future>
+#include <cstdlib>
 #include <memory>
 
 namespace mozi::mail
@@ -16,6 +14,11 @@ namespace mozi::mail
 // 增加 void *data 的内存对齐
 struct mo_mail_s
 {
+  private:
+    struct mo__async_run_s
+    {
+    };
+
   public:
     friend class mo_mail_translator_c;
     struct mo_mail_out_s
@@ -75,6 +78,12 @@ struct mo_mail_s
     {
         m_behavior(m_serial_in, m_in);
     }
+    // void operator()([[MO_UNUSED]] mo__async_run_s _) noexcept
+    // {
+    //     auto future = m_future_behavior(m_serial_in, m_in);
+    //     future.handle().destroy();
+    //     spdlog::info("mo__async_run end");
+    // }
     ~mo_mail_s()
     {
         // spdlog::info("mo_mail_s::~mo_mail_s()");
@@ -86,8 +95,16 @@ struct mo_mail_s
         }
         delete m_out;
     }
+    mo_mail_s &operator=(const mo_mail_s &) = delete;
+    mo_mail_s &operator=(mo_mail_s &&) = delete;
+    mo_mail_s(const mo_mail_s &) = delete;
+    mo_mail_s(mo_mail_s &&) = delete;
+    mo_mail_s() = default;
 
   private:
+    struct mo__empty_s
+    {
+    };
     void store_mail_in(uint8_t *serial_mail_in, void *mail_in)
     {
         delete[] m_serial_in;
@@ -109,12 +126,20 @@ struct mo_mail_s
     {
         return m_out != nullptr;
     }
-    void set_behavior(void (*behavior)(uint8_t *, void *)) noexcept
+    inline void set_behavior(void (*behavior)(uint8_t *, void *)) noexcept
     {
         m_behavior = behavior;
     }
+    // inline void set_behavior(coro::mo_future_s<std::unique_ptr<mo__empty_s>> (*behavior)(uint8_t *, void *)) noexcept
+    // {
+    //     m_future_behavior = behavior;
+    // }
 
-    void (*m_behavior)(uint8_t *, void *) = nullptr; // behavior must be set before calling the operator
+    // behavior must be set before calling the operator
+    void (*m_behavior)(uint8_t *, void *) = nullptr;
+    // coro::mo_future_s<std::unique_ptr<mo__empty_s>> (*m_future_behavior)(uint8_t *, void *) = nullptr;
+    // behavior must be set before calling the operator
+
     // void (*m_store_mail_out)(void *) = nullptr;   // store_mail_out must be set before calling the operator
     uint8_t *m_serial_in = nullptr;
     void *m_in = nullptr;
@@ -162,28 +187,19 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
     void (*f)(uint8_t *buffer, void *data);
 };
 
-class mo_mail_read_c
+struct mo_mail_read_s
 {
   public:
-    bool on_event([[maybe_unused]] mo_mail_s *event, [[maybe_unused]] size_t sequence,
-                  [[maybe_unused]] bool end_of_batch) noexcept
+    bool on_event(mo_mail_s *event, [[MO_UNUSED]] size_t sequence, [[MO_UNUSED]] bool end_of_batch) noexcept
     {
         // TODO: 完善 增加日志 增加执行结果处理 增加异常处理
         (*event)();
         return true;
     }
 };
-} // namespace mozi::mail
+// struct mo_mail_async_read_s
+// {
+//   public:
 
-void hello()
-{
-    struct b
-    {
-    };
-    struct a
-    {
-        b c;
-    };
-    a *a1 = new a();
-    a1->c = b();
-}
+// }
+} // namespace mozi::mail

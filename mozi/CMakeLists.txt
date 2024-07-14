@@ -81,6 +81,8 @@ set(MOZI_HEADERS
   core/alias.hpp
   core/mail.hpp
   core/deque.hpp
+  core/future.hpp
+  core/future.cpp
   core/run.hpp)
 
 add_library(${PROJECT_NAME} STATIC
@@ -88,11 +90,11 @@ add_library(${PROJECT_NAME} STATIC
   ${MOZI_COMPILE_HEADERS}
   ${MOZI_NID_HEADERS}
   ${MOZI_VARIABLES}
-  ${MOZI_HEADERS}
   ${MOZI_HTTP_HEADERS}
   ${MOZI_HTTP_SOURCES}
   ${MOZI_UTILS_HEADERS}
-  ${MOZI_CORE_RING_HEADERS})
+  ${MOZI_CORE_RING_HEADERS}
+  ${MOZI_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 

@@ -1,8 +1,10 @@
 #pragma once
 #include "mozi/compile/attributes_cpp.hpp"
 #include <atomic>
+#include <concepts>
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <type_traits>
 namespace mozi
 {
@@ -123,6 +125,12 @@ concept mo_lockfreeable_t = mo_atomicable_t<T> && std::atomic<T>::is_always_lock
 
 template <typename T>
 concept mo_dequeable_t = mo_lockfreeable_t<T> && std::default_initializable<T>;
+
+template <typename T>
+concept mo_unique_point_t = requires(T t)                                //
+{                                                                        //
+    requires std::same_as<T, std::unique_ptr<typename T::element_type>>; //
+};
 
 template <typename ReturnType, typename... Args> using mo_function_t = std::function<ReturnType(Args...)>;
 
