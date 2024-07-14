@@ -86,7 +86,7 @@ struct mo_mail_s
     // }
     ~mo_mail_s()
     {
-        // spdlog::info("mo_mail_s::~mo_mail_s()");
+        spdlog::info("mo_mail_s::~mo_mail_s()");
         delete[] m_serial_in;
         free(m_in);
         if (m_out != nullptr)

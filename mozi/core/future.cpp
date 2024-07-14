@@ -25,4 +25,37 @@ bool mo_future_s::mo__coro_s::mo__poll_actor_awaiter::await_ready() noexcept
     return is_ready;
 };
 
+mo_future_s::coro_handle mo_future_s::mo__coro_s::mo__poll_actor_awaiter::await_suspend(
+    mo_future_s::coro_handle h) noexcept
+{
+    actor::mo_actor_state_flags state;
+    m_resource->read([&state](void *data) noexcept {
+        mozi::actor::mo_poll_actor_data_s *p_data = static_cast<mozi::actor::mo_poll_actor_data_s *>(data);
+        state = p_data->state();
+    });
+    if (state == actor::mo_actor_state_flags::MO_ACTOR_STATE_IDLE)
+    {
+        h.promise().m_resource->read([](void *data) noexcept {
+            mozi::actor::mo_poll_actor_data_s *p_data = static_cast<mozi::actor::mo_poll_actor_data_s *>(data);
+            p_data->poll(mo_mail_read_t{});
+        });
+    }
+
+    std::optional<mo_future_s::coro_handle *> handle = std::nullopt;
+    h.promise().m_resource->read([&handle](void *data) noexcept {
+        mozi::actor::mo_poll_actor_data_s *p_data = static_cast<mozi::actor::mo_poll_actor_data_s *>(data);
+        handle = p_data->next_actor();
+    });
+    if (handle.has_value())
+    {
+        return *(handle.value());
+    }
+    else
+    {
+        return h.promise().m_resource->read([](void *data) noexcept {
+            mozi::actor::mo_poll_actor_data_s *p_data = static_cast<mozi::actor::mo_poll_actor_data_s *>(data);
+            return p_data->schedule_handle();
+        });
+    }
+};
 } // namespace mozi::coro

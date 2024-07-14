@@ -35,9 +35,9 @@ struct mo_poll_c
     //     write(m_data);
     // }
     // TODO 改为使用 invocable 约束 并且限制约束参数
-    template <typename F> inline void read(F read) const noexcept
+    template <typename F> inline auto read(F read) const noexcept
     {
-        read(m_data);
+        return read(m_data);
     }
     // inline void read(void (*read)(void *data) noexcept) const noexcept
     // {
