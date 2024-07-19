@@ -86,28 +86,8 @@ inline void destroy_poll_actor_data(void *info) noexcept
 } // namespace actor
 } // namespace mozi
 
-//     struct mo__coro_s;
-//     using promise_type = mo__coro_s;
-//     using coro_handle = std::coroutine_handle<promise_type>;
-//     using suspend_never = std::suspend_never;
-//     using suspend_always = std::suspend_always;
 //     struct mo__coro_s
 //     {
-//         mo_uv_actor_c get_return_object() noexcept
-//         {
-//             return mo_uv_actor_c{coro_handle::from_promise(*this)};
-//         }
-//         mo__coro_s()
-//             : m_workflow{std::make_unique<mozi::mo_deque_c<std::coroutine_handle<>>>()},
-//               m_state(mo_actor_state_flags::MO_ACTOR_STATE_INIT)
-//         {
-//             std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
-//             std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
-//             m_mailbox_poller = std::move(mailbox_poller);
-//             m_mailbox = std::move(mailbox);
-//             spdlog::info("mo__coro_s::mo__coro_s()");
-//         }
-
 //         struct mo__yield_awaiter
 //         {
 //             bool await_ready() noexcept
@@ -163,14 +143,6 @@ inline void destroy_poll_actor_data(void *info) noexcept
 //         mo_actor_state_flags m_state;
 //     };
 
-//     inline void workflow_push(std::coroutine_handle<> handle) noexcept
-//     {
-//         return m_coro_handle.promise().m_workflow->push(handle);
-//     }
-//     inline bool publish_event(mo_mail_translator_t &translate) noexcept
-//     {
-//         return m_coro_handle.promise().m_mailbox->publish_event(translate);
-//     }
 //     static mo_uv_actor_c create()
 //     {
 //         typename mo__coro_s::mo__out_state out_state{mo_actor_state_flags::MO_ACTOR_STATE_CHECK};
@@ -196,15 +168,3 @@ inline void destroy_poll_actor_data(void *info) noexcept
 //         }
 //         m_coro_handle.destroy();
 //     }
-//     mo_uv_actor_c &operator=(const mo_uv_actor_c &) = delete;
-//     mo_uv_actor_c(const mo_uv_actor_c &) = delete;
-//     mo_uv_actor_c &operator=(mo_uv_actor_c &&) = delete;
-//     mo_uv_actor_c(mo_uv_actor_c &&) = delete;
-
-//   private:
-//     mo_uv_actor_c(coro_handle handle) noexcept //
-//         : m_coro_handle(handle)                //
-//     {
-//     }
-
-//     coro_handle m_coro_handle;

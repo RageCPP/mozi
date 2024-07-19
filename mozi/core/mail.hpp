@@ -1,5 +1,6 @@
 #pragma once
 #include "mozi/compile/attributes_cpp.hpp"
+#include "mozi/core/mail_out.hpp"
 #include "mozi/core/ring/event_factory.hpp"
 #include "mozi/core/ring/event_translator.hpp"
 #include "spdlog/spdlog.h"
@@ -21,59 +22,6 @@ struct mo_mail_s
 
   public:
     friend class mo_mail_translator_c;
-    struct mo_mail_out_s
-    {
-      public:
-        void set_destroy(void (*destroy)(void *) noexcept)
-        {
-            m_destroy = destroy;
-        }
-        void set_check(void (*check)(void *, int64_t, uint16_t) noexcept)
-        {
-            m_check = check;
-        }
-        void set_data(void *data, uint16_t wait_senconds)
-        {
-            // TODO: m_start 时间戳
-            m_wait_senconds = wait_senconds;
-            m_start = 0;
-            m_data = data;
-        }
-        void destroy() noexcept
-        {
-            if (m_destroy != nullptr)
-            {
-                m_destroy(m_data);
-            }
-        }
-        void check(void *data, int64_t start, uint16_t wait_senconds) noexcept
-        {
-            // unsafe check
-            // if (m_check != nullptr)
-            // {
-            m_check(data, start, wait_senconds);
-            // }
-        }
-        ~mo_mail_out_s()
-        {
-            if (m_destroy != nullptr)
-            {
-                m_destroy(m_data);
-            }
-        }
-        mo_mail_out_s &operator=(const mo_mail_out_s &) = delete;
-        mo_mail_out_s &operator=(mo_mail_out_s &&) = delete;
-        mo_mail_out_s(const mo_mail_out_s &) = delete;
-        mo_mail_out_s(mo_mail_out_s &&) = delete;
-        mo_mail_out_s() = default;
-
-      private:
-        int64_t m_start;
-        uint16_t m_wait_senconds;
-        void *m_data;
-        void (*m_destroy)(void *) noexcept;
-        void (*m_check)(void *, int64_t, uint16_t) noexcept;
-    };
     void operator()() noexcept
     {
         m_behavior(m_serial_in, m_in);
@@ -105,7 +53,7 @@ struct mo_mail_s
     struct mo__empty_s
     {
     };
-    void store_mail_in(uint8_t *serial_mail_in, void *mail_in)
+    void store_mail_in(uint8_t *serial_mail_in, void *mail_in) noexcept
     {
         delete[] m_serial_in;
         free(m_in);
@@ -134,6 +82,10 @@ struct mo_mail_s
     // {
     //     m_future_behavior = behavior;
     // }
+
+    // TODO: 这里对于behvavior 设置为nullptr的运行 actor自带的 行为匹配
+    // https://actor-framework.readthedocs.io/en/stable/MessageHandlers.html
+    // 需要一套完整的序列化定义 但是这个可以在二期的时候做
 
     // behavior must be set before calling the operator
     void (*m_behavior)(uint8_t *, void *) = nullptr;
@@ -199,9 +151,5 @@ struct mo_mail_read_s
         return true;
     }
 };
-// struct mo_mail_async_read_s
-// {
-//   public:
 
-// }
 } // namespace mozi::mail

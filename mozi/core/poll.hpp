@@ -1,6 +1,7 @@
 #pragma once
 
 #include "spdlog/spdlog.h"
+#include <type_traits>
 namespace mozi::coro
 {
 struct mo_future_s;
@@ -16,7 +17,8 @@ struct mo_poll_c
     };
     mo_poll_c(void *data,                           //
               void (*destroy)(void *data) noexcept) //
-        : m_data(data), m_destroy(destroy)
+        : m_data(data),                             //
+          m_destroy(destroy)                        //
     {
     }
     ~mo_poll_c()
@@ -27,24 +29,22 @@ struct mo_poll_c
             m_destroy(m_data);
         }
     }
-    // TODO 改为使用 invocable 约束
-    template <typename F> inline void write(F write) noexcept
+
+    template <typename F>
+        requires std::invocable<const F &&, void *> && std::is_nothrow_invocable_v<const F &&, void *>
+    inline void write(F write) noexcept
     {
         write(m_data);
     }
-    // inline void write(void (*write)(void *data) noexcept) noexcept
-    // {
-    //     write(m_data);
-    // }
-    // TODO 改为使用 invocable 约束 并且限制约束参数
-    template <typename F> inline auto read(F read) const noexcept
+
+    // TODO 不要使用引用 不知道会不会阻止尾递归优化 后期测试检查生成的汇编代码
+    template <typename F>
+        requires std::invocable<const F &&, void *> && std::is_nothrow_invocable_v<const F &&, void *>
+    inline auto read(F read) const noexcept -> std::invoke_result_t<const F &&, void *>
     {
         return read(m_data);
     }
-    // inline void read(void (*read)(void *data) noexcept) const noexcept
-    // {
-    //     read(m_data);
-    // }
+
     mo_poll_c(const mo_poll_c &) = delete;
     mo_poll_c &operator=(const mo_poll_c &) = delete;
     mo_poll_c(mo_poll_c &&) = delete;
