@@ -5,7 +5,6 @@
 #include "spdlog/spdlog.h"
 #include <coroutine>
 #include <exception>
-#include <memory>
 namespace mozi::actor
 {
 enum class mo_coro_type_flags
@@ -25,6 +24,10 @@ struct schedule_symbol
 };
 struct poll_actor_symbol
 {
+};
+struct poll_actor_symbol_state
+{
+    actor::mo_actor_state_flags m_state;
 };
 struct moveable_actor_symbol
 {
@@ -54,7 +57,7 @@ struct mo_future_s
         struct mo__poll_actor_awaiter;
         struct mo__schedule_actor_awaiter;
         // TODO 完善不同参数的构造函数
-        mo__coro_s(actor::mo_coro_type_flags flag, std::shared_ptr<mo_poll_c> resource) noexcept
+        mo__coro_s(actor::mo_coro_type_flags flag, mo_poll_c *resource) noexcept
             : m_resource(resource), //
               m_flag(flag)          //
         {
@@ -85,7 +88,7 @@ struct mo_future_s
             std::terminate();
         }
 
-        mo__poll_actor_awaiter yield_value(actor::mo_actor_state_flags info) noexcept;
+        mo__poll_actor_awaiter yield_value(actor::yield::poll_actor_symbol_state &&info) noexcept;
 
         mo__schedule_actor_awaiter yield_value([[maybe_unused]] actor::yield::schedule_symbol info) noexcept
         {
@@ -95,7 +98,7 @@ struct mo_future_s
         struct mo__poll_actor_awaiter
         {
           public:
-            mo__poll_actor_awaiter(std::shared_ptr<mo_poll_c> resource) noexcept : m_resource(resource)
+            mo__poll_actor_awaiter(mo_poll_c *resource) noexcept : m_resource(resource)
             {
             }
 
@@ -108,7 +111,7 @@ struct mo_future_s
             }
 
           private:
-            std::shared_ptr<mo_poll_c> m_resource = nullptr;
+            mo_poll_c *m_resource = nullptr;
         };
         struct mo_poll_actor_state
         {
@@ -150,9 +153,11 @@ struct mo_future_s
 
       private:
         friend struct mo_future_s;
-        // 对于需要多个 std::coroutine_handle<promise_type> 复制之间共享的数据一定要存到 m_resource 中
-        // 因为 std::coroutine_handle<promise_type> 是 TriviallyCopyable 的
-        std::shared_ptr<mo_poll_c> m_resource = nullptr;
+        // TODO: 由于 coroutine_handle 的是 trival copyable，所以需要测试当 coroutine_handle 被复制时，作为
+        // 共享资源的 m_resource 计数是否会增加，当 coroutine_handle 被销毁时，作为共享资源的 m_resource 是否会减少
+
+        // TODO: 思考是否需要将 m_resource 改为普通指针 由框架来管理资源的生命周期
+        mo_poll_c *m_resource = nullptr;
         actor::mo_coro_type_flags m_flag;
     };
     mo_future_s(const mo_future_s &) = delete;
@@ -200,7 +205,7 @@ struct mo_future_s
     {
         return &m_coro_handle;
     }
-    inline std::shared_ptr<mo_poll_c> resource() const noexcept
+    inline mo_poll_c *resource() const noexcept
     {
         return m_coro_handle.promise().m_resource;
     }

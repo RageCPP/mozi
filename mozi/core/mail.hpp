@@ -190,9 +190,11 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
 struct mo_mail_read_s
 {
   public:
-    bool on_event(mo_mail_s *event, [[MO_UNUSED]] size_t sequence, [[MO_UNUSED]] bool end_of_batch) noexcept
+    bool on_event([[MO_UNUSED]] mo_mail_s *event, [[MO_UNUSED]] size_t sequence,
+                  [[MO_UNUSED]] bool end_of_batch) noexcept
     {
         // TODO: 完善 增加日志 增加执行结果处理 增加异常处理
+        // TODO 这里应该为协程支持
         (*event)();
         return true;
     }

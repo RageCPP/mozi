@@ -1,5 +1,6 @@
 #pragma once
 
+#include "spdlog/spdlog.h"
 namespace mozi::coro
 {
 struct mo_future_s;
@@ -20,6 +21,7 @@ struct mo_poll_c
     }
     ~mo_poll_c()
     {
+        spdlog::info("mo_poll_c::~mo_poll_c()");
         if (m_destroy != nullptr)
         {
             m_destroy(m_data);

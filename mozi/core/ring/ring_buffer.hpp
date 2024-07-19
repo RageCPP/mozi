@@ -214,10 +214,10 @@ class mo_ring_buffer_s :
         }
         mo_arc_sequence_t poller_sequence = std::make_shared<mo_sequence_t>();
         this->m_data.m_sequencer->add_gating_sequences(poller_sequence);
-        return std::make_unique<mo__event_poller_t>(this,                           //
-                                                    this->m_data.m_sequencer.get(), //
-                                                    poller_sequence,                //
-                                                    gating_sequence);               //
+        return std::make_unique<mo__event_poller_t>(this,                           // DataProvider *
+                                                    this->m_data.m_sequencer.get(), // Sequencer *
+                                                    poller_sequence,                // mo_arc_sequence_t
+                                                    gating_sequence);               // mo_wait_sequences_t
     }
 
     // 未稳定
