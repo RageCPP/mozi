@@ -15,11 +15,6 @@ namespace mozi::mail
 // 增加 void *data 的内存对齐
 struct mo_mail_s
 {
-  private:
-    struct mo__async_run_s
-    {
-    };
-
   public:
     friend class mo_mail_translator_c;
     void operator()() noexcept

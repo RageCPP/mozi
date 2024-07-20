@@ -1,26 +1,22 @@
 #pragma once
-#include "mozi/core/actor_flags.hpp"
 #include "mozi/core/alias.hpp"
+#include "mozi/core/coro/handle.hpp"
 #include "mozi/core/deque.hpp"
-#include "mozi/core/future.hpp"
 #include "mozi/core/ring/ring_buffer.hpp"
-#include "mozi/variables/const_dec.hpp"
-#include <memory>
+#include <coroutine>
 #include <optional>
-// TODO 完善报错
+namespace mozi::coro
+{
 
-namespace mozi
-{
-namespace actor
-{
 struct mo_poll_actor_data_s
 {
     using mo__mailbox = mozi::mo_mailbox_t<BITS_2>;
     using mo__sender = mozi::mo_mailbox_sender_t<BITS_2>;
     using mo__reveiver = mozi::mo_mailbox_receiver_t<BITS_2>;
+    using coro_handle = std::coroutine_handle<mo_handle_s>;
     mo_poll_actor_data_s()
-        : m_workflow{std::make_unique<mozi::mo_deque_c<coro::mo_future_s::coro_handle *>>()},
-          m_state(mo_actor_state_flags::MO_ACTOR_STATE_INIT)
+        : m_workflow{std::make_unique<mozi::mo_deque_c<coro_handle *>>()},
+          m_state(actor::mo_actor_state_flags::MO_ACTOR_STATE_INIT)
     {
         std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
         std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
@@ -34,17 +30,17 @@ struct mo_poll_actor_data_s
     }
     inline void stop() noexcept
     {
-        m_state = mo_actor_state_flags::MO_ACTOR_STATE_STOP;
+        m_state = actor::mo_actor_state_flags::MO_ACTOR_STATE_STOP;
     }
     inline bool is_stop() const noexcept
     {
-        return m_state == mo_actor_state_flags::MO_ACTOR_STATE_STOP;
+        return m_state == actor::mo_actor_state_flags::MO_ACTOR_STATE_STOP;
     }
-    inline void update_state(mo_actor_state_flags state) noexcept
+    inline void update_state(actor::mo_actor_state_flags state) noexcept
     {
         m_state = state;
     }
-    inline mo_actor_state_flags state() const noexcept
+    inline actor::mo_actor_state_flags state() const noexcept
     {
         return m_state;
     }
@@ -52,18 +48,18 @@ struct mo_poll_actor_data_s
     {
         m_mailbox_poller->poll(read);
     }
-    inline std::optional<coro::mo_future_s::coro_handle *> next_actor() noexcept
+    inline std::optional<coro_handle *> next_actor() noexcept
     {
         return m_workflow->pop();
     }
-    inline void push_actor(coro::mo_future_s::coro_handle *handle) noexcept
+    inline void push_actor(coro_handle *handle) noexcept
     {
         return m_workflow->push(handle);
     }
-    inline coro::mo_future_s::coro_handle schedule_handle() noexcept
-    {
-        return m_schedule_actor->handle();
-    }
+    // inline coro_handle schedule_handle() noexcept
+    // {
+    // return m_schedule_actor->handle();
+    // }
 
     mo_poll_actor_data_s &operator=(const mo_poll_actor_data_s &) = delete;
     mo_poll_actor_data_s(const mo_poll_actor_data_s &) = delete;
@@ -75,16 +71,16 @@ struct mo_poll_actor_data_s
     std::unique_ptr<mo__mailbox> m_mailbox;
     std::unique_ptr<mo__reveiver> m_mailbox_poller;
     // Fixed order
-    std::unique_ptr<mozi::mo_deque_c<coro::mo_future_s::coro_handle *>> m_workflow;
-    std::unique_ptr<mozi::coro::mo_future_s> m_schedule_actor = nullptr;
-    mo_actor_state_flags m_state;
+    std::unique_ptr<mozi::mo_deque_c<coro_handle *>> m_workflow;
+    coro_handle m_schedule;
+    actor::mo_actor_state_flags m_state;
 };
+
 inline void destroy_poll_actor_data(void *info) noexcept
 {
     delete static_cast<mo_poll_actor_data_s *>(info);
 }
-} // namespace actor
-} // namespace mozi
+} // namespace mozi::coro
 
 //     struct mo__coro_s
 //     {

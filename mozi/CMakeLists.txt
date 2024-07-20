@@ -83,6 +83,7 @@ set(MOZI_HEADERS
   core/deque.hpp
   core/future.hpp
   core/future.cpp
+  core/promise/handle.cpp
   core/run.hpp)
 
 add_library(${PROJECT_NAME} STATIC

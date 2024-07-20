@@ -1,4 +1,4 @@
-// #pragma once
+#pragma once
 // #include "mozi/core/actor_flags.hpp"
 // #include "mozi/core/alias.hpp"
 // #include "spdlog/spdlog.h"
@@ -6,8 +6,15 @@
 // #include <cstdint>
 // #include <exception>
 // #include <memory>
-// namespace mozi::actor
-// {
+namespace mozi::actor
+{
+enum class mo_coro_type_flags
+{
+    MO_TASK = 0x00,
+    MO_MOVEABLE_ACTOR = 0x01,
+    MO_POLL_ACTOR = 0x02,
+    MO_SCHEDULE_ACTOR = 0x03,
+};
 // template <uint32_t Size> class mo_actor_c
 // {
 //     using mo__mailbox = mo_mailbox_t<Size>;
@@ -182,4 +189,4 @@
 
 //     coro_handle m_coro_handle;
 // };
-// } // namespace mozi::actor
+} // namespace mozi::actor
