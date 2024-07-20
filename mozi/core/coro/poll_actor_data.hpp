@@ -7,7 +7,6 @@
 #include <optional>
 namespace mozi::coro
 {
-
 struct mo_poll_actor_data_s
 {
     using mo__mailbox = mozi::mo_mailbox_t<BITS_2>;

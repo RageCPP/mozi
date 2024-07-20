@@ -77,13 +77,27 @@ set(MOZI_CORE_RING_HEADERS
   core/ring/yield_wait_strategy.hpp
   core/ring/wait_strategy.hpp)
 
+set(MOZI_CORE_CORO_HEADERS
+  core/coro/behavior_awaiter.hpp
+  core/coro/future.hpp
+  core/coro/handle.hpp
+  core/coro/poll_actor_awaiter.hpp
+  core/coro/poll_actor_data.hpp
+  core/coro/poll.hpp
+  core/coro/schedule_actor_awaiter.hpp
+  core/coro/steal_actor_awaiter.hpp)
+set(MOZI_CORE_CORO_SOURCES
+  core/coro/future.cpp
+  core/coro/handle.cpp
+  core/coro/poll_actor_awaiter.cpp)
+
+set(MOZI_CORE_ACTOR_HEADERS
+  core/actor/flags.hpp)
+
 set(MOZI_HEADERS
   core/alias.hpp
   core/mail.hpp
   core/deque.hpp
-  core/future.hpp
-  core/future.cpp
-  core/promise/handle.cpp
   core/run.hpp)
 
 add_library(${PROJECT_NAME} STATIC
@@ -95,7 +109,10 @@ add_library(${PROJECT_NAME} STATIC
   ${MOZI_HTTP_SOURCES}
   ${MOZI_UTILS_HEADERS}
   ${MOZI_CORE_RING_HEADERS}
-  ${MOZI_HEADERS})
+  ${MOZI_HEADERS}
+  ${MOZI_CORE_CORO_HEADERS}
+  ${MOZI_CORE_CORO_SOURCES}
+  ${MOZI_CORE_ACTOR_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
 
@@ -158,6 +175,9 @@ install(FILES
 install(FILES
   ${MOZI_CORE_RING_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/ring")
+install(FILES
+  ${MOZI_CORE_CORO_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/coro")
 install(FILES
   ${MOZI_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core")

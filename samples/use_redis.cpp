@@ -1,7 +1,7 @@
 #include "mozi/core/actor_factory.hpp"
 #include "mozi/db/redis.hpp"
 #include <mozi/core/actor.hpp>
-#include <mozi/core/poll_actor.hpp>
+// #include <mozi/core/poll_actor.hpp>
 #include <mozi/core/run.hpp>
 #include <uv.h>
 

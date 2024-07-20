@@ -3,38 +3,13 @@
 #include "mozi/core/actor.hpp"
 #include "mozi/core/actor/flags.hpp"
 #include "mozi/core/coro/poll.hpp"
+#include "mozi/core/coro/yield_info.hpp"
 #include <coroutine>
-namespace mozi::actor
-{
 
-namespace yield
-{
-struct task_symbol
-{
-};
-struct schedule_symbol
-{
-};
-struct poll_actor_symbol
-{
-};
-struct poll_actor_symbol_state
-{
-    actor::mo_actor_state_flags m_state;
-};
-struct moveable_actor_symbol
-{
-};
-}; // namespace yield
-
-struct mo_suspend_schedule_symbol
-{
-};
-struct mo_poll_actor_data_s;
-} // namespace mozi::actor
 namespace mozi::coro
 {
 struct mo_future_s;
+struct mo_poll_actor_awaiter_s;
 struct mo_handle_s
 {
     using suspend_never = std::suspend_never;
@@ -43,7 +18,6 @@ struct mo_handle_s
     struct mo_actor_state;
     struct mo__actor_awaiter;
     struct mo_poll_actor_state;
-    struct mo__poll_actor_awaiter;
     struct mo__schedule_actor_awaiter;
 
     // TODO 完善不同参数的构造函数
@@ -80,12 +54,12 @@ struct mo_handle_s
         std::terminate();
     }
 
-    mo__poll_actor_awaiter yield_value(actor::yield::poll_actor_symbol_state &&info) noexcept;
+    mo_poll_actor_awaiter_s yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept;
 
-    mo__schedule_actor_awaiter yield_value([[maybe_unused]] actor::yield::schedule_symbol info) noexcept
-    {
-        return {};
-    }
+    // mo__schedule_actor_awaiter yield_value([[maybe_unused]] coro::yield_info::schedule_symbol info) noexcept
+    // {
+    //     return {};
+    // }
 
     struct mo_poll_actor_state
     {
