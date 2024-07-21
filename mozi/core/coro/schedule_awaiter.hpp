@@ -1,14 +1,14 @@
 #pragma once
+#include "mozi/core/actor/poll_actor.hpp"
 #include "mozi/core/coro/future.hpp"
 #include "mozi/core/coro/handle.hpp"
-#include <utility>
 
 namespace mozi::coro
 {
 struct mo_schedule_awaiter_transform_s
 {
     // poll actor
-    mo_future_s fire;
+    mo_future_s *fire;
 };
 struct mo_schedule_awaiter_s
 {
@@ -20,10 +20,14 @@ struct mo_schedule_awaiter_s
         return false;
     }
 
-    coro_handle await_suspend([[MO_UNUSED]] coro_handle coro_handle) noexcept
+    coro_handle await_suspend(coro_handle coro_handle) noexcept
     {
-        // TODO: Implement the logic to schedule the actor
-        std::unreachable();
+        using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data_s;
+        m_coro_handle.promise().m_resource->write([&coro_handle](void *data) noexcept {
+            poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
+            p_data->update_schedule_worker_handle(coro_handle);
+        });
+        return m_coro_handle;
     }
 
     void await_resume() noexcept
@@ -31,6 +35,7 @@ struct mo_schedule_awaiter_s
     }
 
   private:
+    friend struct mo_handle_s;
     explicit mo_schedule_awaiter_s(coro_handle coro_handle) noexcept : m_coro_handle(coro_handle)
     {
     }

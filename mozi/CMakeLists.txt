@@ -82,7 +82,6 @@ set(MOZI_CORE_CORO_HEADERS
   core/coro/future.hpp
   core/coro/handle.hpp
   core/coro/poll_actor_awaiter.hpp
-  core/coro/poll_actor_data.hpp
   core/coro/poll.hpp
   core/coro/schedule_awaiter.hpp
   core/coro/steal_actor_awaiter.hpp)
@@ -93,7 +92,8 @@ set(MOZI_CORE_CORO_SOURCES
 
 set(MOZI_CORE_ACTOR_HEADERS
   core/actor/flags.hpp
-  core/actor/factory.hpp)
+  core/actor/factory.hpp
+  core/actor/poll_actor.hpp)
 
 set(MOZI_HEADERS
   core/alias.hpp

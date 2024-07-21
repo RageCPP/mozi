@@ -6,6 +6,7 @@
 
 namespace mozi::coro
 {
+// TODO: 在debug 模式下给每个 future 都加个ID 观察回收测试
 struct mo_future_s
 {
   public:
@@ -17,6 +18,7 @@ struct mo_future_s
     mo_future_s &operator=(const mo_future_s &) = delete;
     mo_future_s(mo_future_s &&ori) noexcept : m_coro_handle(std::exchange(ori.m_coro_handle, {}))
     {
+        spdlog::info("mo_future_s::mo_future_s ori m_coro_handle is null: {}", ori.m_coro_handle.address() == nullptr);
         spdlog::info("mo_future_s::mo_future_s(mo_future_s &&)");
     }
     mo_future_s &operator=(mo_future_s &&) = delete;
@@ -24,6 +26,10 @@ struct mo_future_s
     ~mo_future_s()
     {
         spdlog::info("mo_future_s::~mo_future_s");
+        if (m_coro_handle.address() != nullptr)
+        {
+            m_coro_handle.destroy();
+        }
     }
 
     inline void resume() noexcept
@@ -65,6 +71,10 @@ struct mo_future_s
     inline mo_poll_c *resource() const noexcept
     {
         return m_coro_handle.promise().m_resource;
+    }
+    inline bool done() const noexcept
+    {
+        return m_coro_handle.done();
     }
 
   private:

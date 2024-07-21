@@ -5,6 +5,10 @@
 #include "mozi/core/coro/yield_info.hpp"
 #include <coroutine>
 
+namespace mozi::scheduler
+{
+class mo_worker_c;
+}
 namespace mozi::coro
 {
 struct mo_future_s;
@@ -19,8 +23,10 @@ struct mo_handle_s
     using suspend_always = std::suspend_always;
     using coro_handle = std::coroutine_handle<mo_handle_s>;
 
-    // TODO 完善不同参数的构造函数
-    mo_handle_s(mo_coro_type_flags flag, mo_poll_c *resource) noexcept
+    explicit mo_handle_s([[MO_UNUSED]] scheduler::mo_worker_c &workder, mo_coro_type_flags flag) noexcept : m_flag(flag)
+    {
+    }
+    explicit mo_handle_s(mo_coro_type_flags flag, mo_poll_c *resource) noexcept
         : m_resource(resource), //
           m_flag(flag)          //
     {
@@ -64,6 +70,7 @@ struct mo_handle_s
 
   private:
     friend struct mo_future_s;
+    friend struct mo_schedule_awaiter_s;
     // TODO: 由于 coroutine_handle 的是 trival copyable，所以需要测试当 coroutine_handle 被复制时，作为
     // 共享资源的 m_resource 计数是否会增加，当 coroutine_handle 被销毁时，作为共享资源的 m_resource 是否会减少
 

@@ -1,13 +1,13 @@
 #include "mozi/core/coro/poll_actor_awaiter.hpp"
+#include "mozi/core/actor/poll_actor.hpp"
 #include "mozi/core/coro/handle.hpp"
 #include "mozi/core/coro/poll.hpp"
-#include "mozi/core/coro/poll_actor_data.hpp"
 #include <coroutine>
 #include <utility>
 
 namespace mozi::coro
 {
-using poll_actor_data_t = typename mozi::coro::mo_poll_actor_data_s;
+using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data_s;
 using coro_handle = std::coroutine_handle<mo_handle_s>;
 
 bool mo_poll_actor_awaiter_s::await_ready() noexcept
@@ -48,12 +48,12 @@ coro_handle mo_poll_actor_awaiter_s::await_suspend([[MO_UNUSED]] coro_handle h) 
     }
     else
     {
+        spdlog::info("mo_poll_actor_c::run end");
         // TODO: 修复
-        std::unreachable();
-        // return m_resource->read([](void *data) noexcept {
-        //     poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
-        //     return p_data->schedule_handle();
-        // });
+        return m_resource->read([](void *data) noexcept {
+            poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
+            return p_data->schedule_worker_handle();
+        });
     }
 }
 } // namespace mozi::coro
