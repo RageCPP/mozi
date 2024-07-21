@@ -84,7 +84,7 @@ set(MOZI_CORE_CORO_HEADERS
   core/coro/poll_actor_awaiter.hpp
   core/coro/poll_actor_data.hpp
   core/coro/poll.hpp
-  core/coro/schedule_actor_awaiter.hpp
+  core/coro/schedule_awaiter.hpp
   core/coro/steal_actor_awaiter.hpp)
 set(MOZI_CORE_CORO_SOURCES
   core/coro/future.cpp
@@ -92,7 +92,8 @@ set(MOZI_CORE_CORO_SOURCES
   core/coro/poll_actor_awaiter.cpp)
 
 set(MOZI_CORE_ACTOR_HEADERS
-  core/actor/flags.hpp)
+  core/actor/flags.hpp
+  core/actor/factory.hpp)
 
 set(MOZI_HEADERS
   core/alias.hpp
@@ -178,6 +179,9 @@ install(FILES
 install(FILES
   ${MOZI_CORE_CORO_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/coro")
+install(FILES
+  ${MOZI_CORE_ACTOR_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/actor")
 install(FILES
   ${MOZI_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core")
