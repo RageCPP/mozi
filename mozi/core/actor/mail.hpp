@@ -38,7 +38,12 @@ struct mo_mail_s
         else if (m_behavior_type == 2)
         {
             // TODO: 这里需要增加异常处理
+            if (m_future.has_value())
+            {
+                return m_future->done();
+            }
             m_future = async_read();
+            // TODO: 这里是否要resume
             return m_future->done();
         }
         std::unreachable();
