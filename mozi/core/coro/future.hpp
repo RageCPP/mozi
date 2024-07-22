@@ -76,9 +76,9 @@ struct mo_future_s
     mo_future_s moved = std::move(original); // 移动操作
     // 此时 ptr 可能指向一个无效的位置
     */
-    inline coro_handle *handle_ptr() noexcept
+    inline coro_handle handle_ptr() noexcept
     {
-        return &m_coro_handle;
+        return m_coro_handle;
     }
     inline coro_handle handle() const noexcept
     {

@@ -14,7 +14,7 @@ struct mo_poll_actor_data_s
     using mo__reveiver = mozi::mo_mailbox_receiver_t<BITS_2>;
     using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
     mo_poll_actor_data_s()
-        : m_workflow{std::make_unique<mozi::mo_deque_c<coro_handle *>>()},
+        : m_workflow{std::make_unique<mozi::mo_deque_c<coro_handle>>()},
           m_state(actor::mo_actor_state_flags::MO_ACTOR_STATE_INIT)
     {
         std::unique_ptr<mo__mailbox> mailbox = mo__mailbox::create_multi_producer();
@@ -47,11 +47,11 @@ struct mo_poll_actor_data_s
     {
         m_mailbox_poller->poll(read);
     }
-    inline std::optional<coro_handle *> next_actor() noexcept
+    inline std::optional<coro_handle> next_actor() noexcept
     {
         return m_workflow->pop();
     }
-    inline void push_actor(coro_handle *handle) noexcept
+    inline void push_actor(coro_handle handle) noexcept
     {
         return m_workflow->push(handle);
     }
@@ -74,7 +74,7 @@ struct mo_poll_actor_data_s
     std::unique_ptr<mo__mailbox> m_mailbox;
     std::unique_ptr<mo__reveiver> m_mailbox_poller;
     // Fixed order
-    std::unique_ptr<mozi::mo_deque_c<coro_handle *>> m_workflow;
+    std::unique_ptr<mozi::mo_deque_c<coro_handle>> m_workflow;
     coro_handle m_schedule_worker_handle;
     actor::mo_actor_state_flags m_state;
 };

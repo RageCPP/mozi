@@ -76,6 +76,16 @@ struct mo_handle_s
     //     return {};
     // }
 
+    mo_coro_type_flags flag() const noexcept
+    {
+        return m_flag;
+    }
+
+    void update_flag(mo_coro_type_flags flag) noexcept
+    {
+        m_flag = flag;
+    }
+
   private:
     friend struct mo_future_s;
     friend struct mo_schedule_awaiter_s;

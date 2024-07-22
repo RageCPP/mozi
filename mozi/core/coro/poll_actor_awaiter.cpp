@@ -38,14 +38,14 @@ coro_handle mo_poll_actor_awaiter_s::await_suspend([[MO_UNUSED]] coro_handle h) 
         });
     }
 
-    std::optional<coro_handle *> handle = std::nullopt;
+    std::optional<coro_handle> handle = std::nullopt;
     m_resource->read([&handle](void *data) noexcept {
         poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
         handle = p_data->next_actor();
     });
     if (handle.has_value())
     {
-        return *(handle.value());
+        return handle.value();
     }
     else
     {
