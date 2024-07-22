@@ -21,6 +21,8 @@ struct mo_poll_actor_awaiter_s;
 struct mo_schedule_awaiter_s;
 struct mo_schedule_awaiter_transform_s;
 
+struct mo_steal_actor_awaiter_s;
+
 struct mo_handle_s
 {
     using suspend_never = std::suspend_never;
@@ -65,6 +67,7 @@ struct mo_handle_s
     }
 
     mo_poll_actor_awaiter_s yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept;
+    mo_steal_actor_awaiter_s yield_value(coro::yield_info::steal_actor_symbol_state &&info) noexcept;
 
     mo_schedule_awaiter_s await_transform(mo_schedule_awaiter_transform_s &&info) noexcept;
 
