@@ -10,6 +10,7 @@ namespace mozi::scheduler
 class mo_worker_c
 {
     using mo__future_t = mozi::coro::mo_future_s;
+    using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
 
   public:
     enum class mo_worker_state_flags
@@ -25,6 +26,11 @@ class mo_worker_c
     mo_worker_c() noexcept : m_state(mo_worker_state_flags::MO_WORKER_STATE_IDLE)
     {
         m_poll_actor = mozi::actor::poll_actor_create();
+    }
+
+    inline coro_handle poll_actor_handle() noexcept
+    {
+        return m_poll_actor->handle();
     }
 
     void run_once()

@@ -54,7 +54,7 @@ struct mo_steal_actor_data_s
     {
         return m_poll_actor_handle;
     }
-    inline void update_self_handle(coro_handle &handle) noexcept
+    inline void update_self_handle(coro_handle const &handle) noexcept
     {
         m_self_handle = handle;
     }

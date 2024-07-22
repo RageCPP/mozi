@@ -12,6 +12,7 @@
 namespace mozi::actor
 {
 using mo_future_s = mozi::coro::mo_future_s;
+using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
 using poll_actor_symbol_state = coro::yield_info::poll_actor_symbol_state;
 using steal_actor_symbol_state = coro::yield_info::steal_actor_symbol_state;
 
@@ -66,6 +67,17 @@ inline mo_future_s steal_actor_create([[MO_UNUSED]] coro::mo_coro_type_flags fla
         }
     }
     spdlog::info("mo_steal_actor_c::run end");
+}
+inline std::unique_ptr<mo_future_s> steal_actor_create(coro_handle poll_actor_handle) noexcept
+{
+    using mo_poll_c = coro::mo_poll_c;
+    using mo_future_s = coro::mo_future_s;
+    auto steal_actor_data = new mozi::actor::mo_steal_actor_data_s(poll_actor_handle);
+    mo_poll_c *resource = new mo_poll_c{steal_actor_data, &actor::destroy_steal_actor_data};
+    auto steal_actor =
+        std::make_unique<mo_future_s>(steal_actor_create(coro::mo_coro_type_flags::MO_STEAL_ACTOR, resource));
+    steal_actor_data->update_self_handle(steal_actor->handle());
+    return steal_actor;
 }
 
 // inline mo_future_s schedule_actor_create([[MO_UNUSED]] mo_coro_type_flags flag, [[MO_UNUSED]] coro::mo_poll_c

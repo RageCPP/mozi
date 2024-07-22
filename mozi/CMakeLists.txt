@@ -81,14 +81,15 @@ set(MOZI_CORE_CORO_HEADERS
   core/coro/behavior_awaiter.hpp
   core/coro/future.hpp
   core/coro/handle.hpp
-  core/coro/poll_actor_awaiter.hpp
   core/coro/poll.hpp
   core/coro/schedule_awaiter.hpp
+  core/coro/poll_actor_awaiter.hpp
   core/coro/steal_actor_awaiter.hpp)
 set(MOZI_CORE_CORO_SOURCES
   core/coro/future.cpp
   core/coro/handle.cpp
-  core/coro/poll_actor_awaiter.cpp)
+  core/coro/poll_actor_awaiter.cpp
+  core/coro/steal_actor_awaiter.cpp)
 
 set(MOZI_CORE_ACTOR_HEADERS
   core/actor/flags.hpp
