@@ -14,14 +14,30 @@ struct mo_future_s
     using coro_handle = std::coroutine_handle<promise_type>;
     using suspend_never = std::suspend_never;
     using suspend_always = std::suspend_always;
+
     mo_future_s(const mo_future_s &) = delete;
-    mo_future_s &operator=(const mo_future_s &) = delete;
+    mo_future_s &operator=(mo_future_s const &other)
+    {
+        if (this != &other)
+        {
+            m_coro_handle = other.m_coro_handle;
+        }
+        // m_coro_handle = std::exchange(ori.m_coro_handle, {});
+        return *this;
+    };
     mo_future_s(mo_future_s &&ori) noexcept : m_coro_handle(std::exchange(ori.m_coro_handle, {}))
     {
         spdlog::info("mo_future_s::mo_future_s ori m_coro_handle is null: {}", ori.m_coro_handle.address() == nullptr);
         spdlog::info("mo_future_s::mo_future_s(mo_future_s &&)");
     }
-    mo_future_s &operator=(mo_future_s &&) = delete;
+    mo_future_s &operator=(mo_future_s &&ori)
+    {
+        if (this != &ori)
+        {
+            m_coro_handle = std::exchange(ori.m_coro_handle, {});
+        }
+        return *this;
+    }
 
     ~mo_future_s()
     {

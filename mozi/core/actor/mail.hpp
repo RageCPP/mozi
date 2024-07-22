@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
+#include <optional>
 #include <utility>
 
 namespace mozi::actor
@@ -30,13 +31,15 @@ struct mo_mail_s
         }
         if (m_behavior_type == 1)
         {
+            // TODO 这里如果出错 是否返回false
             block_read();
             return true;
         }
         else if (m_behavior_type == 2)
         {
-            async_read();
-            return true;
+            // TODO: 这里需要增加异常处理
+            m_future = async_read();
+            return m_future->done();
         }
         std::unreachable();
     }
@@ -75,6 +78,7 @@ struct mo_mail_s
         m_in = mail_in;
         m_out = mail_out;
         m_behavior_type = 0;
+        m_future = std::nullopt;
     }
     inline bool is_waiting() noexcept
     {
@@ -109,6 +113,7 @@ struct mo_mail_s
     uint8_t *m_serial_in = nullptr;
     void *m_in = nullptr;
     mo_mail_out_s *m_out = nullptr;
+    std::optional<coro::mo_future_s> m_future = std::nullopt;
 };
 
 class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_c, mo_mail_s>
@@ -176,8 +181,9 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
 struct mo_mail_handle_s
 {
   public:
-    bool on_event([[MO_UNUSED]] mo_mail_s *event, [[MO_UNUSED]] size_t sequence,
-                  [[MO_UNUSED]] bool end_of_batch) noexcept
+    bool on_event(mo_mail_s *event,                         //
+                  [[MO_UNUSED]] size_t sequence,            //
+                  [[MO_UNUSED]] bool end_of_batch) noexcept //
     {
         // TODO: 完善 增加日志 增加执行结果处理 增加异常处理
         // TODO 这里应该为协程支持

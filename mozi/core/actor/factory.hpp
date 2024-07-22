@@ -38,7 +38,6 @@ inline std::unique_ptr<mo_future_s> poll_actor_create() noexcept
     mo_poll_c *resource = new mo_poll_c{new mozi::actor::mo_poll_actor_data_s(), &actor::destroy_poll_actor_data};
     auto poll_actor =
         std::make_unique<mo_future_s>(poll_actor_create(coro::mo_coro_type_flags::MO_POLL_ACTOR, resource));
-    // poll_actor->resume();
     return poll_actor;
 }
 // inline mo_future_s schedule_actor_create([[MO_UNUSED]] mo_coro_type_flags flag, [[MO_UNUSED]] coro::mo_poll_c

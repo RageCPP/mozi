@@ -16,10 +16,67 @@ int main()
     // {
     //     mozi::coro::mo_future_s *fut = nullptr;
     // };
-    using namespace mozi;
-    mozi::scheduler::mo_worker_c worker{};
-    worker.run_once();
-    worker.run_once();
+    // using namespace mozi;
+    // mozi::scheduler::mo_worker_c worker{};
+    // worker.run_once();
+    // worker.run_once();
+
+    struct hello
+    {
+        hello &operator=(const hello &ori)
+        {
+            if (this != &ori)
+            {
+                spdlog::info("hello::operator=(const hello &)");
+                std::stringstream ss;
+                ss << &ori;
+                spdlog::info("address of ori: {}", ss.str());
+                spdlog::info("");
+            }
+            return *this;
+        }
+        hello &operator=(hello &&ori)
+        {
+            if (this != &ori)
+            {
+                spdlog::info("hello::operator=(hello &&)");
+                std::stringstream ss;
+                ss << &ori;
+                spdlog::info("address of ori: {}", ss.str());
+                spdlog::info("");
+            }
+            return *this;
+        }
+        hello(hello const &ori)
+        {
+            spdlog::info("hello::hello(const hello &)");
+            std::stringstream ss;
+            ss << &ori;
+            spdlog::info("address of ori: {}", ss.str());
+            spdlog::info("");
+        };
+        hello(hello &&ori)
+        {
+            spdlog::info("hello::hello(hello &&)");
+            std::stringstream ss;
+            ss << &ori;
+            spdlog::info("address of ori: {}", ss.str());
+            spdlog::info("");
+        };
+        hello() = default;
+    };
+    hello a{};
+    std::stringstream ss;
+    ss << &a;
+
+    spdlog::info("address of a: {}", ss.str());
+
+    hello b{std::move(a)};
+
+    std::stringstream ss2;
+    ss2 << &b;
+    spdlog::info("address of b: {}", ss2.str());
+
     // using poll_data = mozi::actor::mo_poll_actor_data_s;
     // std::unique_ptr<coro::mo_future_s> poll_actor = mozi::actor::poll_actor_create();
     // spdlog::info("poll_actor->resume()");
