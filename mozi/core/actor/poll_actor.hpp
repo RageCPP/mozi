@@ -43,7 +43,7 @@ struct mo_poll_actor_data_s
     {
         return m_state;
     }
-    inline void poll(mo_mail_read_t read) noexcept
+    inline void poll(mo_mail_handle_t read) noexcept
     {
         m_mailbox_poller->poll(read);
     }

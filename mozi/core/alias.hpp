@@ -1,5 +1,5 @@
 #pragma once
-#include "mozi/core/mail.hpp"
+#include "mozi/core/actor/mail.hpp"
 #include "mozi/nid/worker.hpp"
 #include "mozi/variables/const_dec.hpp"
 #include <cstdint>
@@ -29,13 +29,13 @@ template <uint32_t Size> class mo_poll_actor_c;
 template <uint32_t Size> class mo_actor_c;
 }; // namespace actor
 
-namespace mail
+namespace actor
 {
 struct mo_mail_s;
 class mo_mail_factory_c;
 class mo_mail_translator_c;
-struct mo_mail_read_s;
-}; // namespace mail
+struct mo_mail_handle_s;
+}; // namespace actor
 
 namespace ring
 {
@@ -53,13 +53,13 @@ class mo_event_poller_c;                                                        
 
 using mo_actor_t = actor::mo_actor_c<BITS_8>;
 
-using mo_mail_t = mail::mo_mail_s;
+using mo_mail_t = actor::mo_mail_s;
 
-using mo_mail_factory_t = mail::mo_mail_factory_c;
+using mo_mail_factory_t = actor::mo_mail_factory_c;
 
-using mo_mail_translator_t = mail::mo_mail_translator_c;
+using mo_mail_translator_t = actor::mo_mail_translator_c;
 
-using mo_mail_read_t = mail::mo_mail_read_s;
+using mo_mail_handle_t = actor::mo_mail_handle_s;
 
 template <typename Event, uint32_t Size, class Sequencer, class EventFactory, class Translator>
 using mo_ring_buffer_t = ring::mo_ring_buffer_s<Event, Size, Sequencer, EventFactory, Translator>;

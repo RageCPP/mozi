@@ -93,11 +93,12 @@ set(MOZI_CORE_CORO_SOURCES
 set(MOZI_CORE_ACTOR_HEADERS
   core/actor/flags.hpp
   core/actor/factory.hpp
-  core/actor/poll_actor.hpp)
+  core/actor/poll_actor.hpp
+  core/actor/mail.hpp
+  core/actor/mail_out.hpp)
 
 set(MOZI_HEADERS
   core/alias.hpp
-  core/mail.hpp
   core/deque.hpp
   core/run.hpp)
 

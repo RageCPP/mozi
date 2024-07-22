@@ -1,5 +1,5 @@
+#include "mozi/core/actor/mail_out.hpp"
 #include "mozi/core/alias.hpp"
-#include "mozi/core/mail.hpp"
 #include "mozi/core/ring/event_poller.hpp"
 #include <cstdint>
 #include <gtest/gtest.h>
@@ -8,6 +8,7 @@
 
 constexpr uint32_t mail_size = 512;
 using mail = mozi::mo_mail_t;
+using mail_out = mozi::actor::mo_mail_out_s;
 using mail_factory = mozi::mo_mail_factory_t;
 using mo_mail_translator = mozi::mo_mail_translator_t;
 using producer = mozi::mo_multi_producer_sequencer_t<mail, mail_size>;
@@ -16,12 +17,13 @@ using poller = mozi::mo_event_poller_t<ring_buffer, producer, mail>;
 void publish_with_5thread(auto &producer, uint16_t &success, uint16_t count)
 {
     std::jthread([&producer, &success, count]() {
-        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) {};
+        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data, [[maybe_unused]] mail_out *mail_out) {
+        };
         auto num = 0;
         while (count > num)
         {
             uint8_t *bytes = new uint8_t[1];
-            mo_mail_translator pub_mail{bytes, nullptr, f};
+            mo_mail_translator pub_mail{bytes, nullptr, nullptr, f};
             auto is_sucess = producer->publish_event(pub_mail);
             if (is_sucess)
             {
@@ -31,12 +33,13 @@ void publish_with_5thread(auto &producer, uint16_t &success, uint16_t count)
         }
     });
     std::jthread([&producer, &success, count]() {
-        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) {};
+        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data, [[maybe_unused]] mail_out *mail_out) {
+        };
         auto num = 0;
         while (count > num)
         {
             uint8_t *bytes = new uint8_t[1];
-            mo_mail_translator pub_mail{bytes, nullptr, f};
+            mo_mail_translator pub_mail{bytes, nullptr, nullptr, f};
             auto is_sucess = producer->publish_event(pub_mail);
             if (is_sucess)
             {
@@ -46,12 +49,13 @@ void publish_with_5thread(auto &producer, uint16_t &success, uint16_t count)
         }
     });
     std::jthread([&producer, &success, count]() {
-        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) {};
+        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data, [[maybe_unused]] mail_out *mail_out) {
+        };
         auto num = 0;
         while (count > num)
         {
             uint8_t *bytes = new uint8_t[1];
-            mo_mail_translator pub_mail{bytes, nullptr, f};
+            mo_mail_translator pub_mail{bytes, nullptr, nullptr, f};
             auto is_sucess = producer->publish_event(pub_mail);
             if (is_sucess)
             {
@@ -61,12 +65,13 @@ void publish_with_5thread(auto &producer, uint16_t &success, uint16_t count)
         }
     });
     std::jthread([&producer, &success, count]() {
-        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) {};
+        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data, [[maybe_unused]] mail_out *mail_out) {
+        };
         auto num = 0;
         while (count > num)
         {
             uint8_t *bytes = new uint8_t[1];
-            mo_mail_translator pub_mail{bytes, nullptr, f};
+            mo_mail_translator pub_mail{bytes, nullptr, nullptr, f};
             auto is_sucess = producer->publish_event(pub_mail);
             if (is_sucess)
             {
@@ -76,12 +81,13 @@ void publish_with_5thread(auto &producer, uint16_t &success, uint16_t count)
         }
     });
     std::jthread([&producer, &success, count]() {
-        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data) {};
+        auto f = []([[maybe_unused]] uint8_t *bytes, [[maybe_unused]] void *data, [[maybe_unused]] mail_out *mail_out) {
+        };
         auto num = 0;
         while (count > num)
         {
             uint8_t *bytes = new uint8_t[1];
-            mo_mail_translator pub_mail{bytes, nullptr, f};
+            mo_mail_translator pub_mail{bytes, nullptr, nullptr, f};
             auto is_sucess = producer->publish_event(pub_mail);
             if (is_sucess)
             {
@@ -191,14 +197,14 @@ TEST(MoziTest, Publish)
             publish_with_5thread(multi_producer, second_success, 500);
             EXPECT_EQ(second_success, 0);
             second_success = 0;
-            auto poll_state = poller->poll(mozi::mo_mail_read_t{});
+            auto poll_state = poller->poll(mozi::mo_mail_handle_t{});
             EXPECT_EQ(poll_state, poller::mo_poll_flags::MO_POLL_PROCESSING);
-            poll_state = poller->poll(mozi::mo_mail_read_t{});
+            poll_state = poller->poll(mozi::mo_mail_handle_t{});
             EXPECT_EQ(poll_state, poller::mo_poll_flags::MO_POLL_IDLE);
             publish_with_5thread(multi_producer, second_success, 500);
             EXPECT_EQ(second_success, 512);
             second_success = 0;
-            poll_state = poller->poll(mozi::mo_mail_read_t{});
+            poll_state = poller->poll(mozi::mo_mail_handle_t{});
             EXPECT_EQ(poll_state, poller::mo_poll_flags::MO_POLL_PROCESSING);
             publish_with_5thread(multi_producer, second_success, 1);
             EXPECT_EQ(second_success, 5);

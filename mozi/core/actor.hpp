@@ -76,7 +76,7 @@ namespace mozi::actor
 //                 if (m_state == mo_actor_state_flags::MO_ACTOR_STATE_IDLE)
 //                 {
 //                     // TODO: 检查信件是否消耗完
-//                     handle.promise().m_mailbox_poller->poll(mo_mail_read_t{});
+//                     handle.promise().m_mailbox_poller->poll(mo_mail_handle_t{});
 //                 }
 //                 // std::optional<coro_handle> h = handle.promise().m_workflow->pop();
 //                 auto uv_actor = handle.promise().m_uv_actor.load();

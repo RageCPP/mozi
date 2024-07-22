@@ -33,7 +33,7 @@ coro_handle mo_poll_actor_awaiter_s::await_suspend([[MO_UNUSED]] coro_handle h) 
         spdlog::info("mo_poll_actor_c::run idle");
         m_resource->read([](void *data) noexcept {
             poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
-            p_data->poll(mo_mail_read_t{});
+            p_data->poll(mo_mail_handle_t{});
         });
     }
 
