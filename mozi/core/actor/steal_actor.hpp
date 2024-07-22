@@ -62,7 +62,7 @@ struct mo_steal_actor_data_s
     {
         m_poll_actor_handle.promise().m_resource->write([handle = &m_self_handle](void *data) noexcept {
             mo_poll_actor_data_s *p_data = static_cast<mo_poll_actor_data_s *>(data);
-            p_data->push_actor(handle);
+            p_data->push_actor(*handle);
         });
     }
     inline bool send_message(mo_mail_translator_t &message) noexcept
