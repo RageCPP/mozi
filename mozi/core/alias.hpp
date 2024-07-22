@@ -31,7 +31,7 @@ template <uint32_t Size> class mo_actor_c;
 
 namespace actor
 {
-struct mo_mail_s;
+struct mo_mail;
 class mo_mail_factory_c;
 class mo_mail_translator_c;
 struct mo_mail_handle_s;
@@ -53,7 +53,7 @@ class mo_event_poller_c;                                                        
 
 using mo_actor_t = actor::mo_actor_c<BITS_8>;
 
-using mo_mail_t = actor::mo_mail_s;
+using mo_mail_t = actor::mo_mail;
 
 using mo_mail_factory_t = actor::mo_mail_factory_c;
 

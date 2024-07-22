@@ -11,6 +11,7 @@ using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data_s;
 
 mo_future_s mo_handle_s::get_return_object() noexcept
 {
+    spdlog::info("mo_handle_s::get_return_object");
     return mo_future_s{std::coroutine_handle<mo_handle_s>::from_promise(*this)};
 }
 

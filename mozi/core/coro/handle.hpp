@@ -9,6 +9,10 @@ namespace mozi::scheduler
 {
 class mo_worker_c;
 }
+namespace mozi::actor
+{
+struct mo_steal_actor_data_s;
+}
 namespace mozi::coro
 {
 struct mo_future_s;
@@ -36,6 +40,7 @@ struct mo_handle_s
 
     suspend_always initial_suspend() noexcept
     {
+        spdlog::info("mo_handle_s::initial_suspend");
         return {};
     }
 
@@ -71,6 +76,7 @@ struct mo_handle_s
   private:
     friend struct mo_future_s;
     friend struct mo_schedule_awaiter_s;
+    friend struct actor::mo_steal_actor_data_s;
     // TODO: 由于 coroutine_handle 的是 trival copyable，所以需要测试当 coroutine_handle 被复制时，作为
     // 共享资源的 m_resource 计数是否会增加，当 coroutine_handle 被销毁时，作为共享资源的 m_resource 是否会减少
 
