@@ -60,16 +60,23 @@ struct mo_steal_actor_data_s
     }
     inline void workflow_push_self_handle() noexcept
     {
-        {
-            m_poll_actor_handle.promise().m_resource->write([handle = &m_self_handle](void *data) noexcept {
-                mo_poll_actor_data_s *p_data = static_cast<mo_poll_actor_data_s *>(data);
-                p_data->push_actor(handle);
-            });
-        }
+        m_poll_actor_handle.promise().m_resource->write([handle = &m_self_handle](void *data) noexcept {
+            mo_poll_actor_data_s *p_data = static_cast<mo_poll_actor_data_s *>(data);
+            p_data->push_actor(handle);
+        });
     }
     inline bool send_message(mo_mail_translator_t &message) noexcept
     {
-        return m_mailbox->publish_event(message);
+#ifndef NDEBUG
+        spdlog::info("mailbox used capacity: {}", m_mailbox->used_capacity());
+#endif
+        auto is_success = m_mailbox->publish_event(message);
+        auto used = m_mailbox->used_capacity();
+        if (is_success && (used == 0 || used >= 5))
+        {
+            workflow_push_self_handle();
+        }
+        return is_success;
     }
     mo_steal_actor_data_s &operator=(const mo_steal_actor_data_s &) = delete;
     mo_steal_actor_data_s(const mo_steal_actor_data_s &) = delete;

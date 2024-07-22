@@ -22,14 +22,17 @@ int main()
     mozi::scheduler::mo_worker_c worker{};
     worker.run_once();
     worker.run_once();
-    auto steal_actor = mozi::actor::steal_actor_create(worker.poll_actor_handle());
-    steal_actor->resource()->write([steal_actor = steal_actor.get()](void *data) noexcept {
-        mozi::actor::mo_steal_actor_data_s *p_data = static_cast<mozi::actor::mo_steal_actor_data_s *>(data);
-        uint8_t *bytes = new uint8_t[1];
-        mozi::mo_mail_translator_t pub_mail{bytes, nullptr, nullptr, f};
-        p_data->send_message(pub_mail);
-        p_data->workflow_push_self_handle();
-    });
+    auto handle = worker.poll_actor_handle();
+    auto handle_1 = handle;
+    spdlog::info("coroutine handle is equal: {}", handle == handle_1);
+    spdlog::info("coroutine handle size: {}", sizeof(handle));
+    // auto steal_actor = mozi::actor::steal_actor_create(worker.poll_actor_handle());
+    // steal_actor->resource()->write([steal_actor = steal_actor.get()](void *data) noexcept {
+    //     mozi::actor::mo_steal_actor_data_s *p_data = static_cast<mozi::actor::mo_steal_actor_data_s *>(data);
+    //     uint8_t *bytes = new uint8_t[1];
+    //     mozi::mo_mail_translator_t pub_mail{bytes, nullptr, nullptr, f};
+    //     p_data->send_message(pub_mail);
+    // });
 
     // using poll_data = mozi::actor::mo_poll_actor_data_s;
     // std::unique_ptr<coro::mo_future_s> poll_actor = mozi::actor::poll_actor_create();

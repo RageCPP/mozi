@@ -114,6 +114,11 @@ class mo_ring_buffer_s :
         return this->m_data.m_sequencer->remaining_capacity();
     }
 
+    constexpr uint32_t used_capacity() const noexcept
+    {
+        return this->m_data.m_sequencer->used_capacity();
+    }
+
     bool has_available_capacity(uint16_t required_capacity) const noexcept
     {
         return this->m_data.m_sequencer->has_available_capacity(required_capacity);

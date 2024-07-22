@@ -121,6 +121,13 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
         return this->buffer_size() - (produced - consumed);
     }
 
+    uint32_t used_capacity() noexcept
+    {
+        auto consumed = mozi::ring::utils::minimum_sequence(this->gating_sequences(), this->cursor());
+        auto produced = this->cursor();
+        return produced - consumed;
+    }
+
     void publish(const size_t sequence) noexcept
     {
         set_available(sequence);

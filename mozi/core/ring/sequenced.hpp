@@ -37,6 +37,16 @@ template <class SI> class mo_sequenced_c
     {
     };
 
+    template <typename T, typename = void> struct uint32_used_capacity : std::false_type
+    {
+    };
+    template <typename T>
+    struct uint32_used_capacity<T,
+                                std::enable_if_t<std::is_same_v<decltype(std::declval<T>().used_capacity()), uint32_t>>>
+        : std::true_type
+    {
+    };
+
     template <typename T, typename = void> struct size_t_next : std::false_type
     {
     };
@@ -83,6 +93,7 @@ template <class SI> class mo_sequenced_c
         static_assert(bool_has_available_capacity_required_capacity<SI>::value,
                       "SI should have `bool has_available_capacity(uint16_t required_capacity)` method");
         static_assert(uint32_remaining_capacity<SI>::value, "SI should have `uint32_t remaining_capacity()` method");
+        static_assert(uint32_used_capacity<SI>::value, "SI should have `uint32_t used_capacity()` method");
         static_assert(size_t_next<SI>::value, "SI should have `size_t next()` method");
         static_assert(size_t_next_n<SI>::value, "SI should have `size_t next(uint16_t n)` method");
         static_assert(void_publish_sequence<SI>::value, "SI should have `void publish(size_t sequence)` method");
