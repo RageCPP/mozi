@@ -38,16 +38,6 @@ int main()
     using namespace mozi;
     mozi::scheduler::mo_worker_c worker{};
     worker.run_once();
-    worker.run_once();
-    auto handle = worker.poll_actor_handle();
-    auto handle_1 = handle;
-    spdlog::info("coroutine handle is equal: {}", handle == handle_1);
-    spdlog::info("coroutine handle size: {}", sizeof(handle));
-    spdlog::info("handle state {}", coro_type_flags_to_string(handle.promise().flag()));
-    spdlog::info("handle_1 state {}", coro_type_flags_to_string(handle_1.promise().flag()));
-    handle.promise().update_flag(coro::mo_coro_type_flags::MO_STEAL_ACTOR);
-    spdlog::info("handle state {}", coro_type_flags_to_string(handle.promise().flag()));
-    spdlog::info("handle_1 state {}", coro_type_flags_to_string(handle_1.promise().flag()));
 
     // auto steal_actor = mozi::actor::steal_actor_create(worker.poll_actor_handle());
     // steal_actor->resource()->write([steal_actor = steal_actor.get()](void *data) noexcept {
@@ -57,7 +47,7 @@ int main()
     //     p_data->send_message(pub_mail);
     // });
 
-    // using poll_data = mozi::actor::mo_poll_actor_data_s;
+    // using poll_data = mozi::actor::mo_poll_actor_data;
     // std::unique_ptr<coro::mo_future_s> poll_actor = mozi::actor::poll_actor_create();
     // spdlog::info("poll_actor->resume()");
     // std::unique_ptr<coro::mo_future_s> schedule_actor = mozi::actor::schedule_actor_create();

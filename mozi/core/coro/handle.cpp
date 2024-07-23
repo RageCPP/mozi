@@ -9,7 +9,7 @@
 #include <coroutine>
 namespace mozi::coro
 {
-using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data_s;
+using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
 
 mo_future_s mo_handle_s::get_return_object() noexcept
 {

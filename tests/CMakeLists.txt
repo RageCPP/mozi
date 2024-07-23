@@ -4,12 +4,14 @@ project(tests LANGUAGES CXX)
 
 enable_testing()
 
-add_executable(ring_test ring.cpp)
+add_executable(mozi_test
+  ring.cpp
+  scheduler.cpp)
 
 target_link_libraries(
-  ring_test
+  mozi_test
   mozi
   GTest::gtest_main)
 
 include(GoogleTest)
-gtest_discover_tests(ring_test)
+gtest_discover_tests(mozi_test)

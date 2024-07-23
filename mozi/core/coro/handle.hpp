@@ -66,25 +66,19 @@ struct mo_handle_s
         std::terminate();
     }
 
+    mo_poll_c *resource() const noexcept
+    {
+        return m_resource;
+    }
+
     mo_poll_actor_awaiter_s yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept;
     mo_steal_actor_awaiter_s yield_value(coro::yield_info::steal_actor_symbol_state &&info) noexcept;
-
     mo_schedule_awaiter_s await_transform(mo_schedule_awaiter_transform_s &&info) noexcept;
 
     // mo__schedule_actor_awaiter yield_value([[maybe_unused]] coro::yield_info::schedule_symbol info) noexcept
     // {
     //     return {};
     // }
-
-    mo_coro_type_flags flag() const noexcept
-    {
-        return m_flag;
-    }
-
-    void update_flag(mo_coro_type_flags flag) noexcept
-    {
-        m_flag = flag;
-    }
 
   private:
     friend struct mo_future_s;

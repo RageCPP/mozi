@@ -33,7 +33,7 @@ namespace actor
 {
 struct mo_mail;
 class mo_mail_factory_c;
-class mo_mail_translator_c;
+class mo_mail_translator;
 struct mo_mail_handle_s;
 }; // namespace actor
 
@@ -57,7 +57,7 @@ using mo_mail_t = actor::mo_mail;
 
 using mo_mail_factory_t = actor::mo_mail_factory_c;
 
-using mo_mail_translator_t = actor::mo_mail_translator_c;
+using mo_mail_translator_t = actor::mo_mail_translator;
 
 using mo_mail_handle_t = actor::mo_mail_handle_s;
 

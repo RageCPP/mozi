@@ -5,7 +5,7 @@
       "name": "debug",
       "description": "Default settings for the project",
       "hidden": false,
-      "generator": "Unix Makefiles",
+      "generator": "Ninja",
       "binaryDir": "./build",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",

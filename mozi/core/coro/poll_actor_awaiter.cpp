@@ -7,7 +7,7 @@
 
 namespace mozi::coro
 {
-using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data_s;
+using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
 using coro_handle = std::coroutine_handle<mo_handle_s>;
 
 // TODO 这里await_ready 在暂停后返回true好像会进入死循环 无法跳出调度

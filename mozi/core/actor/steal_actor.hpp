@@ -1,4 +1,5 @@
 #pragma once
+#include "mozi/core/actor/mail.hpp"
 #include "mozi/core/actor/poll_actor.hpp"
 #include "mozi/core/alias.hpp"
 #include "mozi/core/coro/handle.hpp"
@@ -61,7 +62,7 @@ struct mo_steal_actor_data_s
     inline void workflow_push_self_handle() noexcept
     {
         m_poll_actor_handle.promise().m_resource->write([handle = &m_self_handle](void *data) noexcept {
-            mo_poll_actor_data_s *p_data = static_cast<mo_poll_actor_data_s *>(data);
+            mo_poll_actor_data *p_data = static_cast<mo_poll_actor_data *>(data);
             p_data->push_actor(*handle);
         });
     }
@@ -77,6 +78,11 @@ struct mo_steal_actor_data_s
             workflow_push_self_handle();
         }
         return is_success;
+    }
+    // TODO: 检查 Actor 是否有 receive_mail 方法
+    template <typename Actor> inline bool send_mail(mo_mail_translator &mail, Actor &actor) noexcept
+    {
+        return actor.receive_mail(mail);
     }
     mo_steal_actor_data_s &operator=(const mo_steal_actor_data_s &) = delete;
     mo_steal_actor_data_s(const mo_steal_actor_data_s &) = delete;

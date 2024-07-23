@@ -22,7 +22,7 @@ struct mo_schedule_awaiter_s
 
     coro_handle await_suspend(coro_handle coro_handle) noexcept
     {
-        using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data_s;
+        using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
         m_coro_handle.promise().m_resource->write([&coro_handle](void *data) noexcept {
             poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
             p_data->update_schedule_worker_handle(coro_handle);

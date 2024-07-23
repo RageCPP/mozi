@@ -19,7 +19,7 @@ namespace mozi::actor
 struct mo_mail
 {
   public:
-    friend class mo_mail_translator_c;
+    friend class mo_mail_translator;
     inline bool read() noexcept
     {
         if (m_behavior_type == 0)
@@ -132,21 +132,21 @@ class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_
     }
 };
 
-class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_translator_c, mo_mail>
+class mo_mail_translator : public mozi::ring::mo_event_translator_c<mo_mail_translator, mo_mail>
 {
   public:
     void operator()(mo_mail *event, [[MO_UNUSED]] size_t sequence) noexcept
     {
 #ifndef NDEBUG
-        spdlog::debug("mo_mail_translator_c::operator()");
+        spdlog::debug("mo_mail_translator::operator()");
 #endif
         event->init_mail(m_serial_in, m_in, m_out);
         m_behavior_type == 1 ? event->set_behavior(m_block_behavior) : event->set_behavior(m_async_behavior);
     }
-    explicit mo_mail_translator_c(uint8_t *serial_mail_in, //
-                                  void *mail_in,           //
-                                  mo_mail_out_s *mail_out, //
-                                  void (*block_behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
+    explicit mo_mail_translator(uint8_t *serial_mail_in, //
+                                void *mail_in,           //
+                                mo_mail_out_s *mail_out, //
+                                void (*block_behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
         : m_serial_in(serial_mail_in),      //
           m_in(mail_in),                    //
           m_out(mail_out),                  //
@@ -155,10 +155,10 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
     {
         // TODO 检查不要是空指针
     }
-    explicit mo_mail_translator_c(uint8_t *serial_mail_in, //
-                                  void *mail_in,           //
-                                  mo_mail_out_s *mail_out, //
-                                  coro::mo_future_s (*async_behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
+    explicit mo_mail_translator(uint8_t *serial_mail_in, //
+                                void *mail_in,           //
+                                mo_mail_out_s *mail_out, //
+                                coro::mo_future_s (*async_behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
         : m_serial_in(serial_mail_in),      //
           m_in(mail_in),                    //
           m_out(mail_out),                  //
@@ -168,11 +168,11 @@ class mo_mail_translator_c : public mozi::ring::mo_event_translator_c<mo_mail_tr
         // TODO 检查不要是空指针
     }
 
-    mo_mail_translator_c &operator=(const mo_mail_translator_c &) = delete;
-    mo_mail_translator_c &operator=(mo_mail_translator_c &&) = delete;
-    mo_mail_translator_c(const mo_mail_translator_c &) = delete;
-    mo_mail_translator_c(mo_mail_translator_c &&) = delete;
-    ~mo_mail_translator_c() = default;
+    mo_mail_translator &operator=(const mo_mail_translator &) = delete;
+    mo_mail_translator &operator=(mo_mail_translator &&) = delete;
+    mo_mail_translator(const mo_mail_translator &) = delete;
+    mo_mail_translator(mo_mail_translator &&) = delete;
+    ~mo_mail_translator() = default;
 
   private:
     uint8_t *m_serial_in = nullptr;
