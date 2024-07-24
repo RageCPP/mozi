@@ -41,7 +41,7 @@ int main()
 
     // auto steal_actor = mozi::actor::steal_actor_create(worker.poll_actor_handle());
     // steal_actor->resource()->write([steal_actor = steal_actor.get()](void *data) noexcept {
-    //     mozi::actor::mo_steal_actor_data_s *p_data = static_cast<mozi::actor::mo_steal_actor_data_s *>(data);
+    //     mozi::actor::mo_steal_actor_data *p_data = static_cast<mozi::actor::mo_steal_actor_data *>(data);
     //     uint8_t *bytes = new uint8_t[1];
     //     mozi::mo_mail_translator_t pub_mail{bytes, nullptr, nullptr, f};
     //     p_data->send_message(pub_mail);

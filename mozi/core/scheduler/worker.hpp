@@ -47,43 +47,43 @@ class mo_worker
             return false;
         }
 #ifndef NDEBUG
-        spdlog::debug("   ");
-        spdlog::debug("mo_worker::run_once start");
+        spdlog::debug("========");
         spdlog::debug("mo_worker m_state {}", state_string());
 #endif
         auto worker = run_once(coro::mo_coro_type_flags::MO_SCHEDULE_WORKER);
         worker.resume(); // initial_suspend resume
         m_state.store(expected, std::memory_order_seq_cst);
 #ifndef NDEBUG
-        spdlog::debug("mo_worker::run_once end");
         spdlog::debug("mo_worker m_state {}", state_string());
+        spdlog::debug("========");
 #endif
         return true;
     }
 
     inline bool start() noexcept
     {
-        spdlog::debug("mo_worker m_state {}", state_string());
         auto expected = mo__state::MO_WORKER_STATE_INTT;
         if (!m_state.compare_exchange_strong(expected, mo__state::MO_WORKER_STATE_IDLE, std::memory_order_seq_cst))
         {
             return false;
         }
-        spdlog::debug("mo_worker m_state {}", state_string());
         run_once();
         return true;
     }
 
     inline bool stop() noexcept
     {
-        spdlog::debug("mo_worker stop m_state {}", state_string());
         // TODO: 需要完善在暂停失败时候如何处理
         auto expected = mo__state::MO_WORKER_STATE_IDLE;
         if (!m_state.compare_exchange_strong(expected, mo__state::MO_WORKER_STATE_STOP, std::memory_order_seq_cst))
         {
-            spdlog::debug("faild mo_worker m_state {}", state_string());
+            spdlog::debug("faild stop mo_worker {}", state_string());
             return false;
         }
+#ifndef NDEBUG
+        spdlog::debug("========");
+        spdlog::debug("mo_worker m_state {}", state_string());
+#endif
         auto poll_actor_resource = m_poll_actor->resource();
         poll_actor_resource->write([](void *data) noexcept {
             mozi::actor::mo_poll_actor_data *p_data = static_cast<mozi::actor::mo_poll_actor_data *>(data);
@@ -91,11 +91,9 @@ class mo_worker
         });
         auto worker = run_once(coro::mo_coro_type_flags::MO_SCHEDULE_WORKER);
         worker.resume(); // initial_suspend resume
-        // poll_actor_resource->read([](void *data) noexcept {
-        //     poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
-        //     return p_data->state() == actor::mo_actor_state_flags::MO_ACTOR_STATE_STOP;
-        // });
-        // m_poll_actor->destroy();
+#ifndef NDEBUG
+        spdlog::debug("========");
+#endif
         return true;
     }
 
@@ -117,11 +115,6 @@ class mo_worker
         }
     }
     [[MO_NODISCARD]] inline coro::mo_future run_once([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
-    {
-        co_await coro::mo_schedule_awaiter_transform_s{.fire = m_poll_actor.get()};
-        // 这里逻辑为跳出本次协程执行循环等待下次调度 一定不要在这里回收 m_poll_actor 的资源
-    }
-    [[MO_NODISCARD]] inline coro::mo_future run_stop([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
     {
         co_await coro::mo_schedule_awaiter_transform_s{.fire = m_poll_actor.get()};
         // 这里逻辑为跳出本次协程执行循环等待下次调度 一定不要在这里回收 m_poll_actor 的资源

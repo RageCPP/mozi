@@ -6,7 +6,7 @@
 
 namespace mozi::coro
 {
-using steal_actor_data_t = typename mozi::actor::mo_steal_actor_data_s;
+using steal_actor_data_t = typename mozi::actor::mo_steal_actor_data;
 using coro_handle = std::coroutine_handle<mo_handle>;
 
 coro_handle mo_steal_actor_awaiter_s::await_suspend([[MO_UNUSED]] coro_handle h) noexcept

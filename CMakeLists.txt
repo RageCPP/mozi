@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.20)
+cmake_minimum_required(VERSION 3.29)
 
 project(webserver LANGUAGES CXX)
 
@@ -8,7 +8,7 @@ enable_testing()
 include(FetchContent)
 FetchContent_Declare(libpqxx
   GIT_REPOSITORY git@github.com:jtv/libpqxx.git
-  GIT_TAG 2ffb711bc4e9b086bf0c549a9c22b19f61ab5476 # v7.9.0
+  GIT_TAG c154460e7418f94abc7291c12b3bbb6ee9760bca # v7.9.1
   OVERRIDE_FIND_PACKAGE
   GIT_SHALLOW ON
 )

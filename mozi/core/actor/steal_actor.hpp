@@ -7,13 +7,13 @@
 #include <coroutine>
 namespace mozi::actor
 {
-struct mo_steal_actor_data_s
+struct mo_steal_actor_data
 {
     using mo__mailbox = mozi::mo_mailbox_t<BITS_2>;
     using mo__sender = mozi::mo_mailbox_sender_t<BITS_2>;
     using mo__reveiver = mozi::mo_mailbox_receiver_t<BITS_2>;
     using coro_handle = std::coroutine_handle<coro::mo_handle>;
-    mo_steal_actor_data_s(coro_handle poll_actor_handle)
+    mo_steal_actor_data(coro_handle poll_actor_handle)
         : m_poll_actor_handle(poll_actor_handle),                   //
           m_state(actor::mo_actor_state_flags::MO_ACTOR_STATE_INIT) //
     {
@@ -21,11 +21,11 @@ struct mo_steal_actor_data_s
         std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
         m_mailbox_poller = std::move(mailbox_poller);
         m_mailbox = std::move(mailbox);
-        spdlog::debug("mo_steal_actor_data_s::mo_steal_actor_data_s()");
+        spdlog::debug("mo_steal_actor_data::mo_steal_actor_data()");
     }
-    ~mo_steal_actor_data_s()
+    ~mo_steal_actor_data()
     {
-        spdlog::debug("mo_steal_actor_data_s::~mo_steal_actor_data_s()");
+        spdlog::debug("mo_steal_actor_data::~mo_steal_actor_data()");
     }
     inline void stop() noexcept
     {
@@ -84,10 +84,10 @@ struct mo_steal_actor_data_s
     {
         return actor.receive_mail(mail);
     }
-    mo_steal_actor_data_s &operator=(const mo_steal_actor_data_s &) = delete;
-    mo_steal_actor_data_s(const mo_steal_actor_data_s &) = delete;
-    mo_steal_actor_data_s &operator=(mo_steal_actor_data_s &&) = delete;
-    mo_steal_actor_data_s(mo_steal_actor_data_s &&) = delete;
+    mo_steal_actor_data &operator=(const mo_steal_actor_data &) = delete;
+    mo_steal_actor_data(const mo_steal_actor_data &) = delete;
+    mo_steal_actor_data &operator=(mo_steal_actor_data &&) = delete;
+    mo_steal_actor_data(mo_steal_actor_data &&) = delete;
 
   private:
     // Fixed order
@@ -100,6 +100,6 @@ struct mo_steal_actor_data_s
 };
 inline void destroy_steal_actor_data(void *data) noexcept
 {
-    delete static_cast<mo_steal_actor_data_s *>(data);
+    delete static_cast<mo_steal_actor_data *>(data);
 }
 } // namespace mozi::actor

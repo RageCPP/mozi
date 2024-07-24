@@ -41,18 +41,17 @@ struct mo_future
 
     ~mo_future()
     {
-        spdlog::debug("mo_future::~mo_future");
+        // spdlog::debug("mo_future::~mo_future");
         if (m_coro_handle.address() != nullptr)
         {
-            auto resource = m_coro_handle.promise().m_resource;
-            if (resource != nullptr)
-            {
-                if (resource->m_destroy != nullptr)
-                {
-                    resource->m_destroy(resource->m_data);
-                }
-            }
-
+            // auto resource = m_coro_handle.promise().m_resource;
+            // if (resource != nullptr)
+            // {
+            //     if (resource->m_destroy != nullptr)
+            //     {
+            //         resource->m_destroy(resource->m_data);
+            //     }
+            // }
             m_coro_handle.destroy();
         }
     }

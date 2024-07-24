@@ -11,18 +11,17 @@
 #include <coroutine>
 namespace mozi::coro
 {
-using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
+using mo_poll_actor_data = typename mozi::actor::mo_poll_actor_data;
 
 mo_future mo_handle::get_return_object() noexcept
 {
-    spdlog::debug("mo_handle::get_return_object");
     return mo_future{std::coroutine_handle<mo_handle>::from_promise(*this)};
 }
 
 mo_poll_actor_awaiter mo_handle::yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept
 {
     m_resource->write([info = std::move(info)](void *data) noexcept {
-        poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
+        mo_poll_actor_data *p_data = static_cast<mo_poll_actor_data *>(data);
         p_data->update_state(info.m_state);
     });
     return {m_resource};
@@ -31,7 +30,7 @@ mo_poll_actor_awaiter mo_handle::yield_value(coro::yield_info::poll_actor_symbol
 mo_steal_actor_awaiter_s mo_handle::yield_value(coro::yield_info::steal_actor_symbol_state &&info) noexcept
 {
     m_resource->write([info = std::move(info)](void *data) noexcept {
-        mozi::actor::mo_steal_actor_data_s *p_data = static_cast<mozi::actor::mo_steal_actor_data_s *>(data);
+        mozi::actor::mo_steal_actor_data *p_data = static_cast<mozi::actor::mo_steal_actor_data *>(data);
         p_data->update_state(info.m_state);
     });
     return {m_resource};

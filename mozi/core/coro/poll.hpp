@@ -55,6 +55,7 @@ struct mo_poll_c
 
   private:
     friend struct mo_future;
+    friend struct mo_handle;
     enum class mo_poll_flags
     {
         MO_POLL_Pending,

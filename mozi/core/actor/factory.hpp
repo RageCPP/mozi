@@ -64,7 +64,7 @@ inline mo_future steal_actor_create([[MO_UNUSED]] coro::mo_coro_type_flags flag,
         co_yield steal_actor_symbol_state{mo_actor_state_flags::MO_ACTOR_STATE_CHECK};
         bool is_stop = false;
         resource->read([&is_stop](void *data) noexcept {
-            mozi::actor::mo_steal_actor_data_s *p_data = static_cast<mozi::actor::mo_steal_actor_data_s *>(data);
+            mozi::actor::mo_steal_actor_data *p_data = static_cast<mozi::actor::mo_steal_actor_data *>(data);
             is_stop = p_data->is_stop();
         });
         if (is_stop) [[MO_UNLIKELY]]
@@ -78,7 +78,7 @@ inline std::unique_ptr<mo_future> steal_actor_create(coro_handle poll_actor_hand
 {
     using mo_poll_c = coro::mo_poll_c;
     using mo_future = coro::mo_future;
-    auto steal_actor_data = new mozi::actor::mo_steal_actor_data_s(poll_actor_handle);
+    auto steal_actor_data = new mozi::actor::mo_steal_actor_data(poll_actor_handle);
     mo_poll_c *resource = new mo_poll_c{steal_actor_data, &actor::destroy_steal_actor_data};
     auto steal_actor =
         std::make_unique<mo_future>(steal_actor_create(coro::mo_coro_type_flags::MO_STEAL_ACTOR, resource));
