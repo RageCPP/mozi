@@ -51,7 +51,7 @@ struct mo_mail
 
     ~mo_mail()
     {
-        spdlog::info("mo_mail::~mo_mail()");
+        spdlog::debug("mo_mail::~mo_mail()");
         delete[] m_serial_in;
         free(m_in);
         if (m_out != nullptr)
@@ -94,7 +94,7 @@ struct mo_mail
         m_behavior_type = 1;
         m_block_behavior = behavior;
     }
-    inline void set_behavior(coro::mo_future_s (*behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
+    inline void set_behavior(coro::mo_future (*behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
     {
         m_behavior_type = 2;
         m_async_behavior = behavior;
@@ -103,7 +103,7 @@ struct mo_mail
     {
         m_block_behavior(m_serial_in, m_in, m_out);
     }
-    inline coro::mo_future_s async_read() noexcept
+    inline coro::mo_future async_read() noexcept
     {
         return m_async_behavior(m_serial_in, m_in, m_out);
     }
@@ -112,13 +112,13 @@ struct mo_mail
     // https://actor-framework.readthedocs.io/en/stable/MessageHandlers.html
     // 需要一套完整的序列化定义 但是这个可以在二期的时候做
     void (*m_block_behavior)(uint8_t *, void *, mo_mail_out_s *) = nullptr;
-    coro::mo_future_s (*m_async_behavior)(uint8_t *, void *, mo_mail_out_s *) = nullptr;
+    coro::mo_future (*m_async_behavior)(uint8_t *, void *, mo_mail_out_s *) = nullptr;
 
     uint8_t m_behavior_type = 0; // 0 not set 1 block 2 async
     uint8_t *m_serial_in = nullptr;
     void *m_in = nullptr;
     mo_mail_out_s *m_out = nullptr;
-    std::optional<coro::mo_future_s> m_future = std::nullopt;
+    std::optional<coro::mo_future> m_future = std::nullopt;
 };
 
 class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_c, mo_mail>
@@ -127,7 +127,7 @@ class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_
     mo_mail_factory_c() = default;
     [[MO_NODISCARD]] static std::unique_ptr<mo_mail> create_instance() noexcept
     {
-        // spdlog::info("mo_mail_factory_c::create_instance");
+        // spdlog::debug("mo_mail_factory_c::create_instance");
         return std::make_unique<mozi::actor::mo_mail>();
     }
 };
@@ -135,14 +135,6 @@ class mo_mail_factory_c : public mozi::ring::mo_event_factory_c<mo_mail_factory_
 class mo_mail_translator : public mozi::ring::mo_event_translator_c<mo_mail_translator, mo_mail>
 {
   public:
-    void operator()(mo_mail *event, [[MO_UNUSED]] size_t sequence) noexcept
-    {
-#ifndef NDEBUG
-        spdlog::debug("mo_mail_translator::operator()");
-#endif
-        event->init_mail(m_serial_in, m_in, m_out);
-        m_behavior_type == 1 ? event->set_behavior(m_block_behavior) : event->set_behavior(m_async_behavior);
-    }
     explicit mo_mail_translator(uint8_t *serial_mail_in, //
                                 void *mail_in,           //
                                 mo_mail_out_s *mail_out, //
@@ -158,7 +150,7 @@ class mo_mail_translator : public mozi::ring::mo_event_translator_c<mo_mail_tran
     explicit mo_mail_translator(uint8_t *serial_mail_in, //
                                 void *mail_in,           //
                                 mo_mail_out_s *mail_out, //
-                                coro::mo_future_s (*async_behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
+                                coro::mo_future (*async_behavior)(uint8_t *, void *, mo_mail_out_s *)) noexcept
         : m_serial_in(serial_mail_in),      //
           m_in(mail_in),                    //
           m_out(mail_out),                  //
@@ -174,12 +166,21 @@ class mo_mail_translator : public mozi::ring::mo_event_translator_c<mo_mail_tran
     mo_mail_translator(mo_mail_translator &&) = delete;
     ~mo_mail_translator() = default;
 
+    void operator()(mo_mail *event, [[MO_UNUSED]] size_t sequence) noexcept
+    {
+#ifndef NDEBUG
+        spdlog::debug("mo_mail_translator::operator()");
+#endif
+        event->init_mail(m_serial_in, m_in, m_out);
+        m_behavior_type == 1 ? event->set_behavior(m_block_behavior) : event->set_behavior(m_async_behavior);
+    }
+
   private:
     uint8_t *m_serial_in = nullptr;
     void *m_in = nullptr;
     mo_mail_out_s *m_out = nullptr;
     void (*m_block_behavior)(uint8_t *, void *, mo_mail_out_s *) = nullptr;
-    coro::mo_future_s (*m_async_behavior)(uint8_t *, void *, mo_mail_out_s *) = nullptr;
+    coro::mo_future (*m_async_behavior)(uint8_t *, void *, mo_mail_out_s *) = nullptr;
     uint8_t m_behavior_type = 0; // 0 not set 1 block 2 async
 };
 

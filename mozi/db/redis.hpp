@@ -17,18 +17,18 @@ void mo_connected(const redisAsyncContext *context, int status)
 {
     if (status != REDIS_OK)
     {
-        spdlog::info("Error: {}", context->errstr);
+        spdlog::debug("Error: {}", context->errstr);
     }
-    spdlog::info("Connected...");
+    spdlog::debug("Connected...");
     return;
 }
 void mo_disconnect(const redisAsyncContext *context, int status)
 {
     if (status != REDIS_OK)
     {
-        spdlog::info("Error: {}", context->errstr);
+        spdlog::debug("Error: {}", context->errstr);
     }
-    spdlog::info("Disconnected...");
+    spdlog::debug("Disconnected...");
     return;
 }
 

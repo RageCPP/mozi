@@ -9,7 +9,7 @@ namespace mozi::scheduler
 {
 class mo_worker_c
 {
-    using mo__future_t = mozi::coro::mo_future_s;
+    using mo__future_t = mozi::coro::mo_future;
     using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
 
   public:
@@ -33,29 +33,20 @@ class mo_worker_c
         return m_poll_actor->handle();
     }
 
-    void run_once()
+    inline void run_once() noexcept
     {
 #ifndef NDEBUG
-        spdlog::info("   ");
-        spdlog::info("mo_worker_c::run_once start");
+        spdlog::debug("   ");
+        spdlog::debug("mo_worker_c::run_once start");
 #endif
-        auto future = run_once(coro::mo_coro_type_flags::MO_SCHEDULE_WORKER);
-        future.resume(); // initial_suspend resume
-
-#ifndef NDEBUG
-        spdlog::info("mo_worker_c::run_once end");
-#endif
-
-        auto is_done = future.done();
-        spdlog::info("mo_worker_c::run_once done: {}", is_done);
+        auto worker = run_once(coro::mo_coro_type_flags::MO_SCHEDULE_WORKER);
+        worker.resume(); // initial_suspend resume
     }
 
   private:
-    [[MO_NODISCARD]] mo__future_t run_once([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
+    [[MO_NODISCARD]] inline mo__future_t run_once([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
     {
-        spdlog::info("mo_worker_c::run_once with flag start");
         co_await coro::mo_schedule_awaiter_transform_s{.fire = m_poll_actor.get()};
-        spdlog::info("mo_worker_c::run_once with flag end");
         // 这里逻辑为跳出本次协程执行循环等待下次调度 一定不要在这里回收 m_poll_actor 的资源
     }
     std::atomic<mo_worker_state_flags> m_state;

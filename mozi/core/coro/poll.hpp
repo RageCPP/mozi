@@ -5,7 +5,7 @@
 
 namespace mozi::coro
 {
-struct mo_future_s;
+struct mo_future;
 struct mo_poll_c
 {
     bool is_pedding() const noexcept
@@ -22,14 +22,15 @@ struct mo_poll_c
           m_destroy(destroy)                        //
     {
     }
-    ~mo_poll_c()
-    {
-        spdlog::info("mo_poll_c::~mo_poll_c()");
-        if (m_destroy != nullptr)
-        {
-            m_destroy(m_data);
-        }
-    }
+    // TODO: 这里必须是平凡析构函数 需要在别的地方检查析构
+    // ~mo_poll_c()
+    // {
+    //     spdlog::debug("mo_poll_c::~mo_poll_c()");
+    //     if (m_destroy != nullptr)
+    //     {
+    //         m_destroy(m_data);
+    //     }
+    // }
 
     // TODO 参数改为右值
     template <typename F>
@@ -53,7 +54,7 @@ struct mo_poll_c
     mo_poll_c &operator=(mo_poll_c &&) = delete;
 
   private:
-    friend struct mo_future_s;
+    friend struct mo_future;
     enum class mo_poll_flags
     {
         MO_POLL_Pending,

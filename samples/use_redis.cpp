@@ -33,7 +33,7 @@ int main()
 
     // struct hello
     // {
-    //     mozi::coro::mo_future_s *fut = nullptr;
+    //     mozi::coro::mo_future *fut = nullptr;
     // };
     using namespace mozi;
     mozi::scheduler::mo_worker_c worker{};
@@ -48,9 +48,9 @@ int main()
     // });
 
     // using poll_data = mozi::actor::mo_poll_actor_data;
-    // std::unique_ptr<coro::mo_future_s> poll_actor = mozi::actor::poll_actor_create();
+    // std::unique_ptr<coro::mo_future> poll_actor = mozi::actor::poll_actor_create();
     // spdlog::info("poll_actor->resume()");
-    // std::unique_ptr<coro::mo_future_s> schedule_actor = mozi::actor::schedule_actor_create();
+    // std::unique_ptr<coro::mo_future> schedule_actor = mozi::actor::schedule_actor_create();
 
     // poll_actor->resume();
     // poll_actor->resource()->write([](void *data) noexcept {

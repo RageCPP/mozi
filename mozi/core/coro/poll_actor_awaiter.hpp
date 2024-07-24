@@ -1,12 +1,14 @@
 #pragma once
+#include "mozi/core/actor/poll_actor.hpp"
 #include "mozi/core/coro/handle.hpp"
 #include "mozi/core/coro/poll.hpp"
+
 namespace mozi::coro
 {
-struct mo_poll_actor_awaiter_s
+struct mo_poll_actor_awaiter
 {
   public:
-    mo_poll_actor_awaiter_s(mo_poll_c *resource) noexcept : m_resource(resource)
+    mo_poll_actor_awaiter(mo_poll_c *resource) noexcept : m_resource(resource)
     {
     }
 
@@ -16,6 +18,14 @@ struct mo_poll_actor_awaiter_s
 
     void await_resume() noexcept
     {
+#ifndef NDEBUG
+        spdlog::debug("poll actor resume read mail");
+#endif
+        using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
+        m_resource->read([](void *data) noexcept {
+            poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
+            p_data->poll(mo_mail_handle_t{});
+        });
     }
 
   private:

@@ -1,4 +1,6 @@
 #include "mozi/core/coro/handle.hpp"
+#include "fmt/core.h"
+#include "mozi/core/actor/flags.hpp"
 #include "mozi/core/actor/poll_actor.hpp"
 #include "mozi/core/actor/steal_actor.hpp"
 #include "mozi/core/coro/future.hpp"
@@ -11,14 +13,15 @@ namespace mozi::coro
 {
 using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
 
-mo_future_s mo_handle_s::get_return_object() noexcept
+mo_future mo_handle_s::get_return_object() noexcept
 {
-    spdlog::info("mo_handle_s::get_return_object");
-    return mo_future_s{std::coroutine_handle<mo_handle_s>::from_promise(*this)};
+    spdlog::debug("mo_handle_s::get_return_object");
+    return mo_future{std::coroutine_handle<mo_handle_s>::from_promise(*this)};
 }
 
-mo_poll_actor_awaiter_s mo_handle_s::yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept
+mo_poll_actor_awaiter mo_handle_s::yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept
 {
+    spdlog::debug("mo_actor_state_flags: {}", actor::to_string(info.m_state));
     m_resource->write([info = std::move(info)](void *data) noexcept {
         poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
         p_data->update_state(info.m_state);
@@ -37,7 +40,7 @@ mo_steal_actor_awaiter_s mo_handle_s::yield_value(coro::yield_info::steal_actor_
 
 mo_schedule_awaiter_s mo_handle_s::await_transform(mo_schedule_awaiter_transform_s &&transform) noexcept
 {
-    spdlog::info("await_transform to mo_schedule_awaiter_s");
+    // fire->handle(): poll actor handle
     return mo_schedule_awaiter_s{transform.fire->handle()};
 }
 } // namespace mozi::coro

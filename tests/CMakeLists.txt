@@ -1,13 +1,15 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.20)
 
 project(tests LANGUAGES CXX)
 
 enable_testing()
 
 add_executable(mozi_test
-  ring.cpp
+
+  # ring.cpp
   scheduler.cpp)
 
+# target_link_options(mozi_test PRIVATE -fuse-ld=mold)
 target_link_libraries(
   mozi_test
   mozi

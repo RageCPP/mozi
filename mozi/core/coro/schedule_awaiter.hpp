@@ -8,7 +8,7 @@ namespace mozi::coro
 struct mo_schedule_awaiter_transform_s
 {
     // poll actor
-    mo_future_s *fire;
+    mo_future *fire;
 };
 struct mo_schedule_awaiter_s
 {
@@ -20,6 +20,7 @@ struct mo_schedule_awaiter_s
         return false;
     }
 
+    // coro_handle: schedule worker handle MO_SCHEDULE_WORKER
     coro_handle await_suspend(coro_handle coro_handle) noexcept
     {
         using poll_actor_data_t = typename mozi::actor::mo_poll_actor_data;
@@ -39,6 +40,7 @@ struct mo_schedule_awaiter_s
     explicit mo_schedule_awaiter_s(coro_handle coro_handle) noexcept : m_coro_handle(coro_handle)
     {
     }
+    // poll actor handle
     coro_handle m_coro_handle;
 };
 } // namespace mozi::coro

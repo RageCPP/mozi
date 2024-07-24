@@ -141,14 +141,14 @@ class mo_responder_c : public std::enable_shared_from_this<mo_responder_c>
     {
         auto data = parser_data(parser);
         data->url = std::string(at, length);
-        spdlog::info("url: {}", data->url);
+        spdlog::debug("url: {}", data->url);
         return llhttp_errno::HPE_OK;
     }
     inline static int32_t on_body(llhttp_t *parser, const char *at, size_t length) noexcept
     {
         auto data = parser_data(parser);
         data->body = std::string(at, length);
-        spdlog::info("body: {}", data->body);
+        spdlog::debug("body: {}", data->body);
         return llhttp_errno::HPE_OK;
     }
     inline static int32_t on_method_complete(llhttp_t *parser) noexcept
@@ -251,10 +251,10 @@ class mo_responder_c : public std::enable_shared_from_this<mo_responder_c>
         switch (code)
         {
         case UV_EOF:
-            // spdlog::info("EOF");
+            // spdlog::debug("EOF");
             break;
         default:
-            spdlog::info("read fail {}", uv_err_name(code));
+            spdlog::debug("read fail {}", uv_err_name(code));
             break;
         }
         uv_close(static_cast<uv_handle_t *>(static_cast<void *>(client)), [](uv_handle_t *client) {

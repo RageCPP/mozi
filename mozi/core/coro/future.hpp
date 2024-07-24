@@ -7,7 +7,7 @@
 namespace mozi::coro
 {
 // TODO: 在debug 模式下给每个 future 都加个ID 观察回收测试
-struct mo_future_s
+struct mo_future
 {
   public:
     using promise_type = mo_handle_s;
@@ -15,8 +15,8 @@ struct mo_future_s
     using suspend_never = std::suspend_never;
     using suspend_always = std::suspend_always;
 
-    mo_future_s(const mo_future_s &) = delete;
-    mo_future_s &operator=(mo_future_s const &other)
+    mo_future(const mo_future &) = delete;
+    mo_future &operator=(mo_future const &other)
     {
         if (this != &other)
         {
@@ -25,12 +25,12 @@ struct mo_future_s
         // m_coro_handle = std::exchange(ori.m_coro_handle, {});
         return *this;
     };
-    mo_future_s(mo_future_s &&ori) noexcept : m_coro_handle(std::exchange(ori.m_coro_handle, {}))
+    mo_future(mo_future &&ori) noexcept : m_coro_handle(std::exchange(ori.m_coro_handle, {}))
     {
-        spdlog::info("mo_future_s::mo_future_s ori m_coro_handle is null: {}", ori.m_coro_handle.address() == nullptr);
-        spdlog::info("mo_future_s::mo_future_s(mo_future_s &&)");
+        spdlog::debug("mo_future::mo_future ori m_coro_handle is null: {}", ori.m_coro_handle.address() == nullptr);
+        spdlog::debug("mo_future::mo_future(mo_future &&)");
     }
-    mo_future_s &operator=(mo_future_s &&ori)
+    mo_future &operator=(mo_future &&ori)
     {
         if (this != &ori)
         {
@@ -39,9 +39,9 @@ struct mo_future_s
         return *this;
     }
 
-    ~mo_future_s()
+    ~mo_future()
     {
-        spdlog::info("mo_future_s::~mo_future_s");
+        spdlog::debug("mo_future::~mo_future");
         if (m_coro_handle.address() != nullptr)
         {
             m_coro_handle.destroy();
@@ -61,7 +61,7 @@ struct mo_future_s
         return m_coro_handle;
     }
     /**
-    class mo_future_s {
+    class mo_future {
     public:
         std::coroutine_handle<> m_coro_handle;
 
@@ -70,10 +70,10 @@ struct mo_future_s
         }
     };
 
-    mo_future_s original;
+    mo_future original;
     auto ptr = original.handle_ptr();
 
-    mo_future_s moved = std::move(original); // 移动操作
+    mo_future moved = std::move(original); // 移动操作
     // 此时 ptr 可能指向一个无效的位置
     */
     inline coro_handle handle_ptr() noexcept
@@ -95,8 +95,8 @@ struct mo_future_s
 
   private:
     friend struct mo_handle_s;
-    explicit mo_future_s(coro_handle handle) noexcept //
-        : m_coro_handle(handle)                       //
+    explicit mo_future(coro_handle handle) noexcept //
+        : m_coro_handle(handle)                     //
     {
     }
     coro_handle m_coro_handle;

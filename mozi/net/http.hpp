@@ -61,7 +61,7 @@ size_t mo_http_listen(uv_loop_t *loop, int32_t port) noexcept
 {
     std::unique_ptr<struct sockaddr_in> addr_in = std::make_unique<struct sockaddr_in>();
 
-    spdlog::info("Listen at port {}", port);
+    spdlog::debug("Listen at port {}", port);
     int32_t address = uv_ip4_addr("0.0.0.0", port, addr_in.get());
     if (address) [[MO_UNLIKELY]]
     {
@@ -88,7 +88,7 @@ void mo_on_connect(uv_stream_t *server, int status) noexcept
         spdlog::error("New connection error {}", uv_strerror(status));
         return;
     }
-    spdlog::info("New connection");
+    spdlog::debug("New connection");
 
     std::unique_ptr<uv_tcp_t> client = std::make_unique<uv_tcp_t>();
     uv_tcp_init(server->loop, client.get());
@@ -113,7 +113,7 @@ void mo_on_connect(uv_stream_t *server, int status) noexcept
     }
     else
     {
-        spdlog::info("new connection fail");
+        spdlog::debug("new connection fail");
         uv_close(static_cast<uv_handle_t *>(static_cast<void *>(responder->client())), [](uv_handle_t *client) {
             auto responder = static_cast<mo_responder_c *>(client->data);
             responder->reset(client->loop, responder->id());

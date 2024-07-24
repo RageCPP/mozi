@@ -22,11 +22,11 @@ struct mo_poll_actor_data
         std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
         m_mailbox_poller = std::move(mailbox_poller);
         m_mailbox = std::move(mailbox);
-        spdlog::info("mo_poll_actor_data::mo_poll_actor_data()");
+        spdlog::debug("mo_poll_actor_data::mo_poll_actor_data()");
     }
     ~mo_poll_actor_data()
     {
-        spdlog::info("mo_poll_actor_data::~mo_poll_actor_data()");
+        spdlog::debug("mo_poll_actor_data::~mo_poll_actor_data()");
     }
     inline void stop() noexcept
     {

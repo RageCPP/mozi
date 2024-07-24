@@ -13,7 +13,7 @@ namespace mozi
 void run(int32_t port)
 {
     uint8_t num_cores = std::thread::hardware_concurrency() / 2;
-    spdlog::info("worker num: {}\n", num_cores);
+    spdlog::debug("worker num: {}\n", num_cores);
     auto d_2020_01_01 = mozi::chrono::raw::unsafe_time(2020, 1, 1);
     auto d_2020_01_01_timestamp = mozi::chrono::raw::timestamp(d_2020_01_01);
     std::vector<std::jthread> threads;
@@ -25,7 +25,7 @@ void run(int32_t port)
             CPU_ZERO(&cpuset);
             CPU_SET(num_cores, &cpuset);
             pthread_t current_thread = pthread_self();
-            spdlog::info("cores {} on current_thread {} -- workid {}", num_cores, current_thread, id);
+            spdlog::debug("cores {} on current_thread {} -- workid {}", num_cores, current_thread, id);
             if (pthread_setaffinity_np(current_thread, sizeof(cpu_set_t), &cpuset) != 0)
             {
                 spdlog::error("Set thread affinity failed");

@@ -21,11 +21,11 @@ struct mo_steal_actor_data_s
         std::unique_ptr<mo__reveiver> mailbox_poller = mailbox->create_poller();
         m_mailbox_poller = std::move(mailbox_poller);
         m_mailbox = std::move(mailbox);
-        spdlog::info("mo_steal_actor_data_s::mo_steal_actor_data_s()");
+        spdlog::debug("mo_steal_actor_data_s::mo_steal_actor_data_s()");
     }
     ~mo_steal_actor_data_s()
     {
-        spdlog::info("mo_steal_actor_data_s::~mo_steal_actor_data_s()");
+        spdlog::debug("mo_steal_actor_data_s::~mo_steal_actor_data_s()");
     }
     inline void stop() noexcept
     {
@@ -69,7 +69,7 @@ struct mo_steal_actor_data_s
     inline bool send_message(mo_mail_translator_t &message) noexcept
     {
 #ifndef NDEBUG
-        spdlog::info("mailbox used capacity: {}", m_mailbox->used_capacity());
+        spdlog::debug("mailbox used capacity: {}", m_mailbox->used_capacity());
 #endif
         auto is_success = m_mailbox->publish_event(message);
         auto used = m_mailbox->used_capacity();

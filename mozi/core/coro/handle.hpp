@@ -15,8 +15,8 @@ struct mo_steal_actor_data_s;
 }
 namespace mozi::coro
 {
-struct mo_future_s;
-struct mo_poll_actor_awaiter_s;
+struct mo_future;
+struct mo_poll_actor_awaiter;
 
 struct mo_schedule_awaiter_s;
 struct mo_schedule_awaiter_transform_s;
@@ -36,13 +36,14 @@ struct mo_handle_s
         : m_resource(resource), //
           m_flag(flag)          //
     {
+        static_assert(std::is_trivially_destructible<mo_poll_c>::value, "mo_poll_c must be trivially destructible");
     }
 
-    mo_future_s get_return_object() noexcept;
+    mo_future get_return_object() noexcept;
 
     suspend_always initial_suspend() noexcept
     {
-        spdlog::info("mo_handle_s::initial_suspend");
+        spdlog::debug("mo_handle_s::initial_suspend");
         return {};
     }
 
@@ -51,7 +52,7 @@ struct mo_handle_s
         if (m_flag == mo_coro_type_flags::MO_SCHEDULE_WORKER) [[MO_UNLIKELY]]
         {
         }
-        spdlog::info("mo_handle_s::final_suspend");
+        spdlog::debug("mo_handle_s::final_suspend");
         return {};
     }
 
@@ -71,7 +72,7 @@ struct mo_handle_s
         return m_resource;
     }
 
-    mo_poll_actor_awaiter_s yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept;
+    mo_poll_actor_awaiter yield_value(coro::yield_info::poll_actor_symbol_state &&info) noexcept;
     mo_steal_actor_awaiter_s yield_value(coro::yield_info::steal_actor_symbol_state &&info) noexcept;
     mo_schedule_awaiter_s await_transform(mo_schedule_awaiter_transform_s &&info) noexcept;
 
@@ -81,7 +82,7 @@ struct mo_handle_s
     // }
 
   private:
-    friend struct mo_future_s;
+    friend struct mo_future;
     friend struct mo_schedule_awaiter_s;
     friend struct actor::mo_steal_actor_data_s;
     // TODO: 由于 coroutine_handle 的是 trival copyable，所以需要测试当 coroutine_handle 被复制时，作为

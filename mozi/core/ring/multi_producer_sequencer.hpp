@@ -84,11 +84,11 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
 #ifndef NDEBUG
         if (!(real_offset > max_offset))
         {
-            spdlog::info("can_write: {} will_write: {} max_offset: {} real_offset: {}",
-                         can_write,    //
-                         will_write,   //
-                         max_offset,   //
-                         real_offset); //
+            spdlog::debug("can_write: {} will_write: {} max_offset: {} real_offset: {}",
+                          can_write,    //
+                          will_write,   //
+                          max_offset,   //
+                          real_offset); //
         }
 #endif
 
@@ -103,7 +103,7 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
 
 #ifndef NDEBUG
             spdlog::debug("min_sequence: {}", min_sequence);
-            spdlog::info("can_write: {} max_offset: {} real_offset: {}", can_write, max_offset, real_offset);
+            spdlog::debug("can_write: {} max_offset: {} real_offset: {}", can_write, max_offset, real_offset);
 #endif
 
             if (real_offset > max_offset)
@@ -125,6 +125,12 @@ class mo_multi_producer_sequencer_c : public mo_abstruct_sequencer_c<mo_multi_pr
     {
         auto consumed = mozi::ring::utils::minimum_sequence(this->gating_sequences(), this->cursor());
         auto produced = this->cursor();
+#ifndef NDEBUG
+        spdlog::debug("used_capacity() result produced: {} - consumed: {} = {}", //
+                      produced,                                                  //
+                      consumed,                                                  //
+                      produced - consumed);                                      //
+#endif
         return produced - consumed;
     }
 

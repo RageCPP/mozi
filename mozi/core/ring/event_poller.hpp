@@ -75,7 +75,7 @@ class mo_event_poller_c : public mo_sequencer_t<Sequencer, Event>, public mo_dat
         size_t current_sequence = m_sequence->value();
         size_t next_sequence = current_sequence + 1;
         size_t available_sequence = m_sequencer->highest_published_sequence(next_sequence, m_wait_sequences.value());
-        // spdlog::info("current_sequence: {}, next_sequence: {}, available_sequence: {}", current_sequence,
+        // spdlog::debug("current_sequence: {}, next_sequence: {}, available_sequence: {}", current_sequence,
         // next_sequence,
         //              available_sequence);
         // init env
