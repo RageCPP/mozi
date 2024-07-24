@@ -14,7 +14,7 @@ struct mo_poll_actor_awaiter
 
     bool await_ready() noexcept;
 
-    std::coroutine_handle<mo_handle_s> await_suspend(std::coroutine_handle<mo_handle_s> h) noexcept;
+    std::coroutine_handle<mo_handle> await_suspend(std::coroutine_handle<mo_handle> h) noexcept;
 
     void await_resume() noexcept
     {

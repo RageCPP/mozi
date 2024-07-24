@@ -15,7 +15,7 @@ struct mo_steal_actor_awaiter_s
         return false;
     }
 
-    std::coroutine_handle<mo_handle_s> await_suspend(std::coroutine_handle<mo_handle_s> h) noexcept;
+    std::coroutine_handle<mo_handle> await_suspend(std::coroutine_handle<mo_handle> h) noexcept;
 
     void await_resume() noexcept
     {

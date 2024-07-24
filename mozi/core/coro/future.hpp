@@ -10,7 +10,7 @@ namespace mozi::coro
 struct mo_future
 {
   public:
-    using promise_type = mo_handle_s;
+    using promise_type = mo_handle;
     using coro_handle = std::coroutine_handle<promise_type>;
     using suspend_never = std::suspend_never;
     using suspend_always = std::suspend_always;
@@ -44,6 +44,15 @@ struct mo_future
         spdlog::debug("mo_future::~mo_future");
         if (m_coro_handle.address() != nullptr)
         {
+            auto resource = m_coro_handle.promise().m_resource;
+            if (resource != nullptr)
+            {
+                if (resource->m_destroy != nullptr)
+                {
+                    resource->m_destroy(resource->m_data);
+                }
+            }
+
             m_coro_handle.destroy();
         }
     }
@@ -94,7 +103,7 @@ struct mo_future
     }
 
   private:
-    friend struct mo_handle_s;
+    friend struct mo_handle;
     explicit mo_future(coro_handle handle) noexcept //
         : m_coro_handle(handle)                     //
     {

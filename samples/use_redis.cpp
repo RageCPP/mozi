@@ -36,7 +36,7 @@ int main()
     //     mozi::coro::mo_future *fut = nullptr;
     // };
     using namespace mozi;
-    mozi::scheduler::mo_worker_c worker{};
+    mozi::scheduler::mo_worker worker{};
     worker.run_once();
 
     // auto steal_actor = mozi::actor::steal_actor_create(worker.poll_actor_handle());

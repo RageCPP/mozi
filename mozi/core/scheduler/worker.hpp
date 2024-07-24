@@ -9,30 +9,26 @@
 namespace mozi::scheduler
 {
 // TODO: lifetime
-class mo_worker_c
+class mo_worker
 {
-    using mo__future_t = mozi::coro::mo_future;
-    using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
+    using coro_handle = std::coroutine_handle<coro::mo_handle>;
 
   public:
-    enum class mo_worker_state_flags
+    enum class mo_worker_state_flags : uint8_t
     {
-        MO_WORKER_STATE_INIT = 0x00,
-        MO_WORKER_STATE_IDLE = 0x00,
-        MO_WORKER_STATE_RUNNING = 0x01,
-        MO_WORKER_STATE_STOP = 0x02,
+        MO_WORKER_STATE_INTT = 0x00,
+        MO_WORKER_STATE_IDLE = 0x01,
+        MO_WORKER_STATE_RUNNING = 0x02,
+        MO_WORKER_STATE_STOP = 0x03,
     };
-    static constexpr auto INIT_STATE = mo_worker_state_flags::MO_WORKER_STATE_INIT;
-    static constexpr auto IDLE_STATE = mo_worker_state_flags::MO_WORKER_STATE_IDLE;
-    static constexpr auto RUNNING_STATE = mo_worker_state_flags::MO_WORKER_STATE_RUNNING;
-    static constexpr auto STOP_STATE = mo_worker_state_flags::MO_WORKER_STATE_STOP;
+    using mo__state = mo_worker_state_flags;
 
-    ~mo_worker_c() = default;
-    mo_worker_c(const mo_worker_c &) = delete;
-    mo_worker_c &operator=(const mo_worker_c &) = delete;
-    mo_worker_c(mo_worker_c &&) = delete;
-    mo_worker_c &operator=(mo_worker_c &&) = delete;
-    mo_worker_c() noexcept : m_state(mo_worker_state_flags::MO_WORKER_STATE_IDLE)
+    ~mo_worker() = default;
+    mo_worker(const mo_worker &) = delete;
+    mo_worker &operator=(const mo_worker &) = delete;
+    mo_worker(mo_worker &&) = delete;
+    mo_worker &operator=(mo_worker &&) = delete;
+    mo_worker() noexcept : m_state(mo__state::MO_WORKER_STATE_INTT)
     {
         m_poll_actor = mozi::actor::poll_actor_create();
     }
@@ -42,36 +38,95 @@ class mo_worker_c
         return m_poll_actor->handle();
     }
 
-    inline void run_once() noexcept
+    inline bool run_once() noexcept
     {
-        if (m_state.load(std::memory_order_relaxed) != IDLE_STATE)
+        // TODO: 仔细思考这里的内存屏障代码 memory_order_seq_cst 是否可优化为性能更高一点的
+        auto expected = mo__state::MO_WORKER_STATE_IDLE;
+        if (!m_state.compare_exchange_strong(expected, mo__state::MO_WORKER_STATE_RUNNING, std::memory_order_seq_cst))
         {
-            return;
+            return false;
         }
-        // TODO: 仔细思考这里的内存屏障代码是否可优化为性能更高一点的
-        m_state.store(mo_worker_state_flags::MO_WORKER_STATE_RUNNING, std::memory_order_seq_cst);
 #ifndef NDEBUG
         spdlog::debug("   ");
-        spdlog::debug("mo_worker_c::run_once start");
+        spdlog::debug("mo_worker::run_once start");
+        spdlog::debug("mo_worker m_state {}", state_string());
 #endif
         auto worker = run_once(coro::mo_coro_type_flags::MO_SCHEDULE_WORKER);
         worker.resume(); // initial_suspend resume
-        m_state.store(mo_worker_state_flags::MO_WORKER_STATE_IDLE, std::memory_order_seq_cst);
+        m_state.store(expected, std::memory_order_seq_cst);
+#ifndef NDEBUG
+        spdlog::debug("mo_worker::run_once end");
+        spdlog::debug("mo_worker m_state {}", state_string());
+#endif
+        return true;
     }
 
-    inline void start() noexcept
+    inline bool start() noexcept
     {
-        m_state.store(mo_worker_state_flags::MO_WORKER_STATE_IDLE, std::memory_order_seq_cst);
+        spdlog::debug("mo_worker m_state {}", state_string());
+        auto expected = mo__state::MO_WORKER_STATE_INTT;
+        if (!m_state.compare_exchange_strong(expected, mo__state::MO_WORKER_STATE_IDLE, std::memory_order_seq_cst))
+        {
+            return false;
+        }
+        spdlog::debug("mo_worker m_state {}", state_string());
         run_once();
+        return true;
+    }
+
+    inline bool stop() noexcept
+    {
+        spdlog::debug("mo_worker stop m_state {}", state_string());
+        // TODO: 需要完善在暂停失败时候如何处理
+        auto expected = mo__state::MO_WORKER_STATE_IDLE;
+        if (!m_state.compare_exchange_strong(expected, mo__state::MO_WORKER_STATE_STOP, std::memory_order_seq_cst))
+        {
+            spdlog::debug("faild mo_worker m_state {}", state_string());
+            return false;
+        }
+        auto poll_actor_resource = m_poll_actor->resource();
+        poll_actor_resource->write([](void *data) noexcept {
+            mozi::actor::mo_poll_actor_data *p_data = static_cast<mozi::actor::mo_poll_actor_data *>(data);
+            p_data->stop();
+        });
+        auto worker = run_once(coro::mo_coro_type_flags::MO_SCHEDULE_WORKER);
+        worker.resume(); // initial_suspend resume
+        // poll_actor_resource->read([](void *data) noexcept {
+        //     poll_actor_data_t *p_data = static_cast<poll_actor_data_t *>(data);
+        //     return p_data->state() == actor::mo_actor_state_flags::MO_ACTOR_STATE_STOP;
+        // });
+        // m_poll_actor->destroy();
+        return true;
     }
 
   private:
-    [[MO_NODISCARD]] inline mo__future_t run_once([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
+    std::string state_string() noexcept
+    {
+        switch (m_state)
+        {
+        case mo__state::MO_WORKER_STATE_INTT:
+            return "MO_WORKER_STATE_INIT";
+        case mo__state::MO_WORKER_STATE_IDLE:
+            return "MO_WORKER_STATE_IDLE";
+        case mo__state::MO_WORKER_STATE_RUNNING:
+            return "MO_WORKER_STATE_RUNNING";
+        case mo__state::MO_WORKER_STATE_STOP:
+            return "MO_WORKER_STATE_STOP";
+        default:
+            return "MO_WORKER_STATE_UNKNOWN";
+        }
+    }
+    [[MO_NODISCARD]] inline coro::mo_future run_once([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
     {
         co_await coro::mo_schedule_awaiter_transform_s{.fire = m_poll_actor.get()};
         // 这里逻辑为跳出本次协程执行循环等待下次调度 一定不要在这里回收 m_poll_actor 的资源
     }
-    std::atomic<mo_worker_state_flags> m_state = mo_worker_state_flags::MO_WORKER_STATE_INIT;
-    std::unique_ptr<mo__future_t> m_poll_actor;
+    [[MO_NODISCARD]] inline coro::mo_future run_stop([[MO_UNUSED]] coro::mo_coro_type_flags flag) noexcept
+    {
+        co_await coro::mo_schedule_awaiter_transform_s{.fire = m_poll_actor.get()};
+        // 这里逻辑为跳出本次协程执行循环等待下次调度 一定不要在这里回收 m_poll_actor 的资源
+    }
+    std::atomic<mo__state> m_state;
+    std::unique_ptr<coro::mo_future> m_poll_actor;
 };
 } // namespace mozi::scheduler

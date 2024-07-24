@@ -12,7 +12,7 @@ struct mo_schedule_awaiter_transform_s
 };
 struct mo_schedule_awaiter_s
 {
-    using coro_handle = std::coroutine_handle<mo_handle_s>;
+    using coro_handle = std::coroutine_handle<mo_handle>;
 
   public:
     bool await_ready() const noexcept
@@ -36,7 +36,7 @@ struct mo_schedule_awaiter_s
     }
 
   private:
-    friend struct mo_handle_s;
+    friend struct mo_handle;
     explicit mo_schedule_awaiter_s(coro_handle coro_handle) noexcept : m_coro_handle(coro_handle)
     {
     }

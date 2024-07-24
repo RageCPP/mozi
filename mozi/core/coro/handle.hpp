@@ -7,7 +7,7 @@
 
 namespace mozi::scheduler
 {
-class mo_worker_c;
+class mo_worker;
 }
 namespace mozi::actor
 {
@@ -23,16 +23,16 @@ struct mo_schedule_awaiter_transform_s;
 
 struct mo_steal_actor_awaiter_s;
 
-struct mo_handle_s
+struct mo_handle
 {
     using suspend_never = std::suspend_never;
     using suspend_always = std::suspend_always;
-    using coro_handle = std::coroutine_handle<mo_handle_s>;
+    using coro_handle = std::coroutine_handle<mo_handle>;
 
-    explicit mo_handle_s([[MO_UNUSED]] scheduler::mo_worker_c &workder, mo_coro_type_flags flag) noexcept : m_flag(flag)
+    explicit mo_handle([[MO_UNUSED]] scheduler::mo_worker &workder, mo_coro_type_flags flag) noexcept : m_flag(flag)
     {
     }
-    explicit mo_handle_s(mo_coro_type_flags flag, mo_poll_c *resource) noexcept
+    explicit mo_handle(mo_coro_type_flags flag, mo_poll_c *resource) noexcept
         : m_resource(resource), //
           m_flag(flag)          //
     {
@@ -43,7 +43,7 @@ struct mo_handle_s
 
     suspend_always initial_suspend() noexcept
     {
-        spdlog::debug("mo_handle_s::initial_suspend");
+        spdlog::debug("mo_handle::initial_suspend");
         return {};
     }
 
@@ -52,7 +52,7 @@ struct mo_handle_s
         if (m_flag == mo_coro_type_flags::MO_SCHEDULE_WORKER) [[MO_UNLIKELY]]
         {
         }
-        spdlog::debug("mo_handle_s::final_suspend");
+        spdlog::debug("mo_handle::final_suspend");
         return {};
     }
 

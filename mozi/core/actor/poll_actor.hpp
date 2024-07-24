@@ -13,7 +13,7 @@ struct mo_poll_actor_data
     using mo__mailbox = mozi::mo_mailbox_t<BITS_2>;
     using mo__sender = mozi::mo_mailbox_sender_t<BITS_2>;
     using mo__reveiver = mozi::mo_mailbox_receiver_t<BITS_2>;
-    using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
+    using coro_handle = std::coroutine_handle<coro::mo_handle>;
     mo_poll_actor_data()
         : m_workflow{std::make_unique<mozi::mo_deque_c<coro_handle>>()},
           m_state(actor::mo_actor_state_flags::MO_ACTOR_STATE_INIT)

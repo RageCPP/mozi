@@ -12,7 +12,7 @@
 namespace mozi::actor
 {
 using mo_future = mozi::coro::mo_future;
-using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
+using coro_handle = std::coroutine_handle<coro::mo_handle>;
 using poll_actor_symbol_state = coro::yield_info::poll_actor_symbol_state;
 using steal_actor_symbol_state = coro::yield_info::steal_actor_symbol_state;
 constexpr auto MO_ACTOR_STATE_IDLE = mo_actor_state_flags::MO_ACTOR_STATE_IDLE;
@@ -29,15 +29,14 @@ inline mo_future poll_actor_create([[MO_UNUSED]] coro::mo_coro_type_flags flag,
         co_yield poll_actor_symbol_state{MO_ACTOR_STATE_CHECK};
 
         // TODO: read from resource
-        // bool is_stop = false;
-        // resource->read([&is_stop](void *data) noexcept {
-        //     mozi::actor::mo_poll_actor_data *p_data = static_cast<mozi::actor::mo_poll_actor_data *>(data);
-        //     is_stop = p_data->is_stop();
-        // });
-        // if (is_stop) [[MO_UNLIKELY]]
-        // {
-        //     break;
-        // }
+        auto is_stop = resource->read([](void *data) noexcept {
+            mozi::actor::mo_poll_actor_data *p_data = static_cast<mozi::actor::mo_poll_actor_data *>(data);
+            return p_data->is_stop();
+        });
+        if (is_stop) [[MO_UNLIKELY]]
+        {
+            break;
+        }
     }
 #ifndef NDEBUG
     spdlog::debug("poll actor life end");
@@ -47,7 +46,7 @@ inline std::unique_ptr<mo_future> poll_actor_create() noexcept
 {
     using mo_poll_c = coro::mo_poll_c;
     using mo_future = coro::mo_future;
-    mo_poll_c *resource = new mo_poll_c{new mozi::actor::mo_poll_actor_data(), &actor::destroy_poll_actor_data};
+    mo_poll_c *resource = new mo_poll_c{new mozi::actor::mo_poll_actor_data(), actor::destroy_poll_actor_data};
     auto poll_actor = std::make_unique<mo_future>(poll_actor_create(coro::mo_coro_type_flags::MO_POLL_ACTOR, resource));
     return poll_actor;
 }

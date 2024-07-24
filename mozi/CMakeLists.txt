@@ -98,6 +98,11 @@ set(MOZI_CORE_ACTOR_HEADERS
   core/actor/mail.hpp
   core/actor/mail_out.hpp)
 
+set(MOZI_CORE_SCHEDULER_HEADERS
+  core/scheduler/worker.hpp)
+set(MOZI_CORE_SCHEDULER_SOURCES
+  core/scheduler/worker.cpp)
+
 set(MOZI_HEADERS
   core/alias.hpp
   core/deque.hpp
@@ -115,6 +120,8 @@ add_library(${PROJECT_NAME} STATIC
   ${MOZI_HEADERS}
   ${MOZI_CORE_CORO_HEADERS}
   ${MOZI_CORE_CORO_SOURCES}
+  ${MOZI_CORE_SCHEDULER_HEADERS}
+  ${MOZI_CORE_SCHEDULER_SOURCES}
   ${MOZI_CORE_ACTOR_HEADERS})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE FALSE)
@@ -185,5 +192,10 @@ install(FILES
   ${MOZI_CORE_ACTOR_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/actor")
 install(FILES
+  ${MOZI_CORE_SCHEDULER_HEADERS}
+  DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core/scheduler")
+install(FILES
   ${MOZI_HEADERS}
   DESTINATION "${MOZI_INSTALL_INCLUDE_DIR}/mozi/core")
+
+# (cmake --build build -j$(nproc) && cd build && ctest -R "Mozi*")

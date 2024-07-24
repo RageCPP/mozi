@@ -12,7 +12,7 @@ struct mo_steal_actor_data_s
     using mo__mailbox = mozi::mo_mailbox_t<BITS_2>;
     using mo__sender = mozi::mo_mailbox_sender_t<BITS_2>;
     using mo__reveiver = mozi::mo_mailbox_receiver_t<BITS_2>;
-    using coro_handle = std::coroutine_handle<coro::mo_handle_s>;
+    using coro_handle = std::coroutine_handle<coro::mo_handle>;
     mo_steal_actor_data_s(coro_handle poll_actor_handle)
         : m_poll_actor_handle(poll_actor_handle),                   //
           m_state(actor::mo_actor_state_flags::MO_ACTOR_STATE_INIT) //
